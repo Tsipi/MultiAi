@@ -4,6 +4,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { Composer } from "./components/Composer";
 import { SettingsBar } from "./components/SettingsBar";
 import { Sidebar } from "./components/Sidebar";
+import { TopNav } from "./components/TopNav";
 import { TeamMember, createDefaultTeam } from "./data/experts";
 import { consultStream, deleteSession, getSession, listSessions } from "./services/api";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
@@ -36,30 +37,27 @@ export default function App() {
   const [followupConstraints, setFollowupConstraints] = useState("");
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
-  const [showFollowupSettings, setShowFollowupSettings] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
-  const viewingSession = Boolean(selectedId);
-  const panelActivity = viewingSession ? [] : activity;
+
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
+  const panelActivity = selectedId ? [] : activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
+
   const chooseClarification = (value: string) => {
     setClarificationChoice(value);
-    if (value !== "Other") {
-      setClarificationOtherText("");
-    }
+    if (value !== "Other") setClarificationOtherText("");
   };
+
   const panelProps = {
     result: displayResult, showFullDiscussion: true, loading, activity: panelActivity,
     cast: panelCast,
     clarificationPrompt, clarificationReason, clarificationOptions, clarificationChoice, clarificationOtherText,
     onClarificationChoice: chooseClarification, onClarificationOtherText: setClarificationOtherText,
     onSubmitClarification: () => runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
-    followupOpen,
-    followupInstruction,
-    followupConstraints,
-    followupChangedSinceOpen,
+    followupOpen, followupInstruction, followupConstraints, followupChangedSinceOpen,
     onOpenFollowup: openFollowup,
     onFollowupInstructionChange: setFollowupInstruction,
     onFollowupConstraintsChange: setFollowupConstraints,
@@ -77,29 +75,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    setTeam((prev) => prev.map((member) => (member.lockToBaseRole ? { ...member, role: form.role } : member)));
+    setTeam((prev) => prev.map((m) => (m.lockToBaseRole ? { ...m, role: form.role } : m)));
   }, [form.role]);
 
   useEffect(() => {
-    if (!attachments.some((a) => a.kind === "image")) {
-      return;
-    }
+    if (!attachments.some((a) => a.kind === "image")) return;
     setTeam((prev) => {
       const switched = prev.filter((m) => m.model === "deepseek/deepseek-chat-v3.2").length;
       const next = prev.map((m) =>
         m.model === "deepseek/deepseek-chat-v3.2" ? { ...m, model: "google/gemini-2.5-flash" } : m
       );
-      if (switched > 0) {
-        setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
-      }
+      if (switched > 0) setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
       return next;
     });
   }, [attachments]);
 
   useEffect(() => {
-    if (!toast) {
-      return;
-    }
+    if (!toast) return;
     const timer = window.setTimeout(() => setToast(""), 3500);
     return () => window.clearTimeout(timer);
   }, [toast]);
@@ -127,47 +119,32 @@ export default function App() {
 
   async function runFollowup() {
     const source = displayResult;
-    if (!source || !followupInstruction.trim()) {
-      return;
-    }
+    if (!source || !followupInstruction.trim()) return;
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
     setFollowupError("");
     setLoading(true);
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
-    if (followupChangedSinceOpen) {
-      setActivity((prev) => [...prev, "Using updated team/settings"]);
-    }
+    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
     const followupQuestion = [
-      "Original prompt:",
-      source.source_prompt || source.question,
-      "",
-      "Previous final answer:",
-      source.source_final_answer || source.final_answer,
-      "",
-      "Follow-up instruction:",
-      mergedInstruction
+      "Original prompt:", source.source_prompt || source.question,
+      "", "Previous final answer:", source.source_final_answer || source.final_answer,
+      "", "Follow-up instruction:", mergedInstruction
     ].join("\n");
     const payload = mergeTeamIntoPayload(
       {
-        ...form,
-        question: followupQuestion,
-        is_followup: true,
-        parent_session_id: source.session_id,
-        thread_id: source.thread_id || source.session_id,
+        ...form, question: followupQuestion, is_followup: true,
+        parent_session_id: source.session_id, thread_id: source.thread_id || source.session_id,
         source_prompt: source.source_prompt || source.question,
         source_final_answer: source.source_final_answer || source.final_answer,
         followup_instruction: mergedInstruction
       },
-      team,
-      [],
-      ""
+      team, [], ""
     );
     try {
       await executeConsult(payload, cast, mergedInstruction);
       setFollowupOpen(false);
-      setShowFollowupSettings(false);
     } catch (error) {
       setFollowupError(String(error));
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
@@ -195,12 +172,9 @@ export default function App() {
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
         setSelectedId(next.session_id);
         setHistory((prev) => [toPreview({
-          session_id: next.session_id,
-          question: next.question || title,
-          timestamp: new Date().toISOString(),
-          thread_id: next.thread_id,
-          parent_session_id: next.parent_session_id,
-          is_followup: next.is_followup,
+          session_id: next.session_id, question: next.question || title,
+          timestamp: new Date().toISOString(), thread_id: next.thread_id,
+          parent_session_id: next.parent_session_id, is_followup: next.is_followup,
           run_title: next.followup_instruction || next.question
         }), ...prev.filter((p) => p.id !== next.session_id)]);
       }
@@ -209,9 +183,8 @@ export default function App() {
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
-    if (resultsById[id]) {
-      return;
-    }
+    setSidebarOpen(false);
+    if (resultsById[id]) return;
     try {
       const loaded = await getSession(id);
       setResultsById((prev) => ({ ...prev, [id]: loaded }));
@@ -221,6 +194,7 @@ export default function App() {
       setActivity((prev) => [...prev, "Could not load selected session."]);
     }
   };
+
   const removeSession = async (id: string) => {
     try { await deleteSession(id); } catch { return; }
     let fallbackId: string | null = null;
@@ -235,6 +209,7 @@ export default function App() {
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
     }
   };
+
   function startNewQuestion() {
     setSelectedId(null);
     setResult(null);
@@ -248,56 +223,52 @@ export default function App() {
     setFollowupConstraints("");
     setFollowupSeed("");
     setFollowupError("");
-    setShowFollowupSettings(false);
   }
 
   function openFollowup() {
-    if (!displayResult) {
-      return;
-    }
+    if (!displayResult) return;
     setFollowupOpen(true);
     setFollowupSeed(runSignature);
-    if (!followupInstruction) {
-      setFollowupInstruction("");
-    }
+    if (!followupInstruction) setFollowupInstruction("");
   }
 
   function adjustFollowupTeam() {
-    setShowFollowupSettings(true);
     settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  }
 
   return (
-    <main className="app-shell">
-      <Sidebar sessions={history} selectedId={selectedId} onSelect={selectSession} onDelete={removeSession} />
-      <section className="content">
-        {toast && <div className="toast-banner">{toast}</div>}
-        {viewingSession && !showFollowupSettings ? (
-          <section className="panel session-view-bar">
-            <p className="muted">Viewing saved session</p>
-            <button onClick={startNewQuestion}>New question</button>
-          </section>
-        ) : (
-          <>
-            {!viewingSession && <Composer value={form} attachments={attachments} onAttachmentsChange={setAttachments} onChange={setForm} />}
-            <div ref={settingsRef}>
-              <SettingsBar
-                value={form}
-                team={team}
-                loading={loading}
-                canSubmit={Boolean(form.question.trim())}
-                onChange={setForm}
-                onTeamChange={setTeam}
-                onSubmit={() => runConsult()}
-                showSubmit={!viewingSession}
-              />
-            </div>
-          </>
-        )}
-        {followupError && <div className="toast-banner">{followupError}</div>}
-        <ChatPanel {...panelProps} />
-      </section>
-    </main>
+    <div className="app-shell">
+      <TopNav onNewRun={startNewQuestion} onToggleSidebar={() => setSidebarOpen((o) => !o)} />
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
+      <main className="app-body">
+        <Sidebar
+          sessions={history}
+          selectedId={selectedId}
+          open={sidebarOpen}
+          onSelect={selectSession}
+          onDelete={removeSession}
+        />
+        <div className="builder-panel">
+          {toast && <div className="toast-banner">{toast}</div>}
+          <Composer value={form} attachments={attachments} onAttachmentsChange={setAttachments} onChange={setForm} />
+          <div ref={settingsRef}>
+            <SettingsBar
+              value={form}
+              team={team}
+              loading={loading}
+              canSubmit={Boolean(form.question.trim())}
+              onChange={setForm}
+              onTeamChange={setTeam}
+              onSubmit={() => runConsult()}
+            />
+          </div>
+        </div>
+        <div className="output-panel">
+          {followupError && <div className="toast-banner">{followupError}</div>}
+          <ChatPanel {...panelProps} />
+        </div>
+      </main>
+    </div>
   );
 }
 
@@ -314,10 +285,7 @@ function selectCastFromTeam(team: TeamMember[]): CastSelection {
 }
 
 function mergeTeamIntoPayload(
-  form: ConsultPayload,
-  team: TeamMember[],
-  attachments: AttachmentInput[],
-  clarification: string
+  form: ConsultPayload, team: TeamMember[], attachments: AttachmentInput[], clarification: string
 ): ConsultPayload {
   const { writer, criticA, criticB } = selectEngineMembers(team);
   const imageLoaded = Boolean(attachments.some((a) => a.kind === "image"));
@@ -327,8 +295,7 @@ function mergeTeamIntoPayload(
     critic_a: withImageFallback(criticA.model, imageLoaded),
     critic_b: withImageFallback(criticB.model, imageLoaded),
     role: (writer.role || form.role || "You are an expert in ...").slice(0, 255),
-    attachments,
-    clarification
+    attachments, clarification
   };
 }
 
@@ -341,33 +308,22 @@ function selectEngineMembers(team: TeamMember[]): { writer: TeamMember; criticA:
 }
 
 function withImageFallback(model: string, imageLoaded: boolean): string {
-  if (!imageLoaded) {
-    return model;
-  }
+  if (!imageLoaded) return model;
   return model === "deepseek/deepseek-chat-v3.2" ? "google/gemini-2.5-flash" : model;
 }
 
 function toPreview(row: {
-  session_id: string;
-  question: string;
-  timestamp?: string;
-  thread_id?: string;
-  parent_session_id?: string;
-  is_followup?: boolean;
-  run_title?: string;
+  session_id: string; question: string; timestamp?: string;
+  thread_id?: string; parent_session_id?: string; is_followup?: boolean; run_title?: string;
 }): SessionPreview {
   return {
-    id: row.session_id,
-    question: row.question,
-    timestamp: row.timestamp,
-    thread_id: row.thread_id || row.session_id,
-    parent_session_id: row.parent_session_id || "",
-    is_followup: Boolean(row.is_followup),
-    run_title: row.run_title || row.question
+    id: row.session_id, question: row.question, timestamp: row.timestamp,
+    thread_id: row.thread_id || row.session_id, parent_session_id: row.parent_session_id || "",
+    is_followup: Boolean(row.is_followup), run_title: row.run_title || row.question
   };
 }
 
 function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
-  const seats = team.map((member) => `${member.id}:${member.duty}:${member.model}:${member.role}`).join("|");
+  const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}`).join("|");
   return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}`;
 }

@@ -5,7 +5,8 @@
       "Bash(python -c \"from backend.consensus.engine import ConsensusEngine; print\\('engine OK'\\)\")",
       "Bash(python -c \"from backend.api.app import app; print\\('app OK'\\)\")",
       "Bash(python -c \"from backend.storage.session_store import delete_session; print\\('session_store OK'\\)\")",
-      "Bash(python -m pytest tests/ -q)"
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(npm run:*)"
     ]
   }
 }
