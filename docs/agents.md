@@ -5,7 +5,8 @@
 
 ## Project Overview
 
-A Python system that improves answer quality by running a question through multiple LLMs in a structured debate loop. One LLM generates an answer, a second and third LLM critique and improve it, the first refines based on the critique, and the loop continues until the three models reach consensus or a maximum round limit is hit. The final answer is synthesized from the converged positions.
+A Python system that improves answer quality by running a question through multiple LLMs in a structured debate loop. 
+One LLM generates an answer, a second and third LLM critique and improve it, the first refines based on the critique, and the loop continues until the three models reach consensus or a maximum round limit is hit. The final answer is synthesized from the converged positions.
 
 No financial logic. No MCP. No database. Phase 1 is a clean, standalone consensus engine.
 
@@ -84,8 +85,7 @@ multi-llm-consensus/
 | Language | Python 3.11+ | Primary language |
 | LLM Gateway | OpenRouter | Single API surface for all configured models |
 | Session storage | JSON files | Simple, human-readable, no DB needed in Phase 1 |
-| Config | python-dotenv | .env file for all secrets |
-| Testing | pytest + pytest-mock | Mock all LLM calls |
+| Config | python-dotenv | .enhttps://code.claude.com/docs/en/overviewock | Mock all LLM calls |
 | Frontend | React | Chat-style UI and results rendering |
 
 The software will be run locally in the beginning and then on Railway.
