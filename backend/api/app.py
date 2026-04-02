@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+from dataclasses import asdict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +39,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         final_answer=session.final_answer,
         final_score=session.final_score,
         cost_hint="Displayed as estimated by selected model rates.",
-        full_discussion=[item.__dict__ for item in session.rounds],
+        full_discussion=[asdict(item) for item in session.rounds],
         status="needs_clarification" if session.needs_clarification else "completed",
         needs_clarification=session.needs_clarification,
         clarification_question=session.clarification_question,

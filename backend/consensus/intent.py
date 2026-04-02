@@ -58,7 +58,7 @@ def _fallback_assessment(question: str, role: str) -> IntentAssessment:
             True,
             "The request can be interpreted in multiple scopes.",
             question.strip(),
-            "Which interpretation should John, Christy, and Mark use?",
+            "Which interpretation should the team use?",
             _with_other_option(["Web search frustrations", "Research workflow", "Tool comparison only"]),
         )
     return IntentAssessment(False, "Intent appears clear.", question.strip(), "", [])

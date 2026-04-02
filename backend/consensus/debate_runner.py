@@ -1,5 +1,6 @@
 """Debate round runner helpers."""
 
+import asyncio
 from typing import Awaitable, Callable
 
 from backend.config import AppConfig
@@ -49,13 +50,15 @@ async def run_rounds(
         prompt = CRITIQUE.format(
             rolling_context=rolling, current_answer=answer, question=question, role_context=domain, intent_scope=session.intent_scope
         )
-        critique_a = await call_openrouter(prompt, critic_a, cfg)
+        critique_a, critique_b = await asyncio.gather(
+            call_openrouter(prompt, critic_a, cfg),
+            call_openrouter(prompt, critic_b, cfg),
+        )
         writer_update = writer_summary_sentence(answer)
         critic_a_update = critic_feedback_sentence(critique_a, CRITIC_A_NAME)
+        critic_b_update = critic_feedback_sentence(critique_b, CRITIC_B_NAME)
         await report(f"Round {idx}: {writer_update}")
         await report(f"Round {idx}: {critic_a_update}")
-        critique_b = await call_openrouter(prompt, critic_b, cfg)
-        critic_b_update = critic_feedback_sentence(critique_b, CRITIC_B_NAME)
         await report(f"Round {idx}: {critic_b_update}")
         revised_a, revised_b = extract_revised_answer(critique_a), extract_revised_answer(critique_b)
         merged = f"[Critic A]\n{critique_a}\n\n[Critic B]\n{critique_b}"
@@ -65,8 +68,10 @@ async def run_rounds(
         )
         await report(f"{WRITER_NAME} rewrites based on {CRITIC_A_NAME} and {CRITIC_B_NAME}.")
         refined_answer = await call_openrouter(refine, writer, cfg)
-        relevance_ok, relevance_score, relevance_reason = await validate_relevance(question, refined_answer, cfg)
-        summary = await summarize_round(refined_answer, merged, cfg)
+        (relevance_ok, relevance_score, relevance_reason), summary = await asyncio.gather(
+            validate_relevance(question, refined_answer, cfg),
+            summarize_round(refined_answer, merged, cfg),
+        )
         session.rounds.append(DebateRound(idx, refined_answer, merged, score, reason, summary, relevance_score, relevance_reason))
         rolling += f"\n[Round {idx} summary]: {summary}"
         await report(f"Round {idx}: consensus {score:.1f}, relevance {relevance_score:.1f}. {_two_sentence_summary(summary)}")

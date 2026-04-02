@@ -15,10 +15,10 @@ const defaults: ConsultPayload = {
 
 export default function App() {
   const [form, setForm] = useState<ConsultPayload>(defaults);
-  const [team, setTeam] = useState<TeamMember[]>(createDefaultTeam(""));
+  const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
   const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
   const [toast, setToast] = useState("");
-  const [activeCast, setActiveCast] = useState<CastSelection>(selectCastFromTeam(createDefaultTeam("")));
+  const [activeCast, setActiveCast] = useState<CastSelection>(() => selectCastFromTeam(createDefaultTeam("")));
   const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>({});
   const [result, setResult] = useState<ConsultResult | null>(null);
   const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});

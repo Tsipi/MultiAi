@@ -45,26 +45,7 @@ export function ChatPanel(props: Props) {
     return (
       <section className="panel chat">
         {showActivity ? (
-          <div className="activity-box">
-            <h2 className="section-title">{loading ? "Live Team Banter" : "Fresh Team Banter"}</h2>
-            <ol className="activity-chat">
-              {activity.map((item, i) => {
-                const speaker = detectSpeaker(item, cast);
-                return (
-                  <li key={i} className={`activity-chat-item ${speaker.id}`}>
-                    <img className="activity-avatar" src={speaker.avatar} alt={speaker.label} />
-                    <div className="activity-bubble">
-                      <div className="activity-head">
-                        <span className="activity-name">{speaker.label}</span>
-                        <span className="activity-tag">Step {i + 1}</span>
-                      </div>
-                      <p className="activity-text">{item}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
+          <ActivityFeed title={loading ? "Live Team Banter" : "Fresh Team Banter"} activity={activity} cast={cast} />
         ) : (
           <p className="muted">Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.</p>
         )}
@@ -75,26 +56,7 @@ export function ChatPanel(props: Props) {
   return (
     <section className="panel chat">
       {showActivity && (
-        <div className="activity-box">
-          <h2 className="section-title">{loading ? "Live Team Play-by-Play" : "Team Play-by-Play"}</h2>
-          <ol className="activity-chat">
-            {activity.map((item, i) => {
-              const speaker = detectSpeaker(item, cast);
-              return (
-                <li key={i} className={`activity-chat-item ${speaker.id}`}>
-                  <img className="activity-avatar" src={speaker.avatar} alt={speaker.label} />
-                  <div className="activity-bubble">
-                    <div className="activity-head">
-                      <span className="activity-name">{speaker.label}</span>
-                      <span className="activity-tag">Step {i + 1}</span>
-                    </div>
-                    <p className="activity-text">{item}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+        <ActivityFeed title={loading ? "Live Team Play-by-Play" : "Team Play-by-Play"} activity={activity} cast={cast} />
       )}
       {showClarify && clarifyBox}
       <SessionMetricsBar totalCostUsd={result.total_cost_usd} totalTokens={result.total_tokens} consensusScore={result.final_score} />
@@ -153,53 +115,57 @@ export function ChatPanel(props: Props) {
       {showFullDiscussion && (
         <details>
           <summary>Director's Cut: Full Debate</summary>
-          {result.full_discussion.map((r, idx) => (
-            <article key={idx} className="discussion-round">
-              <strong>Round {String((r.round_num as number) ?? idx + 1)}</strong>
-              <ol className="discussion-chat">
-                <li className="activity-chat-item john">
-                  <img className="activity-avatar" src={cast.writer.avatar} alt={cast.writer.name} />
-                  <div className="activity-bubble">
-                    <div className="activity-head">
-                      <span className="activity-name">{cast.writer.name}</span>
-                      <span className="activity-tag">Round {String((r.round_num as number) ?? idx + 1)}</span>
+          {result.full_discussion.map((r, idx) => {
+            const roundLabel = String((r.round_num as number) ?? idx + 1);
+            const { christy, mark } = splitCritique(String(r.critique ?? ""));
+            return (
+              <article key={idx} className="discussion-round">
+                <strong>Round {roundLabel}</strong>
+                <ol className="discussion-chat">
+                  <li className="activity-chat-item john">
+                    <img className="activity-avatar" src={cast.writer.avatar} alt={cast.writer.name} />
+                    <div className="activity-bubble">
+                      <div className="activity-head">
+                        <span className="activity-name">{cast.writer.name}</span>
+                        <span className="activity-tag">Round {roundLabel}</span>
+                      </div>
+                      <div className="discussion-body"><ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown></div>
                     </div>
-                    <div className="discussion-body"><ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown></div>
-                  </div>
-                </li>
-                <li className="activity-chat-item christy">
-                  <img className="activity-avatar" src={cast.criticA.avatar} alt={cast.criticA.name} />
-                  <div className="activity-bubble">
-                    <div className="activity-head">
-                      <span className="activity-name">{cast.criticA.name}</span>
-                      <span className="activity-tag">Round {String((r.round_num as number) ?? idx + 1)}</span>
+                  </li>
+                  <li className="activity-chat-item christy">
+                    <img className="activity-avatar" src={cast.criticA.avatar} alt={cast.criticA.name} />
+                    <div className="activity-bubble">
+                      <div className="activity-head">
+                        <span className="activity-name">{cast.criticA.name}</span>
+                        <span className="activity-tag">Round {roundLabel}</span>
+                      </div>
+                      <div className="discussion-body"><ReactMarkdown>{christy}</ReactMarkdown></div>
                     </div>
-                    <div className="discussion-body"><ReactMarkdown>{splitCritique(String(r.critique ?? "")).christy}</ReactMarkdown></div>
-                  </div>
-                </li>
-                <li className="activity-chat-item mark">
-                  <img className="activity-avatar" src={cast.criticB.avatar} alt={cast.criticB.name} />
-                  <div className="activity-bubble">
-                    <div className="activity-head">
-                      <span className="activity-name">{cast.criticB.name}</span>
-                      <span className="activity-tag">Round {String((r.round_num as number) ?? idx + 1)}</span>
+                  </li>
+                  <li className="activity-chat-item mark">
+                    <img className="activity-avatar" src={cast.criticB.avatar} alt={cast.criticB.name} />
+                    <div className="activity-bubble">
+                      <div className="activity-head">
+                        <span className="activity-name">{cast.criticB.name}</span>
+                        <span className="activity-tag">Round {roundLabel}</span>
+                      </div>
+                      <div className="discussion-body"><ReactMarkdown>{mark}</ReactMarkdown></div>
                     </div>
-                    <div className="discussion-body"><ReactMarkdown>{splitCritique(String(r.critique ?? "")).mark}</ReactMarkdown></div>
-                  </div>
-                </li>
-                <li className="activity-chat-item system">
-                  <img className="activity-avatar" src={SYSTEM_AVATAR} alt="System" />
-                  <div className="activity-bubble">
-                    <div className="activity-head">
-                      <span className="activity-name">Round Summary</span>
-                      <span className="activity-tag">Round {String((r.round_num as number) ?? idx + 1)}</span>
+                  </li>
+                  <li className="activity-chat-item system">
+                    <img className="activity-avatar" src={SYSTEM_AVATAR} alt="System" />
+                    <div className="activity-bubble">
+                      <div className="activity-head">
+                        <span className="activity-name">Round Summary</span>
+                        <span className="activity-tag">Round {roundLabel}</span>
+                      </div>
+                      <div className="discussion-body"><ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown></div>
                     </div>
-                    <div className="discussion-body"><ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown></div>
-                  </div>
-                </li>
-              </ol>
-            </article>
-          ))}
+                  </li>
+                </ol>
+              </article>
+            );
+          })}
         </details>
       )}
     </section>
@@ -208,6 +174,31 @@ export function ChatPanel(props: Props) {
 
 type Speaker = { id: "john" | "christy" | "mark" | "system"; label: string; avatar: string };
 type Person = { name: string; avatar: string };
+
+function ActivityFeed({ title, activity, cast }: { title: string; activity: string[]; cast: { writer: Person; criticA: Person; criticB: Person } }) {
+  return (
+    <div className="activity-box">
+      <h2 className="section-title">{title}</h2>
+      <ol className="activity-chat">
+        {activity.map((item, i) => {
+          const speaker = detectSpeaker(item, cast);
+          return (
+            <li key={i} className={`activity-chat-item ${speaker.id}`}>
+              <img className="activity-avatar" src={speaker.avatar} alt={speaker.label} />
+              <div className="activity-bubble">
+                <div className="activity-head">
+                  <span className="activity-name">{speaker.label}</span>
+                  <span className="activity-tag">Step {i + 1}</span>
+                </div>
+                <p className="activity-text">{item}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
 const SYSTEM_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='32' fill='%23758cae'/%3E%3Ctext x='32' y='41' font-size='28' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E";
 
 function detectSpeaker(message: string, cast: { writer: Person; criticA: Person; criticB: Person }): Speaker {

@@ -7,10 +7,11 @@ Users will sign in View, Manage and interact with this dashboard.
 
 ## Commands
 
+Run all commands from the project root (`MultiAi`).
+
 ### Backend
 ```bash
-pip install -r backend/requirements.txt
-uvicorn backend.api.app:app --reload --port 8000
+uv run uvicorn backend.api.app:app --reload --port 8000
 ```
 
 ### Frontend
@@ -23,9 +24,15 @@ npm test           # vitest run
 
 ### Python Tests
 ```bash
-pytest tests/                          # All tests
-pytest tests/test_scorer.py            # Single test file
-pytest tests/test_scorer.py::test_name # Single test
+uv run pytest tests/                          # All tests
+uv run pytest tests/test_scorer.py            # Single test file
+uv run pytest tests/test_scorer.py::test_name # Single test
+```
+
+### uv setup (first time only)
+```bash
+winget install astral-sh.uv   # install uv (PowerShell)
+uv sync                        # create .venv and install all dependencies
 ```
 
 ## Architecture

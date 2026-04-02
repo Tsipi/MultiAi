@@ -81,10 +81,7 @@ class ConsensusEngine:
             session.clarification_question = assessment.clarification_question
             session.clarification_options = assessment.clarification_options or []
             await report(f"Clarification required: {assessment.reason}")
-            usage = stop_usage_collection(usage_token)
-            session.model_costs = [{"model": k, **v} for k, v in usage.items()]
-            session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
-            session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))
+            _apply_usage(session, usage_token)
             save_session(session, self.cfg.sessions_dir)
             return session
         try:
@@ -135,10 +132,7 @@ class ConsensusEngine:
         except LLMCallError as exc:
             await report(f"Stopped due to LLM error: {exc}")
             session.final_answer = f"Stopped early due to LLM error: {exc}"
-        usage = stop_usage_collection(usage_token)
-        session.model_costs = [{"model": k, **v} for k, v in usage.items()]
-        session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
-        session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))
+        _apply_usage(session, usage_token)
         save_session(session, self.cfg.sessions_dir)
         return session
 
@@ -146,3 +140,11 @@ class ConsensusEngine:
 def _fallback_for_image(model: str) -> str:
     """Switch image-unsupported Deepseek to Gemini Flash."""
     return "google/gemini-2.5-flash" if model == "deepseek/deepseek-chat-v3.2" else model
+
+
+def _apply_usage(session: DebateSession, token: object) -> None:
+    """Stop collection and write cost/token totals onto session."""
+    usage = stop_usage_collection(token)
+    session.model_costs = [{"model": k, **v} for k, v in usage.items()]
+    session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
+    session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))

@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
-import { ConsultPayload } from "../types";
-import { AttachmentInput } from "../types";
+import { AttachmentInput, ConsultPayload } from "../types";
 import { readAttachments, readClipboardFromBrowser, readClipboardItems, supportedUploadTypes } from "../services/attachments";
 
 type Props = {

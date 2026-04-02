@@ -58,7 +58,8 @@ def list_sessions(sessions_dir: Path) -> list[dict]:
 def delete_session(session_id: str, sessions_dir: Path) -> bool:
     """Delete one saved session file if present."""
     file = sessions_dir / f"{session_id}.json"
-    if not file.exists():
+    try:
+        file.unlink()
+        return True
+    except FileNotFoundError:
         return False
-    file.unlink(missing_ok=True)
-    return True
