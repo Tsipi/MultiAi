@@ -8,6 +8,8 @@ import { TopNav } from "./components/TopNav";
 import { TeamMember, createDefaultTeam } from "./data/experts";
 import { consultStream, deleteSession, getSession, listSessions } from "./services/api";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { useDarkMode } from "./hooks/useDarkMode";
+import { cn } from "./lib/utils";
 
 const defaults: ConsultPayload = {
   writer: "deepseek/deepseek-chat-v3.2", critic_a: "google/gemini-2.5-flash", critic_b: "google/gemini-2.5-flash",
@@ -15,6 +17,7 @@ const defaults: ConsultPayload = {
 };
 
 export default function App() {
+  const [dark, toggleDark] = useDarkMode();
   const [form, setForm] = useState<ConsultPayload>(defaults);
   const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
   const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
@@ -237,10 +240,26 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <TopNav onNewRun={startNewQuestion} onToggleSidebar={() => setSidebarOpen((o) => !o)} />
-      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
-      <main className="app-body">
+    <div className="min-h-screen flex flex-col">
+      <TopNav
+        onNewRun={startNewQuestion}
+        onToggleSidebar={() => setSidebarOpen((o) => !o)}
+        dark={dark}
+        onToggleDark={toggleDark}
+      />
+
+      {/* Sidebar backdrop on mobile/tablet */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-[199] bg-black/38 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <main className={cn(
+        "flex-1 grid gap-4 p-4 items-start w-full max-w-[1600px] mx-auto",
+        "grid-cols-1 sm:grid-cols-2 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]"
+      )}>
         <Sidebar
           sessions={history}
           selectedId={selectedId}
@@ -248,8 +267,13 @@ export default function App() {
           onSelect={selectSession}
           onDelete={removeSession}
         />
-        <div className="builder-panel">
-          {toast && <div className="toast-banner">{toast}</div>}
+
+        <div className="grid gap-4">
+          {toast && (
+            <div className="border border-ring/40 bg-ring/12 text-foreground rounded-md px-3 py-2.5 text-sm shadow-sm">
+              {toast}
+            </div>
+          )}
           <Composer value={form} attachments={attachments} onAttachmentsChange={setAttachments} onChange={setForm} />
           <div ref={settingsRef}>
             <SettingsBar
@@ -263,8 +287,13 @@ export default function App() {
             />
           </div>
         </div>
-        <div className="output-panel">
-          {followupError && <div className="toast-banner">{followupError}</div>}
+
+        <div className="grid gap-4">
+          {followupError && (
+            <div className="border border-ring/40 bg-ring/12 text-foreground rounded-md px-3 py-2.5 text-sm shadow-sm">
+              {followupError}
+            </div>
+          )}
           <ChatPanel {...panelProps} />
         </div>
       </main>

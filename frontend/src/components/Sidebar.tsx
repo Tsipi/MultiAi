@@ -1,3 +1,5 @@
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { SessionPreview } from "../types";
 
 type Props = {
@@ -11,12 +13,22 @@ type Props = {
 export function Sidebar({ sessions, selectedId, open, onSelect, onDelete }: Props) {
   const threads = groupByThread(sessions);
   return (
-    <aside className={`sidebar${open ? " open" : ""}`}>
-      <h1 className="title">Team Answers</h1>
-      <p className="muted sidebar-sub">Previous runs</p>
-      <div className="session-list">
+    <aside
+      className={cn(
+        "glass-panel-hover flex flex-col gap-3 p-4",
+        "bg-sidebar backdrop-blur-xl border-border/60",
+        // Mobile/tablet: fixed drawer from left, sits below the 56px header
+        "fixed top-14 left-0 bottom-0 z-[200] w-72 border-r rounded-none transition-transform duration-200",
+        open ? "translate-x-0" : "-translate-x-full",
+        // Desktop: static in grid, slightly darker sidebar background
+        "lg:static lg:translate-x-0 lg:rounded-[14px] lg:border lg:h-auto lg:w-auto"
+      )}
+    >
+      <h1 className="text-lg font-bold tracking-tight m-0">Team Answers</h1>
+      <p className="text-xs text-muted-foreground m-0">Previous runs</p>
+      <div className="flex flex-col gap-1.5 sidebar-scroll flex-1">
         {threads.map((thread) => (
-          <div key={thread.threadId} className="thread-group">
+          <div key={thread.threadId} className="flex flex-col gap-1.5">
             <SessionRow
               session={thread.parent}
               selectedId={selectedId}
@@ -35,7 +47,9 @@ export function Sidebar({ sessions, selectedId, open, onSelect, onDelete }: Prop
             ))}
           </div>
         ))}
-        {sessions.length === 0 && <p className="muted">No sessions yet.</p>}
+        {sessions.length === 0 && (
+          <p className="text-sm text-muted-foreground">No sessions yet.</p>
+        )}
       </div>
     </aside>
   );
@@ -54,23 +68,37 @@ function SessionRow({ session, selectedId, onSelect, onDelete, child = false }: 
   const description = [
     session.is_followup ? "Follow-up" : null,
     formatDate(session.timestamp),
-  ].filter(Boolean).join(" · ");
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <div className={`session-item${selectedId === session.id ? " active" : ""}${child ? " session-item-child" : ""}`}>
-      <button className="session-open" onClick={() => onSelect(session.id)}>
-        <span className="session-q">{title}</span>
-        {description && <span className="session-meta">{description}</span>}
+    <div
+      className={cn(
+        "grid grid-cols-[1fr_auto] items-center gap-1 rounded-md border border-border/80 bg-card/90 px-1.5 py-1 transition-colors",
+        "hover:border-ring/30",
+        selectedId === session.id && "border-ring bg-ring/10",
+        child && "ml-3 text-[0.74rem] text-foreground/75"
+      )}
+    >
+      <button
+        className="text-left bg-transparent border-0 shadow-none p-1 flex flex-col gap-0.5 min-h-0 cursor-pointer"
+        onClick={() => onSelect(session.id)}
+      >
+        <span className={cn("font-semibold leading-snug line-clamp-1", child && "font-normal")}>
+          {title}
+        </span>
+        {description && (
+          <span className="text-[0.72rem] text-muted-foreground leading-tight">{description}</span>
+        )}
       </button>
       <button
-        className="session-delete"
+        className="flex items-center justify-center w-6 h-6 rounded border border-transparent bg-transparent text-muted-foreground hover:border-border hover:text-foreground transition-colors shadow-none p-0 cursor-pointer"
         onClick={() => onDelete(session.id)}
         aria-label="Delete session"
         title="Delete this run"
       >
-        <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
-          <path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9Zm4 2v8h2v-8h-2Zm4 0v8h2v-8h-2Z" fill="currentColor" />
-        </svg>
+        <Trash2 className="w-3 h-3" />
       </button>
     </div>
   );
@@ -87,7 +115,9 @@ function formatDate(iso?: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function groupByThread(sessions: SessionPreview[]): Array<{ threadId: string; parent: SessionPreview; runs: SessionPreview[] }> {
+function groupByThread(
+  sessions: SessionPreview[]
+): Array<{ threadId: string; parent: SessionPreview; runs: SessionPreview[] }> {
   const byThread = new Map<string, SessionPreview[]>();
   for (const session of sessions) {
     const threadId = session.thread_id || session.id;
@@ -97,7 +127,8 @@ function groupByThread(sessions: SessionPreview[]): Array<{ threadId: string; pa
   }
   const threads: Array<{ threadId: string; parent: SessionPreview; runs: SessionPreview[] }> = [];
   for (const [threadId, rows] of byThread.entries()) {
-    const parent = rows.find((row) => !row.is_followup && row.id === threadId) ?? rows[rows.length - 1];
+    const parent =
+      rows.find((row) => !row.is_followup && row.id === threadId) ?? rows[rows.length - 1];
     const runs = rows.filter((row) => row.id !== parent.id);
     threads.push({ threadId, parent, runs });
   }

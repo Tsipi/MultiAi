@@ -6,6 +6,8 @@ import { MarkdownView } from "./MarkdownView";
 import { ModelCostDetails } from "./ModelCostDetails";
 import { SessionMetricsBar } from "./SessionMetricsBar";
 import { FollowupComposer } from "./FollowupComposer";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Props = {
   result: ConsultResult | null;
@@ -39,46 +41,83 @@ export function ChatPanel(props: Props) {
   const { result, showFullDiscussion, loading, activity, cast } = props;
   const showActivity = loading || activity.length > 0;
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
-  const clarifyBox = <ClarificationBox reason={props.clarificationReason} question={props.clarificationPrompt} options={props.clarificationOptions} selected={props.clarificationChoice} otherText={props.clarificationOtherText} loading={loading} onSelect={props.onClarificationChoice} onOtherTextChange={props.onClarificationOtherText} onSubmit={props.onSubmitClarification} />;
+  const clarifyBox = (
+    <ClarificationBox
+      reason={props.clarificationReason}
+      question={props.clarificationPrompt}
+      options={props.clarificationOptions}
+      selected={props.clarificationChoice}
+      otherText={props.clarificationOtherText}
+      loading={loading}
+      onSelect={props.onClarificationChoice}
+      onOtherTextChange={props.onClarificationOtherText}
+      onSubmit={props.onSubmitClarification}
+    />
+  );
   const downloadTitle = result?.question?.trim() || "consensus_result";
+
   if (!result) {
     return (
-      <section className="panel chat">
+      <section className="glass-panel glass-panel-hover p-4 grid gap-3">
         {showActivity ? (
-          <ActivityFeed title={loading ? "Live Team Banter" : "Fresh Team Banter"} activity={activity} cast={cast} />
+          <ActivityFeed
+            title={loading ? "Live Team Banter" : "Fresh Team Banter"}
+            activity={activity}
+            cast={cast}
+          />
         ) : (
-          <p className="muted">Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.</p>
+          <p className="text-sm text-muted-foreground m-0">
+            Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.
+          </p>
         )}
         {showClarify && clarifyBox}
       </section>
     );
   }
+
   return (
-    <section className="panel chat">
+    <section className="glass-panel glass-panel-hover p-4 grid gap-3">
       {showActivity && (
-        <ActivityFeed title={loading ? "Live Team Play-by-Play" : "Team Play-by-Play"} activity={activity} cast={cast} />
+        <ActivityFeed
+          title={loading ? "Live Team Play-by-Play" : "Team Play-by-Play"}
+          activity={activity}
+          cast={cast}
+        />
       )}
       {showClarify && clarifyBox}
-      <SessionMetricsBar totalCostUsd={result.total_cost_usd} totalTokens={result.total_tokens} consensusScore={result.final_score} />
-      <div className="session-context">
-        <p><b>Role:</b> {result.role || "Not provided"}</p>
-        <p><b>Prompt:</b> {result.question || "Not provided"}</p>
+
+      <SessionMetricsBar
+        totalCostUsd={result.total_cost_usd}
+        totalTokens={result.total_tokens}
+        consensusScore={result.final_score}
+      />
+
+      <div className="border border-border rounded-lg px-3 py-2.5 bg-card/90 text-sm grid gap-1">
+        <p className="m-0"><b>Role:</b> {result.role || "Not provided"}</p>
+        <p className="m-0"><b>Prompt:</b> {result.question || "Not provided"}</p>
       </div>
-      <h2 className="section-title">Final Answer From The Crew</h2>
+
+      <h2 className="text-[1.06rem] font-semibold tracking-tight m-0">Final Answer From The Crew</h2>
       <MarkdownView content={result.final_answer} />
+
       {result.is_followup && (
-        <details>
-          <summary>Context used</summary>
-          <div className="followup-context">
-            <p><b>Original prompt</b></p>
-            <p className="muted clamp-3">{result.source_prompt || result.question}</p>
-            <p><b>Previous final answer</b></p>
-            <p className="muted clamp-3">{result.source_final_answer || "Previous answer unavailable; follow-up used original prompt only."}</p>
-            <p><b>Follow-up instruction</b></p>
-            <p className="muted">{result.followup_instruction || "Not provided."}</p>
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium text-muted-foreground hover:text-foreground transition-colors select-none">
+            Context used
+          </summary>
+          <div className="mt-2 grid gap-2">
+            <p className="font-semibold m-0">Original prompt</p>
+            <p className="text-muted-foreground line-clamp-3 m-0">{result.source_prompt || result.question}</p>
+            <p className="font-semibold m-0">Previous final answer</p>
+            <p className="text-muted-foreground line-clamp-3 m-0">
+              {result.source_final_answer || "Previous answer unavailable; follow-up used original prompt only."}
+            </p>
+            <p className="font-semibold m-0">Follow-up instruction</p>
+            <p className="text-muted-foreground m-0">{result.followup_instruction || "Not provided."}</p>
           </div>
         </details>
       )}
+
       <FollowupComposer
         open={props.followupOpen}
         instruction={props.followupInstruction}
@@ -94,74 +133,64 @@ export function ChatPanel(props: Props) {
         onSubmit={props.onSubmitFollowup}
         onStartFresh={props.onStartFresh}
       />
+
       {props.followupError && (
-        <p className="muted followup-retry-link">
-          Follow-up run failed. <button className="ghost-btn" onClick={props.onRetryFollowup}>Retry follow-up</button>
+        <p className="text-sm text-muted-foreground flex items-center gap-2 m-0">
+          Follow-up run failed.{" "}
+          <Button variant="outline" size="sm" onClick={props.onRetryFollowup}>
+            Retry follow-up
+          </Button>
         </p>
       )}
-      <div className="download-row">
-        <button onClick={() => downloadMarkdown({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}>
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadMarkdown({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}
+        >
           Download Markdown
-        </button>
-        <button onClick={() => downloadPdf({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadPdf({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}
+        >
           Download PDF
-        </button>
+        </Button>
       </div>
-      <div className="meta">
+
+      <div className="flex items-center justify-between gap-2.5 text-sm text-muted-foreground">
         <span>{result.cost_hint}</span>
         <span>Session: {result.session_id}</span>
       </div>
+
       <ModelCostDetails rows={result.model_costs} />
+
       {showFullDiscussion && (
-        <details>
-          <summary>Director's Cut: Full Debate</summary>
+        <details className="mt-1">
+          <summary className="cursor-pointer font-medium text-sm text-muted-foreground hover:text-foreground transition-colors select-none">
+            Director's Cut: Full Debate
+          </summary>
           {result.full_discussion.map((r, idx) => {
             const roundLabel = String((r.round_num as number) ?? idx + 1);
             const { christy, mark } = splitCritique(String(r.critique ?? ""));
             return (
-              <article key={idx} className="discussion-round">
-                <strong>Round {roundLabel}</strong>
-                <ol className="discussion-chat">
-                  <li className="activity-chat-item john">
-                    <img className="activity-avatar" src={cast.writer.avatar} alt={cast.writer.name} />
-                    <div className="activity-bubble">
-                      <div className="activity-head">
-                        <span className="activity-name">{cast.writer.name}</span>
-                        <span className="activity-tag">Round {roundLabel}</span>
-                      </div>
-                      <div className="discussion-body"><ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown></div>
-                    </div>
-                  </li>
-                  <li className="activity-chat-item christy">
-                    <img className="activity-avatar" src={cast.criticA.avatar} alt={cast.criticA.name} />
-                    <div className="activity-bubble">
-                      <div className="activity-head">
-                        <span className="activity-name">{cast.criticA.name}</span>
-                        <span className="activity-tag">Round {roundLabel}</span>
-                      </div>
-                      <div className="discussion-body"><ReactMarkdown>{christy}</ReactMarkdown></div>
-                    </div>
-                  </li>
-                  <li className="activity-chat-item mark">
-                    <img className="activity-avatar" src={cast.criticB.avatar} alt={cast.criticB.name} />
-                    <div className="activity-bubble">
-                      <div className="activity-head">
-                        <span className="activity-name">{cast.criticB.name}</span>
-                        <span className="activity-tag">Round {roundLabel}</span>
-                      </div>
-                      <div className="discussion-body"><ReactMarkdown>{mark}</ReactMarkdown></div>
-                    </div>
-                  </li>
-                  <li className="activity-chat-item system">
-                    <img className="activity-avatar" src={SYSTEM_AVATAR} alt="System" />
-                    <div className="activity-bubble">
-                      <div className="activity-head">
-                        <span className="activity-name">Round Summary</span>
-                        <span className="activity-tag">Round {roundLabel}</span>
-                      </div>
-                      <div className="discussion-body"><ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown></div>
-                    </div>
-                  </li>
+              <article key={idx} className="mt-2.5 pt-2.5 border-t border-border grid gap-2">
+                <strong className="text-sm">Round {roundLabel}</strong>
+                <ol className="list-none m-0 p-0 grid gap-2">
+                  <ChatBubble id="john" label={cast.writer.name} avatar={cast.writer.avatar} tag={`Round ${roundLabel}`}>
+                    <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
+                  </ChatBubble>
+                  <ChatBubble id="christy" label={cast.criticA.name} avatar={cast.criticA.avatar} tag={`Round ${roundLabel}`}>
+                    <ReactMarkdown>{christy}</ReactMarkdown>
+                  </ChatBubble>
+                  <ChatBubble id="mark" label={cast.criticB.name} avatar={cast.criticB.avatar} tag={`Round ${roundLabel}`}>
+                    <ReactMarkdown>{mark}</ReactMarkdown>
+                  </ChatBubble>
+                  <ChatBubble id="system" label="Round Summary" avatar={SYSTEM_AVATAR} tag={`Round ${roundLabel}`}>
+                    <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
+                  </ChatBubble>
                 </ol>
               </article>
             );
@@ -172,48 +201,98 @@ export function ChatPanel(props: Props) {
   );
 }
 
+/* ===== Activity Feed ===== */
 type Speaker = { id: "john" | "christy" | "mark" | "system"; label: string; avatar: string };
 type Person = { name: string; avatar: string };
 
-function ActivityFeed({ title, activity, cast }: { title: string; activity: string[]; cast: { writer: Person; criticA: Person; criticB: Person } }) {
+function ActivityFeed({
+  title,
+  activity,
+  cast,
+}: {
+  title: string;
+  activity: string[];
+  cast: { writer: Person; criticA: Person; criticB: Person };
+}) {
   return (
-    <div className="activity-box">
-      <h2 className="section-title">{title}</h2>
-      <ol className="activity-chat">
+    <div className="border border-border rounded-lg p-3.5 bg-card/90">
+      <h2 className="text-[1.06rem] font-semibold tracking-tight m-0 mb-3">{title}</h2>
+      <ol className="list-none m-0 p-0 max-h-[340px] overflow-auto grid gap-2">
         {activity.map((item, i) => {
           const speaker = detectSpeaker(item, cast);
           return (
-            <li key={i} className={`activity-chat-item ${speaker.id}`}>
-              <img className="activity-avatar" src={speaker.avatar} alt={speaker.label} />
-              <div className="activity-bubble">
-                <div className="activity-head">
-                  <span className="activity-name">{speaker.label}</span>
-                  <span className="activity-tag">Step {i + 1}</span>
-                </div>
-                <p className="activity-text">{item}</p>
-              </div>
-            </li>
+            <ChatBubble key={i} id={speaker.id} label={speaker.label} avatar={speaker.avatar} tag={`Step ${i + 1}`}>
+              <p className="m-0 text-[0.92rem] italic">{item}</p>
+            </ChatBubble>
           );
         })}
       </ol>
     </div>
   );
 }
-const SYSTEM_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='32' fill='%23758cae'/%3E%3Ctext x='32' y='41' font-size='28' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E";
 
-function detectSpeaker(message: string, cast: { writer: Person; criticA: Person; criticB: Person }): Speaker {
+/* ===== Reusable chat bubble ===== */
+function ChatBubble({
+  id,
+  label,
+  avatar,
+  tag,
+  children,
+}: {
+  id: "john" | "christy" | "mark" | "system";
+  label: string;
+  avatar: string;
+  tag: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className={cn("flex gap-2 items-end", id === "john" && "flex-row-reverse")}>
+      <img
+        className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
+        src={avatar}
+        alt={label}
+      />
+      <div
+        className={cn(
+          "max-w-[min(92%,900px)] rounded-xl border border-border/60 px-2.5 py-2 shadow-sm",
+          `bubble-${id}`
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-[0.75rem] font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
+          <span className="text-[0.67rem] text-muted-foreground border border-border rounded-full px-1.5 py-0.5 bg-card/60">
+            {tag}
+          </span>
+        </div>
+        <div className="disc-prose text-sm leading-snug">{children}</div>
+      </div>
+    </li>
+  );
+}
+
+const SYSTEM_AVATAR =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='32' fill='%23758cae'/%3E%3Ctext x='32' y='41' font-size='28' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E";
+
+function detectSpeaker(
+  message: string,
+  cast: { writer: Person; criticA: Person; criticB: Person }
+): Speaker {
   const text = message.toLowerCase();
-  if (text.includes("critic a") || text.includes("christy")) return { id: "christy", label: cast.criticA.name, avatar: cast.criticA.avatar };
-  if (text.includes("critic b") || text.includes("mark")) return { id: "mark", label: cast.criticB.name, avatar: cast.criticB.avatar };
-  if (text.includes("writer") || text.includes("john")) return { id: "john", label: cast.writer.name, avatar: cast.writer.avatar };
+  if (text.includes("critic a") || text.includes("christy"))
+    return { id: "christy", label: cast.criticA.name, avatar: cast.criticA.avatar };
+  if (text.includes("critic b") || text.includes("mark"))
+    return { id: "mark", label: cast.criticB.name, avatar: cast.criticB.avatar };
+  if (text.includes("writer") || text.includes("john"))
+    return { id: "john", label: cast.writer.name, avatar: cast.writer.avatar };
   return { id: "system", label: "System", avatar: SYSTEM_AVATAR };
 }
 
 function splitCritique(merged: string): { christy: string; mark: string } {
   const a = merged.match(/\[Critic A\]\s*([\s\S]*?)(?=\[Critic B\]|$)/i)?.[1]?.trim() ?? "";
   const b = merged.match(/\[Critic B\]\s*([\s\S]*)$/i)?.[1]?.trim() ?? "";
-  if (!a && !b) {
-    return { christy: merged, mark: "No separate Mark critique captured in this round." };
-  }
-  return { christy: a || "No separate Christy critique captured in this round.", mark: b || "No separate Mark critique captured in this round." };
+  if (!a && !b) return { christy: merged, mark: "No separate Mark critique captured in this round." };
+  return {
+    christy: a || "No separate Christy critique captured in this round.",
+    mark: b || "No separate Mark critique captured in this round.",
+  };
 }

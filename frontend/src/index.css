@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (toggled via .dark on <html>) */
+@variant dark (&:is(.dark, .dark *));
+
+/* Map CSS variables to Tailwind color utilities */
+@theme inline {
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-sidebar: var(--sidebar);
+}
+
+/* ===== LIGHT MODE TOKENS ===== */
+:root {
+  --background: #f3f5f8;
+  --foreground: #121621;
+  --card: #ffffff;
+  --card-foreground: #121621;
+  --muted: #f1f3f7;
+  --muted-foreground: #616b7b;
+  --border: #d4dce8;
+  --input: #d4dce8;
+  --ring: #8ca2c3;
+  --primary: #111827;
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f3f7;
+  --secondary-foreground: #121621;
+  --accent: #f1f3f7;
+  --accent-foreground: #121621;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --sidebar: #e9ecf0;
+
+  --panel-glass: rgba(255, 255, 255, 0.74);
+  --panel-cheer-overlay: linear-gradient(
+    135deg,
+    rgba(158, 199, 255, 0.1) 0%,
+    rgba(185, 242, 197, 0.08) 45%,
+    rgba(255, 217, 168, 0.07) 100%
+  );
+  --bg-gradient: radial-gradient(circle at 15% 0%, #ffffff 0%, #edf1f6 56%, #e9edf3 100%);
+}
+
+/* ===== DARK MODE TOKENS ===== */
+.dark {
+  --background: #0d1118;
+  --foreground: #e5e9f2;
+  --card: #111827;
+  --card-foreground: #e5e9f2;
+  --muted: #1a2234;
+  --muted-foreground: #9ca8bc;
+  --border: #334155;
+  --input: #334155;
+  --ring: #7ea5df;
+  --primary: #dde6f7;
+  --primary-foreground: #0b1220;
+  --secondary: #1a2234;
+  --secondary-foreground: #e5e9f2;
+  --accent: #1a2234;
+  --accent-foreground: #e5e9f2;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --sidebar: #0a0f17;
+
+  --panel-glass: rgba(20, 27, 39, 0.68);
+  --panel-cheer-overlay: linear-gradient(
+    135deg,
+    rgba(141, 182, 234, 0.1) 0%,
+    rgba(148, 213, 163, 0.08) 45%,
+    rgba(223, 190, 144, 0.07) 100%
+  );
+  --bg-gradient: radial-gradient(circle at 15% 0%, #1c2433 0%, #0f1521 56%, #0a0f17 100%);
+}
+
+/* ===== BASE ===== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  color: var(--foreground);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===== NAMED GLASS UTILITIES (used 5+ times each) ===== */
+@layer utilities {
+  .glass-panel {
+    background-color: var(--panel-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+  .glass-panel-cheer {
+    background-color: var(--panel-glass);
+    background-image: var(--panel-cheer-overlay);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  }
+  .glass-panel-hover {
+    transition: box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .glass-panel-hover:hover {
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.08), 0 22px 44px rgb(0 0 0 / 0.11);
+    border-color: color-mix(in srgb, var(--ring) 35%, var(--border));
+  }
+}
+
+/* ===== ACTIVITY CHAT BUBBLE COLOURS ===== */
+.bubble-john    { background-color: color-mix(in srgb, #d8f5d4 86%, var(--card)); }
+.bubble-christy { background-color: color-mix(in srgb, #dbeafe 85%, var(--card)); }
+.bubble-mark    { background-color: color-mix(in srgb, #fde9d3 84%, var(--card)); }
+.bubble-system  { background-color: color-mix(in srgb, #eef2ff 82%, var(--card)); }
+.dark .bubble-john    { background-color: color-mix(in srgb, #d8f5d4 38%, var(--card)); }
+.dark .bubble-christy { background-color: color-mix(in srgb, #dbeafe 36%, var(--card)); }
+.dark .bubble-mark    { background-color: color-mix(in srgb, #fde9d3 35%, var(--card)); }
+.dark .bubble-system  { background-color: color-mix(in srgb, #eef2ff 33%, var(--card)); }
+
+/* ===== MARKDOWN PROSE (applied to ReactMarkdown output) ===== */
+.md-prose p { margin: 10px 0; line-height: 1.72; }
+.md-prose h1, .md-prose h2, .md-prose h3 { margin: 18px 0 10px; line-height: 1.25; font-weight: 640; }
+.md-prose ul, .md-prose ol { margin: 10px 0 12px 22px; padding: 0; }
+.md-prose li { line-height: 1.72; margin: 3px 0; }
+
+/* ===== DISCUSSION PROSE (inside chat bubbles) ===== */
+.disc-prose p { margin: 0 0 8px; line-height: 1.55; font-size: 0.92rem; }
+.disc-prose p:last-child { margin-bottom: 0; }
+.disc-prose ul, .disc-prose ol { margin: 6px 0 8px 18px; padding: 0; }
+.disc-prose li { margin: 3px 0; }
+
+/* ===== PULSING GREEN DOT (followup badge) ===== */
+@keyframes green-pulse {
+  0%, 100% {
+    background-color: #16a34a;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18), 0 0 5px rgba(34, 197, 94, 0.38);
+  }
+  50% {
+    background-color: #4ade80;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.34), 0 0 14px rgba(34, 197, 94, 0.76);
+  }
+}
+.animate-green-pulse { animation: green-pulse 1.4s ease-in-out infinite; }
+
+/* ===== SIDEBAR SCROLLBAR ===== */
+.sidebar-scroll { overflow-y: auto; }
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }

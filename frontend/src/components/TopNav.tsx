@@ -1,24 +1,38 @@
+import { Menu, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 type Props = {
   onNewRun: () => void;
   onToggleSidebar: () => void;
+  dark: boolean;
+  onToggleDark: () => void;
 };
 
-export function TopNav({ onNewRun, onToggleSidebar }: Props) {
+export function TopNav({ onNewRun, onToggleSidebar, dark, onToggleDark }: Props) {
   return (
-    <header className="app-header">
-      <div className="app-header-inner">
-        <div className="header-left">
-          <button className="hamburger-btn" onClick={onToggleSidebar} aria-label="Toggle sidebar">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-              <rect y="2" width="18" height="2" rx="1" fill="currentColor" />
-              <rect y="8" width="18" height="2" rx="1" fill="currentColor" />
-              <rect y="14" width="18" height="2" rx="1" fill="currentColor" />
-            </svg>
-          </button>
-          <span className="app-logo">MultiAi</span>
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-card/75 backdrop-blur-xl">
+      <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between px-5">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onToggleSidebar}
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <span className="bg-gradient-to-br from-blue-500 to-emerald-400 bg-clip-text text-transparent font-bold text-lg tracking-tight select-none">
+            MultiAi
+          </span>
         </div>
-        <div className="header-right">
-          <button className="ghost-btn header-new-run" onClick={onNewRun}>New Run</button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={onToggleDark} aria-label="Toggle dark mode">
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={onNewRun}>
+            New Run
+          </Button>
         </div>
       </div>
     </header>
