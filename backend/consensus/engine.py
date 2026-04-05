@@ -71,6 +71,11 @@ class ConsensusEngine:
             source_prompt=source_prompt,
             source_final_answer=source_final_answer,
             followup_instruction=followup_instruction,
+            base_question=question,
+            attachment_files=[
+                {"name": a.name, "mime_type": a.mime_type, "kind": a.kind, "data": a.data}
+                for a in normalized_attachments
+            ],
         )
         usage_token = start_usage_collection()
         assessment = await assess_intent(question_with_context, domain, clarification, self.cfg)

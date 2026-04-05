@@ -56,3 +56,5 @@ class ConsultResponse(BaseModel):
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
+    base_question: str = ""
+    attachment_files: list[dict] = Field(default_factory=list)

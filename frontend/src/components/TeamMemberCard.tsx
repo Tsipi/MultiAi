@@ -33,7 +33,7 @@ export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove
       <div className="flex gap-3 items-start">
         <img
           src={member.avatar}
-          className="w-[60px] h-[60px] rounded-full object-cover border-2 border-ring/35 flex-shrink-0"
+          className="w-10 h-10 rounded-full object-cover border-2 border-ring/35 flex-shrink-0"
           alt={member.name}
         />
         <div className="flex-1 grid gap-2 min-w-0">

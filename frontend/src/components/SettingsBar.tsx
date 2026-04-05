@@ -52,7 +52,7 @@ export function SettingsBar({ value, team, loading, canSubmit, onChange, onTeamC
         aria-expanded={open}
       >
         <h2 className="flex items-center gap-2.5 text-[1.06rem] font-semibold tracking-tight m-0">
-          <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex-shrink-0 shadow-[0_0_0_3px_rgba(79,125,215,0.22)]" />
+          <span className="w-5 h-5 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-400 flex-shrink-0 shadow-[0_0_0_3px_rgba(79,125,215,0.22)]" />
           Your Team of Experts
         </h2>
         <ChevronDown

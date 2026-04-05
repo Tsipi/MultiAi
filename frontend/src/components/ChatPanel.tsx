@@ -3,8 +3,15 @@ import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "./ClarificationBox";
 import { downloadMarkdown, downloadPdf } from "../services/exporter";
 import { MarkdownView } from "./MarkdownView";
-import { ModelCostDetails } from "./ModelCostDetails";
-import { SessionMetricsBar } from "./SessionMetricsBar";
+import { SessionInsightsDashboard } from "./SessionInsightsDashboard";
+import { CollapsiblePanel } from "./CollapsiblePanel";
+import { PromptContextTable } from "./PromptContextTable";
+import {
+  attachmentListForDisplay,
+  promptTextForDisplay,
+  promptTextForExport,
+  stripAttachmentBlock,
+} from "@/lib/promptDisplay";
 import { FollowupComposer } from "./FollowupComposer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,7 +65,7 @@ export function ChatPanel(props: Props) {
 
   if (!result) {
     return (
-      <section className="glass-panel glass-panel-hover p-4 grid gap-3">
+      <section className="grid gap-4">
         {showActivity ? (
           <ActivityFeed
             title={loading ? "Live Team Banter" : "Fresh Team Banter"}
@@ -75,8 +82,10 @@ export function ChatPanel(props: Props) {
     );
   }
 
+  const attachmentsForUi = attachmentListForDisplay(result);
+
   return (
-    <section className="glass-panel glass-panel-hover p-4 grid gap-3">
+    <section className="grid gap-4">
       {showActivity && (
         <ActivityFeed
           title={loading ? "Live Team Play-by-Play" : "Team Play-by-Play"}
@@ -86,19 +95,60 @@ export function ChatPanel(props: Props) {
       )}
       {showClarify && clarifyBox}
 
-      <SessionMetricsBar
+      <SessionInsightsDashboard
         totalCostUsd={result.total_cost_usd}
         totalTokens={result.total_tokens}
         consensusScore={result.final_score}
+        modelCosts={result.model_costs}
+        sessionId={result.session_id}
       />
 
-      <div className="border border-border rounded-lg px-3 py-2.5 bg-card/90 text-sm grid gap-1">
-        <p className="m-0"><b>Role:</b> {result.role || "Not provided"}</p>
-        <p className="m-0"><b>Prompt:</b> {result.question || "Not provided"}</p>
-      </div>
+      <CollapsiblePanel title="Role & prompt" defaultOpen>
+        <PromptContextTable
+          role={result.role || ""}
+          prompt={promptTextForDisplay(result) || ""}
+          files={attachmentsForUi}
+        />
+      </CollapsiblePanel>
 
-      <h2 className="text-[1.06rem] font-semibold tracking-tight m-0">Final Answer From The Crew</h2>
-      <MarkdownView content={result.final_answer} />
+      <CollapsiblePanel title="Final answer from the crew" defaultOpen>
+        <MarkdownView
+          content={result.final_answer}
+          className="border-0 bg-muted/15 px-0 py-1 max-w-none shadow-none"
+        />
+        <div className="flex flex-wrap gap-2 pt-3 mt-3 border-t border-border/45">
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() =>
+              downloadMarkdown({
+                title: downloadTitle,
+                role: result.role,
+                prompt: promptTextForExport(result),
+                answer: result.final_answer
+              })
+            }
+          >
+            Download final answer (Markdown)
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() =>
+              downloadPdf({
+                title: downloadTitle,
+                role: result.role,
+                prompt: promptTextForExport(result),
+                answer: result.final_answer
+              })
+            }
+          >
+            Download final answer (PDF)
+          </Button>
+        </div>
+      </CollapsiblePanel>
 
       {result.is_followup && (
         <details className="text-sm">
@@ -107,7 +157,9 @@ export function ChatPanel(props: Props) {
           </summary>
           <div className="mt-2 grid gap-2">
             <p className="font-semibold m-0">Original prompt</p>
-            <p className="text-muted-foreground line-clamp-3 m-0">{result.source_prompt || result.question}</p>
+            <p className="text-muted-foreground line-clamp-3 m-0">
+              {stripAttachmentBlock(result.source_prompt || result.question)}
+            </p>
             <p className="font-semibold m-0">Previous final answer</p>
             <p className="text-muted-foreground line-clamp-3 m-0">
               {result.source_final_answer || "Previous answer unavailable; follow-up used original prompt only."}
@@ -143,59 +195,40 @@ export function ChatPanel(props: Props) {
         </p>
       )}
 
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => downloadMarkdown({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}
-        >
-          Download Markdown
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => downloadPdf({ title: downloadTitle, role: result.role, prompt: result.question, answer: result.final_answer })}
-        >
-          Download PDF
-        </Button>
-      </div>
-
-      <div className="flex items-center justify-between gap-2.5 text-sm text-muted-foreground">
-        <span>{result.cost_hint}</span>
-        <span>Session: {result.session_id}</span>
-      </div>
-
-      <ModelCostDetails rows={result.model_costs} />
-
       {showFullDiscussion && (
-        <details className="mt-1">
-          <summary className="cursor-pointer font-medium text-sm text-muted-foreground hover:text-foreground transition-colors select-none">
-            Director's Cut: Full Debate
-          </summary>
-          {result.full_discussion.map((r, idx) => {
-            const roundLabel = String((r.round_num as number) ?? idx + 1);
-            const { christy, mark } = splitCritique(String(r.critique ?? ""));
-            return (
-              <article key={idx} className="mt-2.5 pt-2.5 border-t border-border grid gap-2">
-                <strong className="text-sm">Round {roundLabel}</strong>
-                <ol className="list-none m-0 p-0 grid gap-2">
-                  <ChatBubble id="john" label={cast.writer.name} avatar={cast.writer.avatar} tag={`Round ${roundLabel}`}>
-                    <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
-                  </ChatBubble>
-                  <ChatBubble id="christy" label={cast.criticA.name} avatar={cast.criticA.avatar} tag={`Round ${roundLabel}`}>
-                    <ReactMarkdown>{christy}</ReactMarkdown>
-                  </ChatBubble>
-                  <ChatBubble id="mark" label={cast.criticB.name} avatar={cast.criticB.avatar} tag={`Round ${roundLabel}`}>
-                    <ReactMarkdown>{mark}</ReactMarkdown>
-                  </ChatBubble>
-                  <ChatBubble id="system" label="Round Summary" avatar={SYSTEM_AVATAR} tag={`Round ${roundLabel}`}>
-                    <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
-                  </ChatBubble>
-                </ol>
-              </article>
-            );
-          })}
-        </details>
+        <CollapsiblePanel title="Director's Cut: Full Debate" defaultOpen={false}>
+          <div className="grid gap-0">
+            {result.full_discussion.map((r, idx) => {
+              const roundLabel = String((r.round_num as number) ?? idx + 1);
+              const { christy, mark } = splitCritique(String(r.critique ?? ""));
+              return (
+                <article
+                  key={idx}
+                  className={cn(
+                    "grid gap-2",
+                    idx > 0 && "mt-2.5 pt-2.5 border-t border-border/25"
+                  )}
+                >
+                  <strong className="text-sm">Round {roundLabel}</strong>
+                  <ol className="list-none m-0 p-0 grid gap-2">
+                    <ChatBubble id="john" label={cast.writer.name} avatar={cast.writer.avatar} tag={`Round ${roundLabel}`}>
+                      <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
+                    </ChatBubble>
+                    <ChatBubble id="christy" label={cast.criticA.name} avatar={cast.criticA.avatar} tag={`Round ${roundLabel}`}>
+                      <ReactMarkdown>{christy}</ReactMarkdown>
+                    </ChatBubble>
+                    <ChatBubble id="mark" label={cast.criticB.name} avatar={cast.criticB.avatar} tag={`Round ${roundLabel}`}>
+                      <ReactMarkdown>{mark}</ReactMarkdown>
+                    </ChatBubble>
+                    <ChatBubble id="system" label="Round Summary" avatar={SYSTEM_AVATAR} tag={`Round ${roundLabel}`}>
+                      <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
+                    </ChatBubble>
+                  </ol>
+                </article>
+              );
+            })}
+          </div>
+        </CollapsiblePanel>
       )}
     </section>
   );
@@ -215,7 +248,7 @@ function ActivityFeed({
   cast: { writer: Person; criticA: Person; criticB: Person };
 }) {
   return (
-    <div className="border border-border rounded-lg p-3.5 bg-card/90">
+    <div className="rounded-xl p-3.5 bg-muted/20">
       <h2 className="text-[1.06rem] font-semibold tracking-tight m-0 mb-3">{title}</h2>
       <ol className="list-none m-0 p-0 max-h-[340px] overflow-auto grid gap-2">
         {activity.map((item, i) => {
@@ -254,13 +287,13 @@ function ChatBubble({
       />
       <div
         className={cn(
-          "max-w-[min(92%,900px)] rounded-xl border border-border/60 px-2.5 py-2 shadow-sm",
+          "max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",
           `bubble-${id}`
         )}
       >
         <div className="flex items-center justify-between gap-2 mb-1">
           <span className="text-[0.75rem] font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
-          <span className="text-[0.67rem] text-muted-foreground border border-border rounded-full px-1.5 py-0.5 bg-card/60">
+          <span className="text-[0.67rem] text-muted-foreground rounded-full px-1.5 py-0.5 bg-muted/50">
             {tag}
           </span>
         </div>

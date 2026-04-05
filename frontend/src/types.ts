@@ -29,6 +29,14 @@ export type AttachmentInput = {
   data: string;
 };
 
+/** Serialized attachment reference returned with session (data URL for opening in a new tab). */
+export type AttachmentFileRef = {
+  name: string;
+  mime_type: string;
+  kind: string;
+  data: string;
+};
+
 export type ConsultResult = {
   session_id: string;
   question: string;
@@ -51,6 +59,8 @@ export type ConsultResult = {
   source_prompt: string;
   source_final_answer: string;
   followup_instruction: string;
+  base_question: string;
+  attachment_files: AttachmentFileRef[];
 };
 
 export type StreamHandlers = {

@@ -8,12 +8,14 @@ from dataclasses import asdict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from backend.api.sessions import router as sessions_router
 from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
 from backend.consensus.engine import ConsensusEngine
+from backend.consensus.llm_clients import call_openrouter
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -54,9 +56,28 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         source_prompt=session.source_prompt,
         source_final_answer=session.source_final_answer,
         followup_instruction=session.followup_instruction,
+        base_question=session.base_question,
+        attachment_files=session.attachment_files,
     )
+class TitleRequest(BaseModel):
+    question: str
+
 @app.get("/api/health")
 async def health() -> dict: return {"status": "ok"}
+
+@app.post("/api/title")
+async def generate_title(payload: TitleRequest) -> dict:
+    """Generate a concise title for a question using a fast free model."""
+    prompt = (
+        "Generate a concise title of 5-8 words for the following question or task. "
+        "Return only the title text, no quotes, no trailing punctuation.\n\n"
+        f"Question: {payload.question[:500]}"
+    )
+    try:
+        title = await call_openrouter(prompt, "openrouter/gpt-oss-120b:free", CFG)
+        return {"title": title.strip()[:80]}
+    except Exception:
+        return {"title": payload.question[:60]}
 @app.post("/api/consult", response_model=ConsultResponse)
 async def consult(payload: ConsultRequest) -> ConsultResponse:
     """Run consensus session and return final result plus rounds."""

@@ -46,6 +46,8 @@ class DebateSession:
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
+    base_question: str = ""
+    attachment_files: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return serializable session dictionary."""

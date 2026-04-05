@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { ChatPanel } from "./components/ChatPanel";
+import { AnswersPanel } from "./components/AnswersPanel";
 import { Composer } from "./components/Composer";
 import { SettingsBar } from "./components/SettingsBar";
-import { Sidebar } from "./components/Sidebar";
 import { TopNav } from "./components/TopNav";
 import { TeamMember, createDefaultTeam } from "./data/experts";
-import { consultStream, deleteSession, getSession, listSessions } from "./services/api";
+import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { cn } from "./lib/utils";
@@ -26,6 +25,7 @@ export default function App() {
   const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>({});
   const [result, setResult] = useState<ConsultResult | null>(null);
   const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
+  const [sessionTitles, setSessionTitles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
   const [clarificationPrompt, setClarificationPrompt] = useState("");
@@ -40,7 +40,6 @@ export default function App() {
   const [followupConstraints, setFollowupConstraints] = useState("");
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement | null>(null);
 
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
@@ -180,13 +179,17 @@ export default function App() {
           parent_session_id: next.parent_session_id, is_followup: next.is_followup,
           run_title: next.followup_instruction || next.question
         }), ...prev.filter((p) => p.id !== next.session_id)]);
+
+        // Generate concise title asynchronously
+        generateTitle(next.question || title).then((generatedTitle) => {
+          setSessionTitles((prev) => ({ ...prev, [next.session_id]: generatedTitle }));
+        }).catch(() => {});
       }
     });
   }
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
-    setSidebarOpen(false);
     if (resultsById[id]) return;
     try {
       const loaded = await getSession(id);
@@ -207,6 +210,7 @@ export default function App() {
       return next;
     });
     setResultsById((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    setSessionTitles((prev) => { const next = { ...prev }; delete next[id]; return next; });
     if (selectedId === id) {
       setSelectedId(fallbackId);
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
@@ -243,31 +247,15 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <TopNav
         onNewRun={startNewQuestion}
-        onToggleSidebar={() => setSidebarOpen((o) => !o)}
         dark={dark}
         onToggleDark={toggleDark}
       />
 
-      {/* Sidebar backdrop on mobile/tablet */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-[199] bg-black/38 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       <main className={cn(
         "flex-1 grid gap-4 p-4 items-start w-full max-w-[1600px] mx-auto",
-        "grid-cols-1 sm:grid-cols-2 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]"
+        "grid-cols-1 lg:grid-cols-2"
       )}>
-        <Sidebar
-          sessions={history}
-          selectedId={selectedId}
-          open={sidebarOpen}
-          onSelect={selectSession}
-          onDelete={removeSession}
-        />
-
+        {/* Left panel: problem input + team config */}
         <div className="grid gap-4">
           {toast && (
             <div className="border border-ring/40 bg-ring/12 text-foreground rounded-md px-3 py-2.5 text-sm shadow-sm">
@@ -288,14 +276,17 @@ export default function App() {
           </div>
         </div>
 
-        <div className="grid gap-4">
-          {followupError && (
-            <div className="border border-ring/40 bg-ring/12 text-foreground rounded-md px-3 py-2.5 text-sm shadow-sm">
-              {followupError}
-            </div>
-          )}
-          <ChatPanel {...panelProps} />
-        </div>
+        {/* Right panel: collapsible answers accordion */}
+        <AnswersPanel
+          sessions={history}
+          selectedId={selectedId}
+          sessionTitles={sessionTitles}
+          resultsById={resultsById}
+          castBySession={castBySession}
+          chatPanelProps={panelProps}
+          onSelect={selectSession}
+          onDelete={removeSession}
+        />
       </main>
     </div>
   );

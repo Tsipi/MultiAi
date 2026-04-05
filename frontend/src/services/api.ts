@@ -1,4 +1,4 @@
-import { ConsultPayload, ConsultResult, StreamHandlers } from "../types";
+import { AttachmentFileRef, ConsultPayload, ConsultResult, StreamHandlers } from "../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -44,6 +44,21 @@ export async function getSession(sessionId: string): Promise<ConsultResult> {
     throw new Error("Could not load session.");
   }
   return normalizeResult(await response.json());
+}
+
+export async function generateTitle(question: string): Promise<string> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/title`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    if (!response.ok) return question.slice(0, 60);
+    const data = await response.json() as { title: string };
+    return data.title || question.slice(0, 60);
+  } catch {
+    return question.slice(0, 60);
+  }
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
@@ -97,7 +112,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     final_answer: String(raw.final_answer ?? ""),
     final_score: Number(raw.final_score ?? 0),
     cost_hint: String(raw.cost_hint ?? "Displayed as estimated by selected model rates."),
-    full_discussion: Array.isArray(raw.full_discussion) ? raw.full_discussion : [],
+    full_discussion: Array.isArray(raw.full_discussion) ? raw.full_discussion : (Array.isArray(raw.rounds) ? raw.rounds : []),
     status: needsClarification ? "needs_clarification" : "completed",
     needs_clarification: needsClarification,
     clarification_question: String(raw.clarification_question ?? ""),
@@ -111,8 +126,28 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     is_followup: toBoolean(raw.is_followup),
     source_prompt: String(raw.source_prompt ?? ""),
     source_final_answer: String(raw.source_final_answer ?? ""),
-    followup_instruction: String(raw.followup_instruction ?? "")
+    followup_instruction: String(raw.followup_instruction ?? ""),
+    base_question: String(raw.base_question ?? ""),
+    attachment_files: normalizeAttachmentFiles(raw.attachment_files)
   };
+}
+
+function normalizeAttachmentFiles(raw: unknown): AttachmentFileRef[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const o = item as Record<string, unknown>;
+      const data = String(o.data ?? "");
+      if (!data) return null;
+      return {
+        name: String(o.name ?? "Attachment"),
+        mime_type: String(o.mime_type ?? ""),
+        kind: String(o.kind ?? "file"),
+        data
+      };
+    })
+    .filter((x): x is AttachmentFileRef => x !== null);
 }
 
 function toBoolean(value: unknown): boolean {

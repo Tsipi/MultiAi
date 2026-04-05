@@ -1,31 +1,19 @@
-import { Menu, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   onNewRun: () => void;
-  onToggleSidebar: () => void;
   dark: boolean;
   onToggleDark: () => void;
 };
 
-export function TopNav({ onNewRun, onToggleSidebar, dark, onToggleDark }: Props) {
+export function TopNav({ onNewRun, dark, onToggleDark }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-card/75 backdrop-blur-xl">
       <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between px-5">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={onToggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <span className="bg-gradient-to-br from-blue-500 to-emerald-400 bg-clip-text text-transparent font-bold text-lg tracking-tight select-none">
-            MultiAi
-          </span>
-        </div>
+        <span className="bg-gradient-to-br from-blue-500 to-emerald-400 bg-clip-text text-transparent font-bold text-lg tracking-tight select-none">
+          MultiAi
+        </span>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={onToggleDark} aria-label="Toggle dark mode">
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
