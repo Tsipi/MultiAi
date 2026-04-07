@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { panelHeadingClass } from "@/lib/panelStyles";
 import { ModelCostBreakdown } from "./ModelCostBreakdown";
 
 type Props = {
@@ -30,7 +31,7 @@ export function SessionInsightsDashboard({
   return (
     <details
       className={cn(
-        "group rounded-xl border border-border/70 overflow-hidden mb-3",
+        "group mb-3 rounded-xl border border-border/70",
         "bg-gradient-to-br from-muted/45 via-card/95 to-muted/25",
         "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]",
         "dark:from-muted/15 dark:via-card/90 dark:to-muted/10",
@@ -44,9 +45,7 @@ export function SessionInsightsDashboard({
           "[&::-webkit-details-marker]:hidden"
         )}
       >
-        <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80 dark:text-foreground/75">
-          Session insights
-        </span>
+        <span className={cn(panelHeadingClass, "leading-snug")}>Session Insights</span>
         <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
       </summary>
       <div className="px-3.5 pb-3.5 pt-0 space-y-3 border-t border-border/55">

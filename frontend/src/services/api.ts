@@ -46,18 +46,30 @@ export async function getSession(sessionId: string): Promise<ConsultResult> {
   return normalizeResult(await response.json());
 }
 
-export async function generateTitle(question: string): Promise<string> {
+function titleFallback(question: string): string {
+  const words = question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2)
+    .slice(0, 6);
+  if (words.length >= 3) return words.join(" ");
+  if (words.length > 0) return words.join(" ");
+  return "consensus export";
+}
+
+export async function generateTitle(question: string, role = ""): Promise<string> {
   try {
     const response = await fetch(`${BASE_URL}/api/title`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, role })
     });
-    if (!response.ok) return question.slice(0, 60);
+    if (!response.ok) return titleFallback(question);
     const data = await response.json() as { title: string };
-    return data.title || question.slice(0, 60);
+    return (data.title && data.title.trim()) || titleFallback(question);
   } catch {
-    return question.slice(0, 60);
+    return titleFallback(question);
   }
 }
 

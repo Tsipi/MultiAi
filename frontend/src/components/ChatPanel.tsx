@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { ConsultResult } from "../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "./ClarificationBox";
-import { downloadMarkdown, downloadPdf } from "../services/exporter";
+import { downloadMarkdown, downloadPdf, exportDateLocal } from "../services/exporter";
+import { generateTitle } from "../services/api";
 import { MarkdownView } from "./MarkdownView";
 import { SessionInsightsDashboard } from "./SessionInsightsDashboard";
 import { CollapsiblePanel } from "./CollapsiblePanel";
@@ -15,11 +17,17 @@ import {
 import { FollowupComposer } from "./FollowupComposer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DebateActivityFeed } from "./DebateActivityFeed";
+import { DebateChatBubble, DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
+
+type Person = { name: string; avatar: string };
 
 type Props = {
   result: ConsultResult | null;
   showFullDiscussion: boolean;
   loading: boolean;
+  /** Hide inline play-by-play when a parent shows the live strip (avoids duplicate UI). */
+  suppressActivityFeed?: boolean;
   activity: string[];
   cast: { writer: Person; criticA: Person; criticB: Person };
   clarificationPrompt: string;
@@ -45,8 +53,10 @@ type Props = {
 };
 
 export function ChatPanel(props: Props) {
+  const [exportBusy, setExportBusy] = useState(false);
   const { result, showFullDiscussion, loading, activity, cast } = props;
-  const showActivity = loading || activity.length > 0;
+  const showActivity =
+    !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
   const clarifyBox = (
     <ClarificationBox
@@ -61,16 +71,16 @@ export function ChatPanel(props: Props) {
       onSubmit={props.onSubmitClarification}
     />
   );
-  const downloadTitle = result?.question?.trim() || "consensus_result";
 
   if (!result) {
     return (
       <section className="grid gap-4">
         {showActivity ? (
-          <ActivityFeed
-            title={loading ? "Live Team Banter" : "Fresh Team Banter"}
+          <DebateActivityFeed
+            title={loading ? "Live debate floor" : "Latest debate"}
             activity={activity}
             cast={cast}
+            loading={loading}
           />
         ) : (
           <p className="text-sm text-muted-foreground m-0">
@@ -84,13 +94,35 @@ export function ChatPanel(props: Props) {
 
   const attachmentsForUi = attachmentListForDisplay(result);
 
+  const runExport = async (kind: "md" | "pdf") => {
+    const prompt = promptTextForExport(result);
+    const role = result.role || "";
+    setExportBusy(true);
+    try {
+      const title = await generateTitle(prompt, role);
+      const exportDate = exportDateLocal();
+      const payload = {
+        title,
+        role: result.role,
+        prompt,
+        answer: result.final_answer,
+        exportDate,
+      };
+      if (kind === "md") downloadMarkdown(payload);
+      else downloadPdf(payload);
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
   return (
     <section className="grid gap-4">
       {showActivity && (
-        <ActivityFeed
-          title={loading ? "Live Team Play-by-Play" : "Team Play-by-Play"}
+        <DebateActivityFeed
+          title={loading ? "Live debate floor" : "Team play-by-play"}
           activity={activity}
           cast={cast}
+          loading={loading}
         />
       )}
       {showClarify && clarifyBox}
@@ -103,7 +135,7 @@ export function ChatPanel(props: Props) {
         sessionId={result.session_id}
       />
 
-      <CollapsiblePanel title="Role & prompt" defaultOpen>
+      <CollapsiblePanel title="Role & Prompt" defaultOpen>
         <PromptContextTable
           role={result.role || ""}
           prompt={promptTextForDisplay(result) || ""}
@@ -111,7 +143,7 @@ export function ChatPanel(props: Props) {
         />
       </CollapsiblePanel>
 
-      <CollapsiblePanel title="Final answer from the crew" defaultOpen>
+      <CollapsiblePanel title="Final Answer from the Crew" defaultOpen>
         <MarkdownView
           content={result.final_answer}
           className="border-0 bg-muted/15 px-0 py-1 max-w-none shadow-none"
@@ -121,31 +153,19 @@ export function ChatPanel(props: Props) {
             variant="outline"
             size="sm"
             type="button"
-            onClick={() =>
-              downloadMarkdown({
-                title: downloadTitle,
-                role: result.role,
-                prompt: promptTextForExport(result),
-                answer: result.final_answer
-              })
-            }
+            disabled={exportBusy}
+            onClick={() => void runExport("md")}
           >
-            Download final answer (Markdown)
+            {exportBusy ? "Preparing title…" : "Download final answer (Markdown)"}
           </Button>
           <Button
             variant="outline"
             size="sm"
             type="button"
-            onClick={() =>
-              downloadPdf({
-                title: downloadTitle,
-                role: result.role,
-                prompt: promptTextForExport(result),
-                answer: result.final_answer
-              })
-            }
+            disabled={exportBusy}
+            onClick={() => void runExport("pdf")}
           >
-            Download final answer (PDF)
+            {exportBusy ? "Preparing title…" : "Download final answer (PDF)"}
           </Button>
         </div>
       </CollapsiblePanel>
@@ -211,18 +231,18 @@ export function ChatPanel(props: Props) {
                 >
                   <strong className="text-sm">Round {roundLabel}</strong>
                   <ol className="list-none m-0 p-0 grid gap-2">
-                    <ChatBubble id="john" label={cast.writer.name} avatar={cast.writer.avatar} tag={`Round ${roundLabel}`}>
+                    <DebateChatBubble id="john" label={cast.writer.name} avatar={cast.writer.avatar} tag={`Round ${roundLabel}`}>
                       <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
-                    </ChatBubble>
-                    <ChatBubble id="christy" label={cast.criticA.name} avatar={cast.criticA.avatar} tag={`Round ${roundLabel}`}>
+                    </DebateChatBubble>
+                    <DebateChatBubble id="christy" label={cast.criticA.name} avatar={cast.criticA.avatar} tag={`Round ${roundLabel}`}>
                       <ReactMarkdown>{christy}</ReactMarkdown>
-                    </ChatBubble>
-                    <ChatBubble id="mark" label={cast.criticB.name} avatar={cast.criticB.avatar} tag={`Round ${roundLabel}`}>
+                    </DebateChatBubble>
+                    <DebateChatBubble id="mark" label={cast.criticB.name} avatar={cast.criticB.avatar} tag={`Round ${roundLabel}`}>
                       <ReactMarkdown>{mark}</ReactMarkdown>
-                    </ChatBubble>
-                    <ChatBubble id="system" label="Round Summary" avatar={SYSTEM_AVATAR} tag={`Round ${roundLabel}`}>
+                    </DebateChatBubble>
+                    <DebateChatBubble id="system" label="Round Summary" avatar={DEBATE_SYSTEM_AVATAR} tag={`Round ${roundLabel}`}>
                       <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
-                    </ChatBubble>
+                    </DebateChatBubble>
                   </ol>
                 </article>
               );
@@ -232,92 +252,6 @@ export function ChatPanel(props: Props) {
       )}
     </section>
   );
-}
-
-/* ===== Activity Feed ===== */
-type Speaker = { id: "john" | "christy" | "mark" | "system"; label: string; avatar: string };
-type Person = { name: string; avatar: string };
-
-function ActivityFeed({
-  title,
-  activity,
-  cast,
-}: {
-  title: string;
-  activity: string[];
-  cast: { writer: Person; criticA: Person; criticB: Person };
-}) {
-  return (
-    <div className="rounded-xl p-3.5 bg-muted/20">
-      <h2 className="text-[1.06rem] font-semibold tracking-tight m-0 mb-3">{title}</h2>
-      <ol className="list-none m-0 p-0 max-h-[340px] overflow-auto grid gap-2">
-        {activity.map((item, i) => {
-          const speaker = detectSpeaker(item, cast);
-          return (
-            <ChatBubble key={i} id={speaker.id} label={speaker.label} avatar={speaker.avatar} tag={`Step ${i + 1}`}>
-              <p className="m-0 text-[0.92rem] italic">{item}</p>
-            </ChatBubble>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
-
-/* ===== Reusable chat bubble ===== */
-function ChatBubble({
-  id,
-  label,
-  avatar,
-  tag,
-  children,
-}: {
-  id: "john" | "christy" | "mark" | "system";
-  label: string;
-  avatar: string;
-  tag: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <li className={cn("flex gap-2 items-end", id === "john" && "flex-row-reverse")}>
-      <img
-        className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
-        src={avatar}
-        alt={label}
-      />
-      <div
-        className={cn(
-          "max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",
-          `bubble-${id}`
-        )}
-      >
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-[0.75rem] font-bold text-muted-foreground uppercase tracking-wide">{label}</span>
-          <span className="text-[0.67rem] text-muted-foreground rounded-full px-1.5 py-0.5 bg-muted/50">
-            {tag}
-          </span>
-        </div>
-        <div className="disc-prose text-sm leading-snug">{children}</div>
-      </div>
-    </li>
-  );
-}
-
-const SYSTEM_AVATAR =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='32' fill='%23758cae'/%3E%3Ctext x='32' y='41' font-size='28' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E";
-
-function detectSpeaker(
-  message: string,
-  cast: { writer: Person; criticA: Person; criticB: Person }
-): Speaker {
-  const text = message.toLowerCase();
-  if (text.includes("critic a") || text.includes("christy"))
-    return { id: "christy", label: cast.criticA.name, avatar: cast.criticA.avatar };
-  if (text.includes("critic b") || text.includes("mark"))
-    return { id: "mark", label: cast.criticB.name, avatar: cast.criticB.avatar };
-  if (text.includes("writer") || text.includes("john"))
-    return { id: "john", label: cast.writer.name, avatar: cast.writer.avatar };
-  return { id: "system", label: "System", avatar: SYSTEM_AVATAR };
 }
 
 function splitCritique(merged: string): { christy: string; mark: string } {

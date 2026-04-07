@@ -15,6 +15,7 @@ from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
 from backend.consensus.engine import ConsensusEngine
+from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
 from backend.consensus.llm_clients import call_openrouter
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -61,23 +62,23 @@ def _to_response(session: DebateSession) -> ConsultResponse:
     )
 class TitleRequest(BaseModel):
     question: str
+    role: str = ""
 
 @app.get("/api/health")
 async def health() -> dict: return {"status": "ok"}
 
 @app.post("/api/title")
 async def generate_title(payload: TitleRequest) -> dict:
-    """Generate a concise title for a question using a fast free model."""
-    prompt = (
-        "Generate a concise title of 5-8 words for the following question or task. "
-        "Return only the title text, no quotes, no trailing punctuation.\n\n"
-        f"Question: {payload.question[:500]}"
-    )
+    """Generate a short (3-6 word) lowercase title from task + role (for exports and sidebar)."""
+    q = payload.question[:2000]
+    r = (payload.role or "")[:600]
+    prompt = build_export_title_prompt(q, r)
     try:
-        title = await call_openrouter(prompt, "openrouter/gpt-oss-120b:free", CFG)
-        return {"title": title.strip()[:80]}
+        raw = await call_openrouter(prompt, CFG.export_title_model, CFG)
+        title = normalize_export_title(raw, q)
+        return {"title": title}
     except Exception:
-        return {"title": payload.question[:60]}
+        return {"title": normalize_export_title("", q)}
 @app.post("/api/consult", response_model=ConsultResponse)
 async def consult(payload: ConsultRequest) -> ConsultResponse:
     """Run consensus session and return final result plus rounds."""

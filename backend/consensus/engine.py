@@ -90,6 +90,7 @@ class ConsensusEngine:
             save_session(session, self.cfg.sessions_dir)
             return session
         try:
+            await report("Your Writer and both Critics are in session — drafting, challenging, then converging.")
             answer, rolling = await run_rounds(
                 session,
                 question_with_context,

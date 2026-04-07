@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { ChatPanel } from "./ChatPanel";
+import { DebateActivityFeed } from "./DebateActivityFeed";
 import { cn } from "@/lib/utils";
+import { panelHeadingClass } from "@/lib/panelStyles";
 import { ConsultResult, SessionPreview } from "../types";
 
 type Person = { name: string; avatar: string };
@@ -19,16 +21,19 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export function AnswersPanel({
-  sessions,
-  selectedId,
-  sessionTitles,
-  resultsById,
-  castBySession,
-  chatPanelProps,
-  onSelect,
-  onDelete,
-}: Props) {
+export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel(
+  {
+    sessions,
+    selectedId,
+    sessionTitles,
+    resultsById,
+    castBySession,
+    chatPanelProps,
+    onSelect,
+    onDelete,
+  },
+  ref
+) {
   const [expandedId, setExpandedId] = useState<string | null>(selectedId);
 
   useEffect(() => {
@@ -36,7 +41,14 @@ export function AnswersPanel({
   }, [selectedId]);
 
   const threads = groupByThread(sessions);
-  const hasContent = sessions.length > 0 || chatPanelProps.loading || Boolean(chatPanelProps.result);
+  const clarifyPending = Boolean(
+    chatPanelProps.clarificationPrompt &&
+    chatPanelProps.clarificationOptions.length &&
+    !chatPanelProps.loading
+  );
+  const orphanClarify = clarifyPending && !chatPanelProps.result;
+  const hasContent =
+    sessions.length > 0 || chatPanelProps.loading || Boolean(chatPanelProps.result) || orphanClarify;
 
   const toggleItem = (id: string) => {
     if (expandedId === id) {
@@ -48,12 +60,12 @@ export function AnswersPanel({
   };
 
   return (
-    <aside className="glass-panel glass-panel-cheer glass-panel-hover flex flex-col gap-3 p-4">
+    <aside ref={ref} className="glass-panel glass-panel-cheer glass-panel-hover flex flex-col gap-3 p-4">
       <button
         className="w-full flex items-center justify-between bg-transparent border-0 shadow-none cursor-default p-0 mb-0"
         aria-expanded={true}
       >
-        <h2 className="flex items-center gap-2.5 text-[1.06rem] font-semibold tracking-tight m-0">
+        <h2 className={cn("flex items-center gap-2.5", panelHeadingClass)}>
           <span className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-blue-300 flex-shrink-0 shadow-[0_0_0_3px_rgba(158,199,255,0.25)]" />
           Team Answers
         </h2>
@@ -65,10 +77,18 @@ export function AnswersPanel({
         </p>
       )}
 
-      {/* Show live activity when loading with no sessions yet */}
-      {chatPanelProps.loading && sessions.length === 0 && (
-        <ChatPanel {...chatPanelProps} />
+      {chatPanelProps.loading && (
+        <DebateActivityFeed
+          title="Your team is debating this now"
+          subtitle="Watch each role weigh in as the Writer, Critics, and bench refine together."
+          activity={chatPanelProps.activity}
+          cast={chatPanelProps.cast}
+          loading
+          prominent
+        />
       )}
+
+      {orphanClarify && <ChatPanel {...chatPanelProps} />}
 
       {/* Accordion list of sessions */}
       <div className="flex flex-col gap-1.5 ">
@@ -88,6 +108,7 @@ export function AnswersPanel({
                 castBySession,
                 chatPanelProps
               )}
+              suppressActivityFeed={chatPanelProps.loading}
               onToggle={() => toggleItem(thread.parent.id)}
               onDelete={onDelete}
             />
@@ -107,6 +128,7 @@ export function AnswersPanel({
                   castBySession,
                   chatPanelProps
                 )}
+                suppressActivityFeed={chatPanelProps.loading}
                 onToggle={() => toggleItem(run.id)}
                 onDelete={onDelete}
                 child
@@ -117,7 +139,7 @@ export function AnswersPanel({
       </div>
     </aside>
   );
-}
+});
 
 function buildSessionChatProps(
   sessionId: string,
@@ -162,6 +184,7 @@ function AccordionItem({
   title,
   isExpanded,
   chatProps,
+  suppressActivityFeed,
   onToggle,
   onDelete,
   child = false,
@@ -170,6 +193,7 @@ function AccordionItem({
   title: string;
   isExpanded: boolean;
   chatProps: ChatPanelProps;
+  suppressActivityFeed: boolean;
   onToggle: () => void;
   onDelete: (id: string) => void;
   child?: boolean;
@@ -179,12 +203,7 @@ function AccordionItem({
     .join(" · ");
 
   return (
-    <div
-      className={cn(
-        "rounded-xl overflow-hidden bg-card/55 shadow-sm",
-        child && "ml-3"
-      )}
-    >
+    <div className={cn("rounded-xl bg-card/55 shadow-sm overflow-visible", child && "ml-3")}>
       <button
         className="w-full flex items-center gap-2 px-3 py-2.5 bg-transparent hover:bg-muted/35 transition-colors cursor-pointer border-0 shadow-none text-left"
         onClick={onToggle}
@@ -224,7 +243,7 @@ function AccordionItem({
 
       {isExpanded && (
         <div className="px-3 pb-3 pt-1 bg-muted/15 rounded-b-xl">
-          <ChatPanel {...chatProps} />
+          <ChatPanel {...chatProps} suppressActivityFeed={suppressActivityFeed} />
         </div>
       )}
     </div>

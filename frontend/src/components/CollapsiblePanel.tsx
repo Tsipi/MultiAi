@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { panelHeadingClass } from "@/lib/panelStyles";
 
 type Props = {
   title: string;
+  leading?: React.ReactNode;
+  titleEnd?: React.ReactNode;
   /** When true (default), panel starts expanded. */
   defaultOpen?: boolean;
   children: React.ReactNode;
@@ -13,7 +16,14 @@ type Props = {
 /**
  * Disclosure panel matching Session insights chrome: bordered, gradient fill, chevron.
  */
-export function CollapsiblePanel({ title, defaultOpen = true, children, className }: Props) {
+export function CollapsiblePanel({
+  title,
+  leading,
+  titleEnd,
+  defaultOpen = true,
+  children,
+  className,
+}: Props) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <details
@@ -34,8 +44,10 @@ export function CollapsiblePanel({ title, defaultOpen = true, children, classNam
           "[&::-webkit-details-marker]:hidden"
         )}
       >
-        <span className="text-xs font-semibold uppercase tracking-wider text-foreground/80 dark:text-foreground/75">
-          {title}
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          {leading}
+          <span className={cn(panelHeadingClass, "min-w-0 shrink truncate leading-snug")}>{title}</span>
+          {titleEnd}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
       </summary>

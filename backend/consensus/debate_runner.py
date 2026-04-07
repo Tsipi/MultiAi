@@ -38,7 +38,7 @@ async def run_rounds(
     image_urls: list[str] | None = None,
 ) -> tuple[str, str]:
     """Execute debate rounds and return latest answer and rolling summary."""
-    await report(f"{WRITER_NAME} is drafting the first answer.")
+    await report(f"{WRITER_NAME} is drafting the opening answer for your question.")
     answer = await call_openrouter(
         WRITER_INITIAL.format(question=question, role_context=domain, intent_scope=session.intent_scope),
         writer,

@@ -41,10 +41,11 @@ export default function App() {
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
   const settingsRef = useRef<HTMLDivElement | null>(null);
+  const answersPanelRef = useRef<HTMLElement | null>(null);
 
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
-  const panelActivity = selectedId ? [] : activity;
+  const panelActivity = activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
@@ -101,7 +102,8 @@ export default function App() {
   const runConsult = async (clarification = "") => {
     clearFollowupState();
     setLoading(true);
-    setActivity(["Queued request. Preparing debate process..."]);
+    answersPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActivity(["Queued request. Your team is assembling the debate..."]);
     setClarificationPrompt("");
     setClarificationReason("");
     setClarificationOptions([]);
@@ -126,6 +128,7 @@ export default function App() {
     setActiveCast(cast);
     setFollowupError("");
     setLoading(true);
+    answersPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
     if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
@@ -181,7 +184,7 @@ export default function App() {
         }), ...prev.filter((p) => p.id !== next.session_id)]);
 
         // Generate concise title asynchronously
-        generateTitle(next.question || title).then((generatedTitle) => {
+        generateTitle(next.question || title, next.role || "").then((generatedTitle) => {
           setSessionTitles((prev) => ({ ...prev, [next.session_id]: generatedTitle }));
         }).catch(() => {});
       }
@@ -190,6 +193,7 @@ export default function App() {
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
+    if (!loading) setActivity([]);
     if (resultsById[id]) return;
     try {
       const loaded = await getSession(id);
@@ -278,6 +282,7 @@ export default function App() {
 
         {/* Right panel: collapsible answers accordion */}
         <AnswersPanel
+          ref={answersPanelRef}
           sessions={history}
           selectedId={selectedId}
           sessionTitles={sessionTitles}
