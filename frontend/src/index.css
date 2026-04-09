@@ -6,6 +6,7 @@
 /* Map CSS variables to Tailwind color utilities */
 @theme inline {
   --font-sans: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  --font-display: "Space Grotesk", Inter, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -53,6 +54,10 @@
   --destructive-foreground: #ffffff;
   --sidebar: #e9ecf0;
 
+  --v2-surface: var(--card);
+  --v2-elevated: var(--muted);
+  --v2-accent: #7c3aed;
+
   --panel-glass: rgba(255, 255, 255, 0.74);
   --panel-cheer-overlay: linear-gradient(
     135deg,
@@ -63,35 +68,38 @@
   --bg-gradient: radial-gradient(circle at 15% 0%, #ffffff 0%, #edf1f6 56%, #e9edf3 100%);
 }
 
-/* ===== DARK MODE TOKENS ===== */
+/* ===== DARK MODE — v2 Dark Tech Minimal ===== */
 .dark {
-  --background: #0d1118;
-  --foreground: #e5e9f2;
-  --card: #111827;
-  --card-foreground: #e5e9f2;
-  --muted: #1a2234;
-  --muted-foreground: #9ca8bc;
-  --border: #334155;
-  --input: #334155;
-  --ring: #7ea5df;
-  --primary: #dde6f7;
-  --primary-foreground: #0b1220;
-  --secondary: #1a2234;
-  --secondary-foreground: #e5e9f2;
-  --accent: #1a2234;
-  --accent-foreground: #e5e9f2;
+  --background: #080810;
+  --foreground: #e8e8ef;
+  --card: #0f0f1a;
+  --card-foreground: #e8e8ef;
+  --muted: #151528;
+  --muted-foreground: #9898a8;
+  --border: rgba(255, 255, 255, 0.06);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #7c3aed;
+  --primary: #7c3aed;
+  --primary-foreground: #f4f4f8;
+  --secondary: #151528;
+  --secondary-foreground: #e8e8ef;
+  --accent: #151528;
+  --accent-foreground: #e8e8ef;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --sidebar: #0a0f17;
+  --sidebar: #080810;
 
-  --panel-glass: rgba(20, 27, 39, 0.68);
+  --v2-surface: #0f0f1a;
+  --v2-elevated: #151528;
+  --v2-accent: #7c3aed;
+  --panel-glass: rgba(15, 15, 26, 0.92);
   --panel-cheer-overlay: linear-gradient(
     135deg,
-    rgba(141, 182, 234, 0.1) 0%,
-    rgba(148, 213, 163, 0.08) 45%,
-    rgba(223, 190, 144, 0.07) 100%
+    rgba(124, 58, 237, 0.06) 0%,
+    rgba(45, 212, 191, 0.04) 40%,
+    rgba(251, 191, 36, 0.04) 100%
   );
-  --bg-gradient: radial-gradient(circle at 15% 0%, #1c2433 0%, #0f1521 56%, #0a0f17 100%);
+  --bg-gradient: radial-gradient(ellipse 120% 80% at 50% -30%, #1a1530 0%, #080810 45%, #050508 100%);
 }
 
 /* ===== BASE ===== */
@@ -102,10 +110,108 @@ body {
   min-height: 100vh;
   background: var(--bg-gradient);
   color: var(--foreground);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* v2 command bar focus glow */
+.v2-command-input:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 28px rgba(124, 58, 237, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: color-mix(in srgb, var(--v2-accent) 55%, transparent);
+}
+
+/* Match command-textarea focus language on inputs/select triggers */
+.v2-field-focus:focus,
+.v2-field-focus:focus-visible,
+.v2-field-focus[data-state="open"] {
+  outline: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 22px rgba(124, 58, 237, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-color: color-mix(in srgb, var(--v2-accent) 55%, transparent);
+}
+
+.v2-primary-cta {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #f8f7ff;
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.32);
+  border: 1px solid color-mix(in srgb, #a78bfa 40%, transparent);
+}
+.v2-primary-cta:hover {
+  filter: brightness(1.06);
+}
+.v2-primary-cta:disabled {
+  opacity: 0.55;
+  filter: none;
+}
+
+.v2-consensus-shell {
+  background: var(--v2-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.v2-agent-pulse {
+  animation: v2-pulse 1.35s ease-in-out infinite;
+}
+@keyframes v2-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 16px 2px rgba(124, 58, 237, 0.25);
+  }
+}
+
+.v2-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+@media (min-width: 640px) {
+  .v2-strip-grid {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  }
+}
+
+.v2-strip-stagger > * {
+  animation: v2-seat-in 0.48s ease-out both;
+}
+.v2-strip-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.v2-strip-stagger > *:nth-child(2) {
+  animation-delay: 110ms;
+}
+.v2-strip-stagger > *:nth-child(3) {
+  animation-delay: 220ms;
+}
+.v2-strip-stagger > *:nth-child(4) {
+  animation-delay: 330ms;
+}
+@keyframes v2-seat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== NAMED GLASS UTILITIES (used 5+ times each) ===== */

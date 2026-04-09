@@ -71,11 +71,18 @@ export function ComposerAttachmentPanel({ attachments, onAttachmentsChange }: Pr
           onChange={(e) => loadFiles(e.target.files)}
         />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" onClick={() => fileInputRef.current?.click()}>
+          <Button type="button" size="sm" className="border-0 shadow-none" onClick={() => fileInputRef.current?.click()}>
             <Paperclip className="mr-1.5 h-4 w-4" />
             Choose files
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={pasteFromClipboard} disabled={pasteBusy}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="border-0 bg-muted text-foreground shadow-none hover:bg-muted/80"
+            onClick={pasteFromClipboard}
+            disabled={pasteBusy}
+          >
             <ClipboardPaste className="mr-1.5 h-4 w-4" />
             {pasteBusy ? "Reading..." : "Paste from clipboard"}
           </Button>

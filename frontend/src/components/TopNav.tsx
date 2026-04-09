@@ -2,24 +2,69 @@ import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
-  onNewRun: () => void;
   dark: boolean;
   onToggleDark: () => void;
 };
 
-export function TopNav({ onNewRun, dark, onToggleDark }: Props) {
+function BrandMark() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-card/75 backdrop-blur-xl">
-      <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between px-5">
-        <span className="bg-gradient-to-br from-blue-500 to-emerald-400 bg-clip-text text-transparent font-bold text-lg tracking-tight select-none">
-          MultiAi
-        </span>
+    <div
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 font-display text-[13px] font-bold text-white shadow-md"
+      aria-hidden
+    >
+      M
+    </div>
+  );
+}
+
+export function TopNav({ dark, onToggleDark }: Props) {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--v2-surface)]/92 backdrop-blur-xl">
+      <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between gap-3 px-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <BrandMark />
+          <div className="flex min-w-0 flex-col gap-0">
+            <span className="font-display truncate font-bold text-base sm:text-lg tracking-tight text-foreground select-none">
+              MultiAI
+            </span>
+            <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:block truncate">
+              Command your AI team
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onToggleDark} aria-label="Toggle dark mode">
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="font-display text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            About
           </Button>
-          <Button variant="outline" size="sm" onClick={onNewRun}>
-            New Run
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="font-display text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Contact us
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="border-[#ffffff12] bg-transparent font-display text-xs font-semibold"
+          >
+            Login/Logout
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleDark}
+            aria-label="Toggle theme"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
         </div>
       </div>

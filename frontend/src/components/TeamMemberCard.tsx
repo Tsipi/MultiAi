@@ -1,4 +1,4 @@
-import { FACE_OPTIONS, TeamMember, findFaceByName } from "../data/experts";
+import { FACE_OPTIONS, TeamMember } from "../data/experts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,10 +14,11 @@ type Props = {
 };
 
 export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove }: Props) {
-  const profile = findFaceByName(member.name);
+  const profile = FACE_OPTIONS.find((f) => f.name === member.name);
   const chooseMember = (name: string) => {
-    const face = findFaceByName(name);
-    onUpdate({ ...member, name: face.name, avatar: face.avatar });
+    const face = FACE_OPTIONS.find((f) => f.name === name);
+    if (!face) return;
+    onUpdate({ ...member, name: face.name, avatar: face.avatar, expertiseTag: face.expertiseTag });
   };
 
   return (
@@ -49,14 +50,16 @@ export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove
             </Select>
           </div>
           <p className="m-0 line-clamp-1 text-[0.68rem] font-semibold uppercase tracking-wider text-ring/70">
-            {profile.expertiseTag}
+            {member.expertiseTag || "Short tag"}
           </p>
-          <p
-            className="m-0 line-clamp-2 text-[0.7rem] font-normal leading-snug text-muted-foreground italic"
-            title={profile.funFact}
-          >
-            {profile.funFact}
-          </p>
+          {profile && (
+            <p
+              className="m-0 line-clamp-2 text-[0.7rem] font-normal leading-snug text-muted-foreground italic"
+              title={profile.funFact}
+            >
+              {profile.funFact}
+            </p>
+          )}
         </div>
       </div>
       <TeamMemberDutyModelRow compact member={member} onUpdate={onUpdate} />
@@ -77,11 +80,19 @@ export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove
           type="button"
           variant="sync"
           size="sm"
+          className="border-0 bg-violet-500/12 text-violet-200 shadow-none hover:bg-violet-500/20"
           onClick={() => onUpdate({ ...member, role: baseRole, lockToBaseRole: true })}
         >
           Adopt main expert style
         </Button>
-        <Button type="button" variant="destructive" size="sm" disabled={!canRemove} onClick={onRemove}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="border-0 bg-rose-500/10 text-rose-300 shadow-none hover:bg-rose-500/15"
+          disabled={!canRemove}
+          onClick={onRemove}
+        >
           Remove
         </Button>
       </div>

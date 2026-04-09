@@ -1,6 +1,6 @@
-import { MODEL_OPTIONS } from "../data/models";
 import { ConsultPayload } from "../types";
-import { FACE_OPTIONS, TeamMember, mkMember } from "../data/experts";
+import { TeamMember } from "../data/experts";
+import { appendDefaultTeamMember } from "@/lib/teamRoster";
 import { TeamMemberCard } from "./TeamMemberCard";
 import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
@@ -20,13 +20,7 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
   const updateMember = (idx: number, next: TeamMember) =>
     onTeamChange(team.map((m, i) => (i === idx ? next : m)));
 
-  const addMember = () => {
-    const face = FACE_OPTIONS[team.length % FACE_OPTIONS.length];
-    onTeamChange([
-      ...team,
-      mkMember(`expert-${Date.now()}`, face.name, face.avatar, MODEL_OPTIONS[0].id, "critic", value.role),
-    ]);
-  };
+  const addMember = () => onTeamChange(appendDefaultTeamMember(team, value.role));
 
   return (
     <>
@@ -60,7 +54,7 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
             onMaxRounds={(n) => set("max_rounds", n)}
             onConsensusScore={(n) => set("consensus_score", n)}
           />
-          <Button size="sm" className="shrink-0" onClick={addMember}>
+          <Button size="sm" className="v2-primary-cta h-9 shrink-0 border-0 shadow-none font-display" onClick={addMember}>
             <UserPlus className="mr-1.5 h-4 w-4" />
             Add another team member
           </Button>

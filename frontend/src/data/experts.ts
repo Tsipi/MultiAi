@@ -24,6 +24,8 @@ export type TeamMember = {
   duty: TeamDuty;
   role: string;
   lockToBaseRole: boolean;
+  /** Short tag on roster cards; preset from face name or custom in the editor. */
+  expertiseTag: string;
 };
 
 export type FaceOption = {
@@ -71,5 +73,15 @@ export function mkMember(
   duty: TeamDuty,
   baseRole: string
 ): TeamMember {
-  return { id, name, avatar, model, duty, role: baseRole, lockToBaseRole: true };
+  const face = FACE_OPTIONS.find((f) => f.name === name);
+  return {
+    id,
+    name,
+    avatar,
+    model,
+    duty,
+    role: baseRole,
+    lockToBaseRole: true,
+    expertiseTag: face?.expertiseTag ?? "",
+  };
 }

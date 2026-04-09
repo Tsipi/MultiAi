@@ -1,18 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ClipboardPaste, Settings2, Upload } from "lucide-react";
 
-import { AnswersPanel } from "./components/AnswersPanel";
-import { Composer } from "./components/Composer";
-import { SettingsBar } from "./components/SettingsBar";
+import { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./components/ConsensusRunsSidebar";
+import { AdvancedDrawer } from "./components/AdvancedDrawer";
+import { AgentStrip } from "./components/AgentStrip";
+import { AgentTileGrid } from "./components/AgentTileGrid";
+import { CommandBar } from "./components/CommandBar";
+import { ComposerAttachmentPanel } from "./components/ComposerAttachmentPanel";
+import { LeadRoleField } from "./components/LeadRoleField";
 import { TopNav } from "./components/TopNav";
+import { ChatPanel } from "./components/ChatPanel";
 import { TeamMember, createDefaultTeam } from "./data/experts";
+import { ROUND_OPTIONS, SCORE_OPTIONS } from "./data/models";
+import {
+  buildRunSignature,
+  mergeTeamIntoPayload,
+  selectCastFromTeam,
+  toPreview,
+  type CastSelection,
+} from "./lib/consultHelpers";
 import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
+import { readAttachments, readClipboardFromBrowser, supportedUploadTypes } from "./services/attachments";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { cn } from "./lib/utils";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const defaults: ConsultPayload = {
-  writer: "deepseek/deepseek-chat-v3.2", critic_a: "google/gemini-2.5-flash", critic_b: "google/gemini-2.5-flash",
-  max_rounds: 3, consensus_score: 8, role: "", question: ""
+  writer: "deepseek/deepseek-chat-v3.2",
+  critic_a: "google/gemini-2.5-flash",
+  critic_b: "google/gemini-2.5-flash",
+  max_rounds: 3,
+  consensus_score: 8,
+  role: "",
+  question: "",
 };
 
 export default function App() {
@@ -40,8 +62,17 @@ export default function App() {
   const [followupConstraints, setFollowupConstraints] = useState("");
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
-  const settingsRef = useRef<HTMLDivElement | null>(null);
-  const answersPanelRef = useRef<HTMLElement | null>(null);
+  const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
+  const toolbarFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [runsSidebarOpen, setRunsSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(RUNS_SIDEBAR_STORAGE_KEY) !== "0";
+  });
+  const [userDisplayName] = useState(() => {
+    if (typeof window === "undefined") return "there";
+    return localStorage.getItem("multiai_display_name")?.trim() || "there";
+  });
 
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
@@ -52,23 +83,6 @@ export default function App() {
   const chooseClarification = (value: string) => {
     setClarificationChoice(value);
     if (value !== "Other") setClarificationOtherText("");
-  };
-
-  const panelProps = {
-    result: displayResult, showFullDiscussion: true, loading, activity: panelActivity,
-    cast: panelCast,
-    clarificationPrompt, clarificationReason, clarificationOptions, clarificationChoice, clarificationOtherText,
-    onClarificationChoice: chooseClarification, onClarificationOtherText: setClarificationOtherText,
-    onSubmitClarification: () => runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
-    followupOpen, followupInstruction, followupConstraints, followupChangedSinceOpen,
-    onOpenFollowup: openFollowup,
-    onFollowupInstructionChange: setFollowupInstruction,
-    onFollowupConstraintsChange: setFollowupConstraints,
-    onAdjustFollowupTeam: adjustFollowupTeam,
-    onSubmitFollowup: runFollowup,
-    onRetryFollowup: runFollowup,
-    onStartFresh: startNewQuestion,
-    followupError
   };
 
   useEffect(() => {
@@ -99,10 +113,18 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const runConsult = async (clarification = "") => {
+  useEffect(() => {
+    localStorage.setItem(RUNS_SIDEBAR_STORAGE_KEY, runsSidebarOpen ? "1" : "0");
+  }, [runsSidebarOpen]);
+
+  const runConsult = async (clarificationTag = "") => {
     clearFollowupState();
+    setAdvancedOpen(false);
+    setRunsSidebarOpen(true);
     setLoading(true);
-    answersPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     setActivity(["Queued request. Your team is assembling the debate..."]);
     setClarificationPrompt("");
     setClarificationReason("");
@@ -111,7 +133,7 @@ export default function App() {
     setClarificationOtherText("");
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
-    const payload = mergeTeamIntoPayload(form, team, attachments, clarification);
+    const payload = mergeTeamIntoPayload(form, team, attachments, clarificationTag);
     try {
       await executeConsult(payload, cast, form.question);
     } catch (error) {
@@ -121,31 +143,65 @@ export default function App() {
     }
   };
 
+  const addFilesFromToolbar = async (files: FileList | null) => {
+    const next = await readAttachments(files);
+    if (!next.length) return;
+    setAttachments((prev) => [...prev, ...next]);
+  };
+
+  const pasteFromToolbar = async () => {
+    try {
+      const next = await readClipboardFromBrowser();
+      if (!next.length) {
+        setToast("Nothing pasteable found in clipboard.");
+        return;
+      }
+      setAttachments((prev) => [...prev, ...next]);
+      setToast(`Added ${next.length} context item(s) from clipboard.`);
+    } catch {
+      setToast("Clipboard access blocked. Use Ctrl+V in Add context files area.");
+    }
+  };
+
   async function runFollowup() {
     const source = displayResult;
     if (!source || !followupInstruction.trim()) return;
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
     setFollowupError("");
+    setAdvancedOpen(false);
+    setRunsSidebarOpen(true);
     setLoading(true);
-    answersPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
     if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
     const followupQuestion = [
-      "Original prompt:", source.source_prompt || source.question,
-      "", "Previous final answer:", source.source_final_answer || source.final_answer,
-      "", "Follow-up instruction:", mergedInstruction
+      "Original prompt:",
+      source.source_prompt || source.question,
+      "",
+      "Previous final answer:",
+      source.source_final_answer || source.final_answer,
+      "",
+      "Follow-up instruction:",
+      mergedInstruction,
     ].join("\n");
     const payload = mergeTeamIntoPayload(
       {
-        ...form, question: followupQuestion, is_followup: true,
-        parent_session_id: source.session_id, thread_id: source.thread_id || source.session_id,
+        ...form,
+        question: followupQuestion,
+        is_followup: true,
+        parent_session_id: source.session_id,
+        thread_id: source.thread_id || source.session_id,
         source_prompt: source.source_prompt || source.question,
         source_final_answer: source.source_final_answer || source.final_answer,
-        followup_instruction: mergedInstruction
+        followup_instruction: mergedInstruction,
       },
-      team, [], ""
+      team,
+      [],
+      ""
     );
     try {
       await executeConsult(payload, cast, mergedInstruction);
@@ -162,7 +218,9 @@ export default function App() {
     await consultStream(payload, {
       onActivity: (message) => setActivity((prev) => [...prev, message]),
       onFinal: (next) => {
-        const canClarify = Boolean(next.needs_clarification && next.clarification_question && next.clarification_options.length);
+        const canClarify = Boolean(
+          next.needs_clarification && next.clarification_question && next.clarification_options.length
+        );
         if (canClarify) {
           setClarificationPrompt(next.clarification_question);
           setClarificationReason(next.clarification_reason);
@@ -176,24 +234,31 @@ export default function App() {
         setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
         setSelectedId(next.session_id);
-        setHistory((prev) => [toPreview({
-          session_id: next.session_id, question: next.question || title,
-          timestamp: new Date().toISOString(), thread_id: next.thread_id,
-          parent_session_id: next.parent_session_id, is_followup: next.is_followup,
-          run_title: next.followup_instruction || next.question
-        }), ...prev.filter((p) => p.id !== next.session_id)]);
-
-        // Generate concise title asynchronously
-        generateTitle(next.question || title, next.role || "").then((generatedTitle) => {
-          setSessionTitles((prev) => ({ ...prev, [next.session_id]: generatedTitle }));
-        }).catch(() => {});
-      }
+        setHistory((prev) => [
+          toPreview({
+            session_id: next.session_id,
+            question: next.question || title,
+            timestamp: new Date().toISOString(),
+            thread_id: next.thread_id,
+            parent_session_id: next.parent_session_id,
+            is_followup: next.is_followup,
+            run_title: next.followup_instruction || next.question,
+          }),
+          ...prev.filter((p) => p.id !== next.session_id),
+        ]);
+        generateTitle(next.question || title, next.role || "")
+          .then((generatedTitle) => setSessionTitles((prev) => ({ ...prev, [next.session_id]: generatedTitle })))
+          .catch(() => {});
+      },
     });
   }
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
     if (!loading) setActivity([]);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     if (resultsById[id]) return;
     try {
       const loaded = await getSession(id);
@@ -206,15 +271,27 @@ export default function App() {
   };
 
   const removeSession = async (id: string) => {
-    try { await deleteSession(id); } catch { return; }
+    try {
+      await deleteSession(id);
+    } catch {
+      return;
+    }
     let fallbackId: string | null = null;
     setHistory((prev) => {
       const next = prev.filter((x) => x.id !== id);
       fallbackId = next[0]?.id ?? null;
       return next;
     });
-    setResultsById((prev) => { const next = { ...prev }; delete next[id]; return next; });
-    setSessionTitles((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    setResultsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSessionTitles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     if (selectedId === id) {
       setSelectedId(fallbackId);
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
@@ -244,45 +321,46 @@ export default function App() {
   }
 
   function adjustFollowupTeam() {
-    settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setAdvancedOpen(true);
   }
+
+  const panelProps = {
+    result: displayResult,
+    showFullDiscussion: true,
+    loading,
+    activity: panelActivity,
+    cast: panelCast,
+    clarificationPrompt,
+    clarificationReason,
+    clarificationOptions,
+    clarificationChoice,
+    clarificationOtherText,
+    onClarificationChoice: chooseClarification,
+    onClarificationOtherText: setClarificationOtherText,
+    onSubmitClarification: () =>
+      runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
+    followupOpen,
+    followupInstruction,
+    followupConstraints,
+    followupChangedSinceOpen,
+    onOpenFollowup: openFollowup,
+    onFollowupInstructionChange: setFollowupInstruction,
+    onFollowupConstraintsChange: setFollowupConstraints,
+    onAdjustFollowupTeam: adjustFollowupTeam,
+    onSubmitFollowup: runFollowup,
+    onRetryFollowup: runFollowup,
+    onStartFresh: startNewQuestion,
+    followupError,
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav
-        onNewRun={startNewQuestion}
-        dark={dark}
-        onToggleDark={toggleDark}
-      />
+      <TopNav dark={dark} onToggleDark={toggleDark} />
 
-      <main className={cn(
-        "flex-1 grid gap-4 p-4 items-start w-full max-w-[1600px] mx-auto",
-        "grid-cols-1 lg:grid-cols-2"
-      )}>
-        {/* Left panel: problem input + team config */}
-        <div className="grid gap-4">
-          {toast && (
-            <div className="border border-ring/40 bg-ring/12 text-foreground rounded-md px-3 py-2.5 text-sm shadow-sm">
-              {toast}
-            </div>
-          )}
-          <Composer value={form} attachments={attachments} onAttachmentsChange={setAttachments} onChange={setForm} />
-          <div ref={settingsRef}>
-            <SettingsBar
-              value={form}
-              team={team}
-              loading={loading}
-              canSubmit={Boolean(form.question.trim())}
-              onChange={setForm}
-              onTeamChange={setTeam}
-              onSubmit={() => runConsult()}
-            />
-          </div>
-        </div>
-
-        {/* Right panel: collapsible answers accordion */}
-        <AnswersPanel
-          ref={answersPanelRef}
+      <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
+        <ConsensusRunsSidebar
+          open={runsSidebarOpen}
+          onOpenChange={setRunsSidebarOpen}
           sessions={history}
           selectedId={selectedId}
           sessionTitles={sessionTitles}
@@ -292,63 +370,151 @@ export default function App() {
           onSelect={selectSession}
           onDelete={removeSession}
         />
-      </main>
+
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-14 sm:gap-6 sm:px-4 sm:py-6 sm:pb-16">
+            {toast && (
+              <div
+                className="rounded-xl border border-violet-500/30 bg-violet-500/10 text-foreground px-3 py-2.5 text-sm"
+                role="status"
+              >
+                {toast}
+              </div>
+            )}
+
+            <section className="flex justify-end">
+              <input
+                ref={toolbarFileInputRef}
+                className="hidden"
+                type="file"
+                multiple
+                accept={supportedUploadTypes()}
+                onChange={(e) => void addFilesFromToolbar(e.target.files)}
+              />
+              <div className="flex w-full max-w-[760px] flex-wrap items-end justify-end gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-2.5 py-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+                  onClick={() => toolbarFileInputRef.current?.click()}
+                  aria-label="Upload context files"
+                >
+                  <Upload className="h-4.5 w-4.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+                  onClick={() => void pasteFromToolbar()}
+                  aria-label="Paste context from clipboard"
+                >
+                  <ClipboardPaste className="h-4.5 w-4.5" />
+                </Button>
+                <div className="mx-1 hidden h-7 w-px bg-violet-400/25 sm:block" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+                  onClick={() => setAdvancedOpen(true)}
+                  aria-label="Open advanced setup"
+                >
+                  <Settings2 className="h-4.5 w-4.5" />
+                </Button>
+              </div>
+            </section>
+
+            <AgentStrip
+              team={team}
+              onTeamChange={setTeam}
+              leadRole={form.role}
+              loading={loading}
+              lastActivityLine={activity[activity.length - 1]}
+            />
+
+            <LeadRoleField
+              value={form.role}
+              disabled={loading}
+              onChange={(role) => setForm((f) => ({ ...f, role }))}
+            />
+
+            <CommandBar
+              value={form.question}
+              userDisplayName={userDisplayName}
+              loading={loading}
+              disabled={loading}
+              onChange={(question) => setForm((f) => ({ ...f, question }))}
+              onSubmit={() => runConsult()}
+            />
+
+            <section className="grid gap-2 sm:grid-cols-2">
+              <label className="grid min-w-[170px] gap-1 rounded-xl bg-white px-2.5 py-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Debate passes</span>
+                <Select
+                  value={String(form.max_rounds)}
+                  onValueChange={(v) => setForm((f) => ({ ...f, max_rounds: Number(v) }))}
+                >
+                  <SelectTrigger className="h-8 w-full border border-violet-300/60 bg-white px-2.5 text-sm shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROUND_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="grid min-w-[170px] gap-1 rounded-xl bg-white px-2.5 py-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Agreement score</span>
+                <Select
+                  value={String(form.consensus_score)}
+                  onValueChange={(v) => setForm((f) => ({ ...f, consensus_score: Number(v) }))}
+                >
+                  <SelectTrigger className="h-8 w-full border border-violet-300/60 bg-white px-2.5 text-sm shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCORE_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>
+                        {n}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+            </section>
+
+            <ComposerAttachmentPanel attachments={attachments} onAttachmentsChange={setAttachments} />
+
+            <div
+              ref={mainSessionPanelRef}
+              className="v2-consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4"
+            >
+              <ChatPanel {...panelProps} />
+            </div>
+
+            <AgentTileGrid team={team} loading={loading} activity={activity} result={displayResult} />
+
+            <AdvancedDrawer
+              open={advancedOpen}
+              onOpenChange={setAdvancedOpen}
+              form={form}
+              team={team}
+              attachments={attachments}
+              loading={loading}
+              canSubmit={Boolean(form.question.trim())}
+              onFormChange={setForm}
+              onTeamChange={setTeam}
+              onAttachmentsChange={setAttachments}
+              onSubmit={() => runConsult()}
+            />
+          </div>
+        </main>
+      </div>
     </div>
   );
-}
-
-type CastPerson = { name: string; avatar: string };
-type CastSelection = { writer: CastPerson; criticA: CastPerson; criticB: CastPerson };
-
-function selectCastFromTeam(team: TeamMember[]): CastSelection {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
-  return {
-    writer: { name: writer.name, avatar: writer.avatar },
-    criticA: { name: criticA.name, avatar: criticA.avatar },
-    criticB: { name: criticB.name, avatar: criticB.avatar }
-  };
-}
-
-function mergeTeamIntoPayload(
-  form: ConsultPayload, team: TeamMember[], attachments: AttachmentInput[], clarification: string
-): ConsultPayload {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
-  const imageLoaded = Boolean(attachments.some((a) => a.kind === "image"));
-  return {
-    ...form,
-    writer: withImageFallback(writer.model, imageLoaded),
-    critic_a: withImageFallback(criticA.model, imageLoaded),
-    critic_b: withImageFallback(criticB.model, imageLoaded),
-    role: (writer.role || form.role || "You are an expert in ...").slice(0, 255),
-    attachments, clarification
-  };
-}
-
-function selectEngineMembers(team: TeamMember[]): { writer: TeamMember; criticA: TeamMember; criticB: TeamMember } {
-  const writer = team.find((m) => m.duty === "writer") ?? team[0];
-  const critics = team.filter((m) => m.duty === "critic");
-  const criticA = critics[0] ?? team.find((m) => m.id !== writer.id) ?? writer;
-  const criticB = critics[1] ?? team.find((m) => m.id !== writer.id && m.id !== criticA.id) ?? criticA;
-  return { writer, criticA, criticB };
-}
-
-function withImageFallback(model: string, imageLoaded: boolean): string {
-  if (!imageLoaded) return model;
-  return model === "deepseek/deepseek-chat-v3.2" ? "google/gemini-2.5-flash" : model;
-}
-
-function toPreview(row: {
-  session_id: string; question: string; timestamp?: string;
-  thread_id?: string; parent_session_id?: string; is_followup?: boolean; run_title?: string;
-}): SessionPreview {
-  return {
-    id: row.session_id, question: row.question, timestamp: row.timestamp,
-    thread_id: row.thread_id || row.session_id, parent_session_id: row.parent_session_id || "",
-    is_followup: Boolean(row.is_followup), run_title: row.run_title || row.question
-  };
-}
-
-function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
-  const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}`).join("|");
-  return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}`;
 }
