@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { ChatPanel } from "./ChatPanel";
-import { DebateActivityFeed } from "./DebateActivityFeed";
+import { ChatroomDebateView } from "./ChatroomDebateView";
 import { cn } from "@/lib/utils";
 import { panelHeadingClass } from "@/lib/panelStyles";
 import { ConsultResult, SessionPreview } from "../types";
@@ -152,12 +152,13 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
       )}
 
       {!compact && chatPanelProps.loading && (
-        <DebateActivityFeed
-          title="Your team is debating this now"
-          subtitle="Watch each role weigh in as the Writer, Critics, and bench refine together."
+        <ChatroomDebateView
           activity={chatPanelProps.activity}
           cast={chatPanelProps.cast}
+          team={chatPanelProps.team}
           loading
+          maxRounds={chatPanelProps.maxRounds}
+          consensusThreshold={chatPanelProps.consensusThreshold}
           prominent
         />
       )}
@@ -261,6 +262,9 @@ function buildSessionChatProps(
     onRetryFollowup: () => {},
     onStartFresh: activeChatProps.onStartFresh,
     followupError: "",
+    team: activeChatProps.team,
+    maxRounds: activeChatProps.maxRounds,
+    consensusThreshold: activeChatProps.consensusThreshold,
   };
 }
 
