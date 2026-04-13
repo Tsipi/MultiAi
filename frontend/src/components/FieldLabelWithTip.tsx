@@ -1,10 +1,16 @@
 import { InfoTip } from "./InfoTip";
 import { cn } from "@/lib/utils";
 
-type Props = { label: string; tip: React.ReactNode; id?: string; compact?: boolean };
+type Props = {
+  label: string;
+  tip: React.ReactNode;
+  id?: string;
+  compact?: boolean;
+  tipAlign?: "start" | "center" | "end";
+};
 
 /** Label text with trailing info tooltip (field control goes below). */
-export function FieldLabelWithTip({ label, tip, id, compact }: Props) {
+export function FieldLabelWithTip({ label, tip, id, compact, tipAlign = "end" }: Props) {
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5">
       <span
@@ -16,7 +22,7 @@ export function FieldLabelWithTip({ label, tip, id, compact }: Props) {
       >
         {label}
       </span>
-      <InfoTip>{tip}</InfoTip>
+      <InfoTip tipAlign={tipAlign}>{tip}</InfoTip>
     </div>
   );
 }

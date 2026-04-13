@@ -5,14 +5,16 @@ type Props = {
   children: React.ReactNode;
   className?: string;
   /** Tooltip position under the icon; `start` keeps copy under the label row. */
-  tipAlign?: "start" | "center";
+  tipAlign?: "start" | "center" | "end";
 };
 
 export function InfoTip({ children, className, tipAlign = "start" }: Props) {
   const tipPos =
     tipAlign === "center"
       ? "left-1/2 top-full mt-1.5 -translate-x-1/2"
-      : "left-0 top-full mt-1.5 translate-x-0";
+      : tipAlign === "end"
+        ? "right-0 top-full mt-1.5 translate-x-0"
+        : "left-0 top-full mt-1.5 translate-x-0";
   return (
     <span
       className={cn("relative inline-flex shrink-0 group/tip align-middle", className)}

@@ -1,4 +1,5 @@
 import { Settings2, X } from "lucide-react";
+import { useEffect } from "react";
 import type { AttachmentInput, ConsultPayload } from "@/types";
 import { TeamMember } from "@/data/experts";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,15 @@ export function AdvancedDrawer({
   onAttachmentsChange,
   onSubmit,
 }: Props) {
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[90]">
@@ -44,7 +54,7 @@ export function AdvancedDrawer({
       />
       <aside
         className={cn(
-          "absolute right-0 top-0 h-full w-full max-w-[560px] overflow-y-auto border-l border-[#ffffff10]",
+          "absolute right-0 top-0 h-full w-full max-w-[560px] overflow-y-auto overflow-x-hidden border-l border-[#ffffff10]",
           "bg-[var(--v2-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]"
         )}
       >
@@ -60,7 +70,7 @@ export function AdvancedDrawer({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid gap-4 p-4">
+        <div className="grid min-w-0 gap-4 p-4">
           <ComposerAdvanced
             value={form}
             attachments={attachments}

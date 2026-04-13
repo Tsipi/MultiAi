@@ -5,6 +5,7 @@ import { TeamMemberCard } from "./TeamMemberCard";
 import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
 import { SlidersHorizontal, UserPlus } from "lucide-react";
+import { InfoTip } from "./InfoTip";
 
 type Props = {
   value: ConsultPayload;
@@ -24,8 +25,12 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
 
   return (
     <>
+      <p className="m-0 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground/80">
+        Team Members
+        <InfoTip tipAlign="end">Manage the roster for this session only.</InfoTip>
+      </p>
       <div
-        className="grid gap-2"
+        className="grid min-w-0 gap-2"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 192px), 1fr))" }}
       >
         {team.map((member, idx) => (
@@ -39,25 +44,24 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
           />
         ))}
       </div>
+      <div className="flex justify-start">
+        <Button size="sm" className="v2-primary-cta h-10 border-0 px-4 shadow-none font-display" onClick={addMember}>
+          <UserPlus className="mr-1.5 h-4 w-4" />
+          Add another team member
+        </Button>
+      </div>
       <section className="grid gap-2.5 rounded-xl border border-ring/35 bg-gradient-to-br from-ring/10 to-card/40 p-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <SlidersHorizontal className="h-4 w-4 text-ring" />
           Team tools
         </div>
-        <p className="m-0 text-xs text-muted-foreground">
-          Tune debate strictness and expand your team quickly.
-        </p>
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <DebateOptionsTable
             maxRounds={value.max_rounds}
             consensusScore={value.consensus_score}
             onMaxRounds={(n) => set("max_rounds", n)}
             onConsensusScore={(n) => set("consensus_score", n)}
           />
-          <Button size="sm" className="v2-primary-cta h-9 shrink-0 border-0 shadow-none font-display" onClick={addMember}>
-            <UserPlus className="mr-1.5 h-4 w-4" />
-            Add another team member
-          </Button>
         </div>
       </section>
       <p className="m-0 text-[0.85rem] text-muted-foreground">Scorer and summarizer always use Deepseek v3.2.</p>

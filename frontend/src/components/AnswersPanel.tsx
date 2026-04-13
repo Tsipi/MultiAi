@@ -8,7 +8,7 @@ import { ConsultResult, SessionPreview } from "../types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type Person = { name: string; avatar: string };
+type Person = { name: string; avatar: string; model: string };
 type CastSelection = { writer: Person; criticA: Person; criticB: Person };
 type ChatPanelProps = React.ComponentProps<typeof ChatPanel>;
 
@@ -261,6 +261,7 @@ function buildSessionChatProps(
     onSubmitFollowup: () => {},
     onRetryFollowup: () => {},
     onStartFresh: activeChatProps.onStartFresh,
+    onResendQuestion: () => {},
     followupError: "",
     team: activeChatProps.team,
     maxRounds: activeChatProps.maxRounds,

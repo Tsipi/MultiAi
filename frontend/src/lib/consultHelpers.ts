@@ -1,15 +1,15 @@
 import { TeamMember } from "@/data/experts";
 import { AttachmentInput, ConsultPayload, SessionPreview } from "@/types";
 
-export type CastPerson = { name: string; avatar: string };
+export type CastPerson = { name: string; avatar: string; model: string };
 export type CastSelection = { writer: CastPerson; criticA: CastPerson; criticB: CastPerson };
 
 export function selectCastFromTeam(team: TeamMember[]): CastSelection {
   const { writer, criticA, criticB } = selectEngineMembers(team);
   return {
-    writer: { name: writer.name, avatar: writer.avatar },
-    criticA: { name: criticA.name, avatar: criticA.avatar },
-    criticB: { name: criticB.name, avatar: criticB.avatar },
+    writer: { name: writer.name, avatar: writer.avatar, model: writer.model },
+    criticA: { name: criticA.name, avatar: criticA.avatar, model: criticA.model },
+    criticB: { name: criticB.name, avatar: criticB.avatar, model: criticB.model },
   };
 }
 

@@ -2,10 +2,10 @@ import { useRef, useState } from "react";
 import { ClipboardPaste, Paperclip } from "lucide-react";
 import { AttachmentInput } from "../types";
 import { readAttachments, readClipboardFromBrowser, readClipboardItems, supportedUploadTypes } from "../services/attachments";
-import { Button } from "@/components/ui/button";
 import { InfoTip } from "./InfoTip";
 import { AttachmentChipList } from "./AttachmentChipList";
 import { QuickPasteZone } from "./QuickPasteZone";
+import { ActionGhostButton } from "./ActionGhostButton";
 
 type Props = {
   attachments: AttachmentInput[];
@@ -71,21 +71,16 @@ export function ComposerAttachmentPanel({ attachments, onAttachmentsChange }: Pr
           onChange={(e) => loadFiles(e.target.files)}
         />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" className="border-0 shadow-none" onClick={() => fileInputRef.current?.click()}>
-            <Paperclip className="mr-1.5 h-4 w-4" />
+          <ActionGhostButton icon={<Paperclip className="h-4 w-4" />} onClick={() => fileInputRef.current?.click()}>
             Choose files
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="border-0 bg-muted text-foreground shadow-none hover:bg-muted/80"
+          </ActionGhostButton>
+          <ActionGhostButton
+            icon={<ClipboardPaste className="h-4 w-4" />}
             onClick={pasteFromClipboard}
             disabled={pasteBusy}
           >
-            <ClipboardPaste className="mr-1.5 h-4 w-4" />
             {pasteBusy ? "Reading..." : "Paste from clipboard"}
-          </Button>
+          </ActionGhostButton>
         </div>
       </div>
       <QuickPasteZone ref={pasteZoneRef} />

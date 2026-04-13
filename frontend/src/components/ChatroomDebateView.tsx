@@ -11,7 +11,7 @@ import { ChatMessage, SystemMessage } from "./ChatMessage";
 import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";
 
-type Person = { name: string; avatar: string };
+type Person = { name: string; avatar: string; model?: string };
 type Cast = { writer: Person; criticA: Person; criticB: Person };
 
 type Props = {

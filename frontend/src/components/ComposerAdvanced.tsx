@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { FieldLabelWithTip } from "./FieldLabelWithTip";
 import { ComposerAttachmentPanel } from "./ComposerAttachmentPanel";
 import { InfoTip } from "./InfoTip";
+import { V2SectionHeader } from "./V2SectionHeader";
 
 type Props = {
   value: ConsultPayload;
@@ -17,6 +18,11 @@ export function ComposerAdvanced(props: Props) {
 
   return (
     <div className="grid gap-4">
+      <V2SectionHeader
+        eyebrow="Your AI team"
+        subtitle="Fixed roster for each run: the Writer drafts answers, two Critics push back, and the Bench (scorer + summarizer, always DeepSeek on the server) turns rounds into scores and short summaries."
+        tip="Double-click any roster card to edit name, seat, model, and strengths."
+      />
       <div className="grid gap-1.5">
         <FieldLabelWithTip
           label="Lead expert role"
@@ -34,7 +40,7 @@ export function ComposerAdvanced(props: Props) {
         <div className="flex items-center gap-2">
           <FieldLabelWithTip
             label="Context files"
-            tip="Optional TXT, PDF, or images merged into the consult (not shown in the command bar)."
+            tip="Optional TXT, PDF, or images merged into the consult; chips appear under the main prompt when attached."
           />
           <InfoTip tipAlign="start">Add evidence the team should read before answering.</InfoTip>
         </div>

@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ClipboardPaste, Settings2, Upload } from "lucide-react";
+import { BarChart3, Settings2 } from "lucide-react";
 
 import { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./components/ConsensusRunsSidebar";
 import { AdvancedDrawer } from "./components/AdvancedDrawer";
-import { AgentStrip } from "./components/AgentStrip";
-import { AgentTileGrid } from "./components/AgentTileGrid";
+import { InsightsDrawer } from "./components/InsightsDrawer";
 import { CommandBar } from "./components/CommandBar";
-import { ComposerAttachmentPanel } from "./components/ComposerAttachmentPanel";
-import { LeadRoleField } from "./components/LeadRoleField";
 import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
 import { TeamMember, createDefaultTeam } from "./data/experts";
-import { ROUND_OPTIONS, SCORE_OPTIONS } from "./data/models";
 import {
   buildRunSignature,
   mergeTeamIntoPayload,
@@ -19,13 +15,11 @@ import {
   toPreview,
   type CastSelection,
 } from "./lib/consultHelpers";
+import { appendDefaultTeamMember } from "./lib/teamRoster";
 import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
-import { readAttachments, readClipboardFromBrowser, supportedUploadTypes } from "./services/attachments";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { useDarkMode } from "./hooks/useDarkMode";
-import { cn } from "./lib/utils";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const defaults: ConsultPayload = {
   writer: "deepseek/deepseek-chat-v3.2",
@@ -63,17 +57,12 @@ export default function App() {
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
-  const toolbarFileInputRef = useRef<HTMLInputElement | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const [runsSidebarOpen, setRunsSidebarOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     return localStorage.getItem(RUNS_SIDEBAR_STORAGE_KEY) !== "0";
   });
-  const [userDisplayName] = useState(() => {
-    if (typeof window === "undefined") return "there";
-    return localStorage.getItem("multiai_display_name")?.trim() || "there";
-  });
-
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
   const panelActivity = activity;
@@ -117,7 +106,9 @@ export default function App() {
     localStorage.setItem(RUNS_SIDEBAR_STORAGE_KEY, runsSidebarOpen ? "1" : "0");
   }, [runsSidebarOpen]);
 
-  const runConsult = async (clarificationTag = "") => {
+  const runConsult = async (clarificationTag = "", questionOverride?: string) => {
+    const questionText = (questionOverride ?? form.question).trim();
+    if (!questionText) return;
     clearFollowupState();
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
@@ -133,9 +124,9 @@ export default function App() {
     setClarificationOtherText("");
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
-    const payload = mergeTeamIntoPayload(form, team, attachments, clarificationTag);
+    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag);
     try {
-      await executeConsult(payload, cast, form.question);
+      await executeConsult(payload, cast, questionText);
     } catch (error) {
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
     } finally {
@@ -143,24 +134,11 @@ export default function App() {
     }
   };
 
-  const addFilesFromToolbar = async (files: FileList | null) => {
-    const next = await readAttachments(files);
-    if (!next.length) return;
-    setAttachments((prev) => [...prev, ...next]);
-  };
-
-  const pasteFromToolbar = async () => {
-    try {
-      const next = await readClipboardFromBrowser();
-      if (!next.length) {
-        setToast("Nothing pasteable found in clipboard.");
-        return;
-      }
-      setAttachments((prev) => [...prev, ...next]);
-      setToast(`Added ${next.length} context item(s) from clipboard.`);
-    } catch {
-      setToast("Clipboard access blocked. Use Ctrl+V in Add context files area.");
-    }
+  const resendQuestion = async (question: string) => {
+    const next = question.trim();
+    if (!next) return;
+    setForm((f) => ({ ...f, question: next }));
+    await runConsult("", next);
   };
 
   async function runFollowup() {
@@ -342,6 +320,7 @@ export default function App() {
     onClarificationOtherText: setClarificationOtherText,
     onSubmitClarification: () =>
       runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
+    onResendQuestion: resendQuestion,
     followupOpen,
     followupInstruction,
     followupConstraints,
@@ -386,36 +365,18 @@ export default function App() {
             )}
 
             <section className="flex justify-end">
-              <input
-                ref={toolbarFileInputRef}
-                className="hidden"
-                type="file"
-                multiple
-                accept={supportedUploadTypes()}
-                onChange={(e) => void addFilesFromToolbar(e.target.files)}
-              />
               <div className="flex w-full max-w-[760px] flex-wrap items-end justify-end gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-2.5 py-2">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
-                  onClick={() => toolbarFileInputRef.current?.click()}
-                  aria-label="Upload context files"
+                  disabled={!displayResult}
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)] disabled:opacity-40"
+                  onClick={() => setInsightsOpen(true)}
+                  aria-label="Open session insights"
                 >
-                  <Upload className="h-4.5 w-4.5" />
+                  <BarChart3 className="h-4.5 w-4.5" />
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
-                  onClick={() => void pasteFromToolbar()}
-                  aria-label="Paste context from clipboard"
-                >
-                  <ClipboardPaste className="h-4.5 w-4.5" />
-                </Button>
-                <div className="mx-1 hidden h-7 w-px bg-violet-400/25 sm:block" />
                 <Button
                   type="button"
                   variant="ghost"
@@ -429,69 +390,19 @@ export default function App() {
               </div>
             </section>
 
-            <AgentStrip
-              team={team}
-              onTeamChange={setTeam}
-              leadRole={form.role}
-              loading={loading}
-              lastActivityLine={activity[activity.length - 1]}
-            />
-
-            <LeadRoleField
-              value={form.role}
-              disabled={loading}
-              onChange={(role) => setForm((f) => ({ ...f, role }))}
-            />
-
             <CommandBar
               value={form.question}
-              userDisplayName={userDisplayName}
+              greetingName="Tsipi"
+              team={team}
               loading={loading}
               disabled={loading}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
               onChange={(question) => setForm((f) => ({ ...f, question }))}
               onSubmit={() => runConsult()}
+              onAddTeamMember={() => setTeam((t) => appendDefaultTeamMember(t, form.role))}
+              onOpenAdvanced={() => setAdvancedOpen(true)}
             />
-
-            <section className="grid gap-2 sm:grid-cols-2">
-              <label className="grid min-w-[170px] gap-1 rounded-xl bg-white px-2.5 py-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Debate passes</span>
-                <Select
-                  value={String(form.max_rounds)}
-                  onValueChange={(v) => setForm((f) => ({ ...f, max_rounds: Number(v) }))}
-                >
-                  <SelectTrigger className="h-8 w-full border border-violet-300/60 bg-white px-2.5 text-sm shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROUND_OPTIONS.map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-              <label className="grid min-w-[170px] gap-1 rounded-xl bg-white px-2.5 py-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Agreement score</span>
-                <Select
-                  value={String(form.consensus_score)}
-                  onValueChange={(v) => setForm((f) => ({ ...f, consensus_score: Number(v) }))}
-                >
-                  <SelectTrigger className="h-8 w-full border border-violet-300/60 bg-white px-2.5 text-sm shadow-none">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SCORE_OPTIONS.map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </label>
-            </section>
-
-            <ComposerAttachmentPanel attachments={attachments} onAttachmentsChange={setAttachments} />
 
             <div
               ref={mainSessionPanelRef}
@@ -499,8 +410,6 @@ export default function App() {
             >
               <ChatPanel {...panelProps} />
             </div>
-
-            <AgentTileGrid team={team} loading={loading} activity={activity} result={displayResult} />
 
             <AdvancedDrawer
               open={advancedOpen}
@@ -515,6 +424,8 @@ export default function App() {
               onAttachmentsChange={setAttachments}
               onSubmit={() => runConsult()}
             />
+
+            <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
           </div>
         </main>
       </div>

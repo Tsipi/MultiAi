@@ -4,11 +4,8 @@ import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "./ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal } from "../services/exporter";
 import { generateTitle } from "../services/api";
-import { SessionInsightsDashboard } from "./SessionInsightsDashboard";
 import { CollapsiblePanel } from "./CollapsiblePanel";
-import { PromptContextTable } from "./PromptContextTable";
 import {
-  attachmentListForDisplay,
   promptTextForDisplay,
   promptTextForExport,
   stripAttachmentBlock,
@@ -19,9 +16,11 @@ import { cn } from "@/lib/utils";
 import { DebateChatBubble, DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChatroomDebateView } from "./ChatroomDebateView";
 import { PinnedAnswer } from "./PinnedAnswer";
+import { SessionPromptBlock } from "./SessionPromptBlock";
+import { SessionPromptDownloads } from "./SessionPromptDownloads";
 import type { TeamMember } from "@/data/experts";
 
-type Person = { name: string; avatar: string };
+type Person = { name: string; avatar: string; model: string };
 
 type Props = {
   result: ConsultResult | null;
@@ -54,6 +53,7 @@ type Props = {
   onRetryFollowup: () => void;
   onStartFresh: () => void;
   followupError: string;
+  onResendQuestion: (question: string) => void | Promise<void>;
 };
 
 export function ChatPanel(props: Props) {
@@ -114,8 +114,6 @@ export function ChatPanel(props: Props) {
   }
 
   // ── Result available ──────────────────────────────────────────────────────
-  const attachmentsForUi = attachmentListForDisplay(result);
-
   const runExport = async (kind: "md" | "pdf") => {
     const prompt = promptTextForExport(result);
     const role = result.role || "";
@@ -133,33 +131,52 @@ export function ChatPanel(props: Props) {
 
   return (
     <section className="grid gap-4">
-      {/* 1. Hero: Final Answer — most prominent */}
-      <PinnedAnswer
-        finalAnswer={result.final_answer}
-        score={result.final_score}
-        onDownloadMd={() => void runExport("md")}
-        onDownloadPdf={() => void runExport("pdf")}
-        exportBusy={exportBusy}
+      <SessionPromptBlock
+        result={result}
+        team={team}
+        loading={loading}
+        onResendQuestion={props.onResendQuestion}
       />
 
-      {/* 2. Summary bar */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
-        {result.full_discussion.length > 0 && (
+      {/* 1. Hero: Final Answer — most prominent */}
+      <div className="flex justify-start">
+        <div className="w-full max-w-[880px]">
+          <PinnedAnswer
+            finalAnswer={result.final_answer}
+            score={result.final_score}
+            cast={cast}
+          />
+        </div>
+      </div>
+      <div className="-mt-2 flex justify-start">
+        <div className="flex w-full max-w-[880px] flex-wrap items-center justify-between gap-3">
+          <SessionPromptDownloads
+            exportBusy={exportBusy}
+            onCopy={async () => {
+              await navigator.clipboard.writeText(result.final_answer || "");
+            }}
+            onDownloadMd={() => void runExport("md")}
+            onDownloadPdf={() => void runExport("pdf")}
+          />
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
+          {result.full_discussion.length > 0 && (
+            <span>
+              {result.full_discussion.length} round
+              {result.full_discussion.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          <span>·</span>
           <span>
-            {result.full_discussion.length} round
-            {result.full_discussion.length !== 1 ? "s" : ""}
+            Score{" "}
+            <span className="font-semibold text-foreground/80">{result.final_score.toFixed(1)}</span>{" "}
+            / 10
           </span>
-        )}
-        <span>·</span>
-        <span>
-          Score{" "}
-          <span className="font-semibold text-foreground/80">{result.final_score.toFixed(1)}</span>{" "}
-          / 10
-        </span>
-        <span>·</span>
-        <span>{result.total_tokens.toLocaleString()} tokens</span>
-        <span>·</span>
-        <span>${result.total_cost_usd.toFixed(4)}</span>
+          <span>·</span>
+          <span>{result.total_tokens.toLocaleString()} tokens</span>
+          <span>·</span>
+          <span>${result.total_cost_usd.toFixed(4)}</span>
+          </div>
+        </div>
       </div>
 
       {/* 3. Clarification (if any) */}
@@ -183,7 +200,7 @@ export function ChatPanel(props: Props) {
 
       {/* 5. Director's Cut: full answer/critique text per round */}
       {showFullDiscussion && result.full_discussion.length > 0 && (
-        <CollapsiblePanel title="Director's Cut: Full Debate" defaultOpen={false}>
+        <CollapsiblePanel title="Director's Cut: Full Debate" defaultOpen>
           <div className="grid gap-0">
             {result.full_discussion.map((r, idx) => {
               const roundLabel = String((r.round_num as number) ?? idx + 1);
@@ -197,12 +214,14 @@ export function ChatPanel(props: Props) {
                   )}
                 >
                   <strong className="text-sm">Round {roundLabel}</strong>
-                  <ol className="list-none m-0 p-0 grid gap-2">
+                  <ol className="list-none m-0 grid gap-2 p-0">
                     <DebateChatBubble
                       id="john"
                       label={cast.writer.name}
                       avatar={cast.writer.avatar}
+                      modelId={cast.writer.model}
                       tag={`Round ${roundLabel}`}
+                      rawText={String(r.answer ?? "")}
                     >
                       <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
                     </DebateChatBubble>
@@ -210,7 +229,9 @@ export function ChatPanel(props: Props) {
                       id="christy"
                       label={cast.criticA.name}
                       avatar={cast.criticA.avatar}
+                      modelId={cast.criticA.model}
                       tag={`Round ${roundLabel}`}
+                      rawText={christy}
                     >
                       <ReactMarkdown>{christy}</ReactMarkdown>
                     </DebateChatBubble>
@@ -218,7 +239,9 @@ export function ChatPanel(props: Props) {
                       id="mark"
                       label={cast.criticB.name}
                       avatar={cast.criticB.avatar}
+                      modelId={cast.criticB.model}
                       tag={`Round ${roundLabel}`}
+                      rawText={mark}
                     >
                       <ReactMarkdown>{mark}</ReactMarkdown>
                     </DebateChatBubble>
@@ -227,6 +250,7 @@ export function ChatPanel(props: Props) {
                       label="Round Summary"
                       avatar={DEBATE_SYSTEM_AVATAR}
                       tag={`Round ${roundLabel}`}
+                      rawText={String(r.summary ?? "")}
                     >
                       <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
                     </DebateChatBubble>
@@ -238,25 +262,7 @@ export function ChatPanel(props: Props) {
         </CollapsiblePanel>
       )}
 
-      {/* 6. Session insights */}
-      <SessionInsightsDashboard
-        totalCostUsd={result.total_cost_usd}
-        totalTokens={result.total_tokens}
-        consensusScore={result.final_score}
-        modelCosts={result.model_costs}
-        sessionId={result.session_id}
-      />
-
-      {/* 7. Role & Prompt */}
-      <CollapsiblePanel title="Role & Prompt" defaultOpen={false}>
-        <PromptContextTable
-          role={result.role || ""}
-          prompt={promptTextForDisplay(result) || ""}
-          files={attachmentsForUi}
-        />
-      </CollapsiblePanel>
-
-      {/* 8. Follow-up context */}
+      {/* 6. Follow-up context */}
       {result.is_followup && (
         <details className="text-sm">
           <summary className="cursor-pointer font-medium text-muted-foreground hover:text-foreground transition-colors select-none">
@@ -280,7 +286,7 @@ export function ChatPanel(props: Props) {
         </details>
       )}
 
-      {/* 9. Follow-up composer */}
+      {/* 7. Follow-up composer */}
       <FollowupComposer
         open={props.followupOpen}
         instruction={props.followupInstruction}

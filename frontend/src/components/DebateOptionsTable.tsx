@@ -21,11 +21,11 @@ export function DebateOptionsTable({
   onConsensusScore,
 }: Props) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/60 bg-card/55">
-      <table className="w-full min-w-[340px] max-w-[420px] border-collapse text-sm">
+    <div className="rounded-lg border border-border/60 bg-card/55">
+      <table className="w-full border-collapse text-sm">
         <tbody>
           <tr className="border-b border-border/55">
-            <th scope="row" className="w-[min(62%,260px)] px-3 py-2.5 align-top text-left">
+            <th scope="row" className="px-3 py-2.5 align-top text-left">
               <p className="m-0 text-xs font-semibold uppercase tracking-wide text-foreground/85">
                 Debate passes
               </p>
@@ -33,12 +33,12 @@ export function DebateOptionsTable({
                 Max critique-and-rewrite rounds before wrap-up.
               </p>
             </th>
-            <td className="w-[132px] px-3 py-2 align-middle">
+            <td className="w-[140px] px-3 py-2 align-middle">
               <Select value={String(maxRounds)} onValueChange={(v) => onMaxRounds(Number(v))}>
-                <SelectTrigger className="h-9 w-[132px] text-sm">
+                <SelectTrigger className="h-9 w-full min-w-[92px]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[240]">
                   {ROUND_OPTIONS.map((n) => (
                     <SelectItem key={n} value={String(n)}>
                       {n}
@@ -57,12 +57,12 @@ export function DebateOptionsTable({
                 Minimum alignment from scorer before stopping.
               </p>
             </th>
-            <td className="w-[132px] px-3 py-2 align-middle">
+            <td className="w-[140px] px-3 py-2 align-middle">
               <Select value={String(consensusScore)} onValueChange={(v) => onConsensusScore(Number(v))}>
-                <SelectTrigger className="h-9 w-[132px] text-sm">
+                <SelectTrigger className="h-9 w-full min-w-[92px]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[240]">
                   {SCORE_OPTIONS.map((n) => (
                     <SelectItem key={n} value={String(n)}>
                       {n}
