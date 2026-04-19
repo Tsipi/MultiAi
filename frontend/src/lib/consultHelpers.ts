@@ -21,8 +21,15 @@ export function mergeTeamIntoPayload(
 ): ConsultPayload {
   const { writer, criticA, criticB } = selectEngineMembers(team);
   const imageLoaded = Boolean(attachments.some((a) => a.kind === "image"));
+
+  const allWriters = team.filter((m) => m.duty === "writer");
+  const allCritics = team.filter((m) => m.duty === "critic");
+
   return {
     ...form,
+    writers: allWriters.map((m) => withImageFallback(m.model, imageLoaded)),
+    critics: allCritics.map((m) => withImageFallback(m.model, imageLoaded)),
+    // Legacy fields so old backend versions and session replays still work
     writer: withImageFallback(writer.model, imageLoaded),
     critic_a: withImageFallback(criticA.model, imageLoaded),
     critic_b: withImageFallback(criticB.model, imageLoaded),

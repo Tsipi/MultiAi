@@ -5,6 +5,9 @@ export type ModelOption = {
 };
 
 export type ConsultPayload = {
+  writers?: string[];
+  critics?: string[];
+  // Legacy fields — kept for settings state persistence; backend prefers the list fields above
   writer: string;
   critic_a: string;
   critic_b: string;
