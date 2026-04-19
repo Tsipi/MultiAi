@@ -15,9 +15,8 @@ def test_engine_requests_clarification_for_ambiguous_prompt(tmp_path: Path):
         engine.consult(
             question="search process issues",
             domain="",
-            writer="openai/gpt-5.4",
-            critic_a="anthropic/claude-sonnet-4.6",
-            critic_b="google/gemini-3.1-pro",
+            writers=["openai/gpt-5.4"],
+            critics=["anthropic/claude-sonnet-4.6", "google/gemini-3.1-pro"],
             max_rounds=2,
             threshold=8,
         )
