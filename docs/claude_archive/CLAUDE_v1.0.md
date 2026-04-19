@@ -1,7 +1,12 @@
-## Project Overview
-MultiAi is a SaaS web app providing a multi-LLM consensus dashboard — better answers through structured AI agent collaboration. Users sign in, then view, manage, and interact with a live debate between AI agents.
+**Version:** 1.0
+**Last Updated:** 2026-04-02
+**Status:** ACTIVE — this supersedes all prior versions
+**Supersedes:** CLAUDE_v1.0.md archived in docs/claude_archive/
 
-The debate UX is a **Slack-style chatroom** (`ChatroomDebateView`). Each agent has a distinct avatar and name; they post messages into a single scrollable feed as the debate progresses. Round boundaries appear as channel dividers. The Scorer posts like a status-update bot. Typing indicators appear between messages. The final answer is pinned at the top of the channel — permanently visible. This layout scales naturally to any number of team members.
+## Project Overview
+This will be a saas web app that will provide a multi-LLM consensus dashboard - gives Better answers through structured AI agents collaboration.
+
+Users will sign in View, Manage and interact with this dashboard.
 
 ---
 
@@ -66,17 +71,10 @@ rolling_context += f"\n[Round {round_num} summary]: {round_summary}"
 This string — not the full answer/critique text — is passed to LLMs in subsequent rounds.
 
 ### Model routing
-- Writers and Critics: user-selected from UI (N writers and N critics supported — see below)
+- Writer, Critic A, Critic B: user-selected from UI
 - Scorer: always `deepseek/deepseek-chat-v3.2`
 - Summarizer: always `deepseek/deepseek-chat-v3.2`
 - Never route scorer/summarizer to user-selected models
-
-### N-writer / N-critic support (implemented)
-The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). Behavior:
-- **N writers:** All draft in parallel in round 1; their answers are merged and labeled `[Writer 1]`, `[Writer 2]`, etc. The primary writer (first) handles all refinements and final synthesis.
-- **N critics:** All critique in parallel every round. Critiques are merged and labeled. Consensus score is the average of all pairwise scores across critics' revised answers. Single-critic sessions compare the writer's answer directly against the critic's suggestion.
-- **Frontend:** `mergeTeamIntoPayload` sends `writers` and `critics` as full lists. Legacy `writer`/`critic_a`/`critic_b` fields are also sent for backward compat; the backend prefers the list fields.
-- **Cap:** max 6 writers, max 6 critics (enforced in `schemas.py`).
 
 ### Key modules
 | File | Responsibility |
@@ -144,54 +142,3 @@ SUMMARIZER_MODEL=deepseek/deepseek-chat-v3.2
 - Do not add a database — JSON file storage only
 - Do not build a CLI entrypoint — React UI + backend API only
 - Do not use `print()` for logging
-
----
-
-## Current Plan
-
-**Version:** v3 — Slack-Style Chatroom Debate Experience  
-**Authored:** 2026-04-09  
-**Scope:** Frontend only — no backend changes. Same existing NDJSON activity stream.
-
-### Design vision
-
-The debate feels like watching a team Slack channel in real-time. Agents post messages one after another as the debate progresses. Each has a distinct avatar and name. Round boundaries appear as Slack-style date dividers. The Scorer drops in like a bot posting a status update. Typing indicators appear between messages. The final answer appears as a pinned message at the top of the channel — the most important thing, permanently visible. This layout scales naturally to any number of team members.
-
-### New components to create
-
-| File | Description |
-|------|-------------|
-| `frontend/src/components/ChatroomDebateView.tsx` | Main chatroom container — replaces `DebateActivityFeed` during live runs and historical replay |
-| `frontend/src/components/ChatMessage.tsx` | Individual Slack-style message row (avatar, name, role badge, timestamp, text) |
-| `frontend/src/components/ScoreBadge.tsx` | Scorer bot post row — visually distinct from peer messages |
-| `frontend/src/components/RoundDivider.tsx` | Round section separator, styled like Slack date dividers |
-| `frontend/src/components/TypingRow.tsx` | Active speaker typing indicator with staggered bouncing dots |
-| `frontend/src/components/ChannelHeader.tsx` | Top bar: channel name, Live badge, round counter, animated score, team avatars |
-| `frontend/src/components/PinnedAnswer.tsx` | Sticky final answer card below header; collapsed by default, expands on toggle |
-| `frontend/src/components/ConsensusReachedBanner.tsx` | Inline consensus-reached callout, styled as a Slack info callout |
-| `frontend/src/lib/parseActivityMessages.ts` | Pure fn: `string[]` → `ChatroomState` — derives speaker, round, score, consensus from activity lines |
-
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `frontend/src/components/ChatPanel.tsx` | Replace `DebateActivityFeed` with `ChatroomDebateView`; reorder result blocks |
-| `frontend/src/index.css` | Agent color CSS custom properties |
-
-### Agent color palette
-
-| Agent | Color token |
-|-------|-------------|
-| Writer | `text-violet-600 / dark:text-violet-400` |
-| Critic A | `text-blue-600 / dark:text-blue-400` |
-| Critic B | `text-orange-600 / dark:text-orange-400` |
-| Extra critics (future) | cycle: teal → rose → amber |
-
-### Key constraints
-
-- **Frontend only** — the NDJSON activity stream from the backend is unchanged.
-- `parseActivityMessages` is a pure function with no React or side effects — all state derivation lives there.
-- The `ChatroomDebateView` receives `activity: string[]`, `cast`, `team`, `loading`, `maxRounds`, `consensusThreshold`, and optionally `result`.
-- `PinnedAnswer` is sticky below `ChannelHeader`; it only renders once `result` is populated.
-- Auto-scroll to bottom while loading; snap to top when result arrives; pause auto-scroll if the user manually scrolls up and show a "Jump to live" button.
-- Extra team members beyond the 3 engine slots are shown in the channel header avatar row with 50% opacity and a "(not in session)" tooltip — they do not post messages.
