@@ -61,7 +61,7 @@ async def score_consensus(answer_a: str, answer_b: str, cfg: AppConfig) -> tuple
 async def score_consensus_multi(answers: list[str], cfg: AppConfig) -> tuple[float, str]:
     """Average pairwise consensus scores across N answers (≥2). Returns (avg_score, reason)."""
     if len(answers) < 2:
-        return 10.0, "single reviewer"
+        return 0.0, "insufficient answers to score"
     pairs = [
         (answers[i], answers[j])
         for i in range(len(answers))

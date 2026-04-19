@@ -9,7 +9,7 @@ from backend.consensus.llm_clients import call_openrouter
 from backend.consensus.models import DebateRound, DebateSession
 from backend.consensus.parsing import extract_revised_answer
 from backend.consensus.prompts import CRITIQUE, WRITER_INITIAL, WRITER_REFINEMENT
-from backend.consensus.scorer import score_consensus_multi
+from backend.consensus.scorer import score_consensus, score_consensus_multi
 from backend.consensus.summarizer import summarize_round
 from backend.consensus.validator import validate_relevance
 
@@ -80,7 +80,11 @@ async def run_rounds(
 
         revised_answers = [extract_revised_answer(c) for c in critiques]
         merged = "\n\n".join(f"[{_critic_name(i, len(critics))}]\n{c}" for i, c in enumerate(critiques))
-        score, reason = await score_consensus_multi(revised_answers, cfg)
+        if len(revised_answers) >= 2:
+            score, reason = await score_consensus_multi(revised_answers, cfg)
+        else:
+            # Single critic: score writer's current answer vs critic's suggestion
+            score, reason = await score_consensus(answer, revised_answers[0], cfg)
 
         refine = WRITER_REFINEMENT.format(
             rolling_context=rolling, question=question, critique=merged,
