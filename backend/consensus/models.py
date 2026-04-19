@@ -29,6 +29,9 @@ class DebateSession:
     final_answer: str = ""
     final_score: float = 0.0
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    model_writers: list[str] = field(default_factory=list)
+    model_critics: list[str] = field(default_factory=list)
+    # Legacy fields preserved for reading old session JSON files
     model_writer: str = ""
     model_critic_a: str = ""
     model_critic_b: str = ""

@@ -1,5 +1,6 @@
 """Consensus scoring logic."""
 
+import asyncio
 import logging
 import re
 
@@ -55,6 +56,20 @@ async def score_consensus(answer_a: str, answer_b: str, cfg: AppConfig) -> tuple
     prompt = SCORER_PROMPT.format(answer_a=answer_a[:600], answer_b=answer_b[:600])
     response = await call_openrouter(prompt, cfg.scorer_model, cfg)
     return _parse_score(response)
+
+
+async def score_consensus_multi(answers: list[str], cfg: AppConfig) -> tuple[float, str]:
+    """Average pairwise consensus scores across N answers (≥2). Returns (avg_score, reason)."""
+    if len(answers) < 2:
+        return 10.0, "single reviewer"
+    pairs = [
+        (answers[i], answers[j])
+        for i in range(len(answers))
+        for j in range(i + 1, len(answers))
+    ]
+    results = await asyncio.gather(*[score_consensus(a, b, cfg) for a, b in pairs])
+    avg = sum(r[0] for r in results) / len(results)
+    return round(avg, 2), results[0][1]
 
 
 async def score_relevance(question: str, answer: str, cfg: AppConfig) -> tuple[float, str]:

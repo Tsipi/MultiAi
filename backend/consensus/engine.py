@@ -25,9 +25,8 @@ class ConsensusEngine:
         self,
         question: str,
         domain: str,
-        writer: str,
-        critic_a: str,
-        critic_b: str,
+        writers: list[str],
+        critics: list[str],
         max_rounds: int,
         threshold: int,
         clarification: str = "",
@@ -49,9 +48,8 @@ class ConsensusEngine:
         attachment_text, image_urls = build_attachment_context(normalized_attachments, self.cfg)
         image_mode = bool(image_urls)
         if image_mode:
-            writer = _fallback_for_image(writer)
-            critic_a = _fallback_for_image(critic_a)
-            critic_b = _fallback_for_image(critic_b)
+            writers = [_fallback_for_image(w) for w in writers]
+            critics = [_fallback_for_image(c) for c in critics]
             await report("Image input detected. Deepseek selections were switched to Gemini Flash.")
         question_with_context = question
         if attachment_text:
@@ -62,9 +60,11 @@ class ConsensusEngine:
             session_id=session_id,
             question=question_with_context,
             domain=domain,
-            model_writer=writer,
-            model_critic_a=critic_a,
-            model_critic_b=critic_b,
+            model_writers=list(writers),
+            model_critics=list(critics),
+            model_writer=writers[0] if writers else "",
+            model_critic_a=critics[0] if critics else "",
+            model_critic_b=critics[1] if len(critics) > 1 else "",
             thread_id=thread_id or session_id,
             parent_session_id=parent_session_id,
             is_followup=is_followup,
@@ -95,9 +95,8 @@ class ConsensusEngine:
                 session,
                 question_with_context,
                 domain,
-                writer,
-                critic_a,
-                critic_b,
+                writers,
+                critics,
                 max_rounds,
                 threshold,
                 self.cfg,
@@ -109,7 +108,7 @@ class ConsensusEngine:
                 question=question_with_context, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=session.intent_scope
             )
             await report("Synthesizing final answer")
-            session.final_answer = await call_openrouter(final_prompt, writer, self.cfg)
+            session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
             session.final_score = session.rounds[-1].consensus_score if session.rounds else 0.0
             is_ok, rel_score, rel_reason = await validate_relevance(question_with_context, session.final_answer, self.cfg)
             if not is_ok:
@@ -118,7 +117,7 @@ class ConsensusEngine:
                 refined = WRITER_REFINEMENT.format(
                     rolling_context=rolling, question=question_with_context, critique=repair, role_context=domain, intent_scope=session.intent_scope
                 )
-                session.final_answer = await call_openrouter(refined, writer, self.cfg)
+                session.final_answer = await call_openrouter(refined, writers[0], self.cfg)
                 is_ok, _, _ = await validate_relevance(question_with_context, session.final_answer, self.cfg)
                 if not is_ok:
                     retry = await assess_intent(question_with_context, domain, clarification, self.cfg)

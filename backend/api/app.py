@@ -85,9 +85,8 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
     session = await ENGINE.consult(
         question=payload.question,
         domain=payload.role,
-        writer=payload.writer,
-        critic_a=payload.critic_a,
-        critic_b=payload.critic_b,
+        writers=payload.writers,
+        critics=payload.critics,
         max_rounds=payload.max_rounds,
         threshold=payload.consensus_score,
         clarification=payload.clarification,
@@ -113,9 +112,8 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
             session = await ENGINE.consult(
                 question=payload.question,
                 domain=payload.role,
-                writer=payload.writer,
-                critic_a=payload.critic_a,
-                critic_b=payload.critic_b,
+                writers=payload.writers,
+                critics=payload.critics,
                 max_rounds=payload.max_rounds,
                 threshold=payload.consensus_score,
                 clarification=payload.clarification,
