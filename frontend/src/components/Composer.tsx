@@ -38,6 +38,7 @@ export function Composer(props: Props) {
             tip="One-line persona: tone, expertise, and guardrails for every model in the run."
           />
           <Input
+            name="role"
             value={props.value.role}
             maxLength={255}
             placeholder="e.g. You are a product strategy expert who gives practical, no-fluff answers."
@@ -50,6 +51,7 @@ export function Composer(props: Props) {
             tip="State the goal clearly: output shape, length, audience, and anything to avoid."
           />
           <Textarea
+            name="question"
             value={props.value.question}
             rows={7}
             placeholder="e.g. Give 7 bullet points, max 14 words each, focused on early-stage B2B SaaS."

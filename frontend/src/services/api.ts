@@ -104,7 +104,12 @@ export async function consultStream(payload: ConsultPayload, handlers: StreamHan
       if (!line.trim()) {
         continue;
       }
-      const event = JSON.parse(line) as { type: string; message?: string; data?: ConsultResult };
+      let event: { type: string; message?: string; data?: ConsultResult };
+      try {
+        event = JSON.parse(line) as { type: string; message?: string; data?: ConsultResult };
+      } catch (error) {
+        throw new Error(`Invalid stream event: ${String(error)} - ${line}`);
+      }
       if (event.type === "activity" && event.message) {
         handlers.onActivity(event.message);
       }

@@ -54,6 +54,8 @@ export function SessionPromptBlock({
               {editing ? (
                 <div className="grid gap-2">
                   <textarea
+                    id="resend-question-textarea"
+                    name="resend_question"
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     className="v2-command-input min-h-[120px] w-full resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground"

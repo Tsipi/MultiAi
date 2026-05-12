@@ -57,6 +57,7 @@ export function FollowupComposer(props: Props) {
           <Label>
             Follow-up task or question
             <Textarea
+              name="followup_instruction"
               value={props.instruction}
               rows={4}
               onChange={(e) => props.onInstructionChange(e.target.value)}
@@ -65,6 +66,7 @@ export function FollowupComposer(props: Props) {
           <Label>
             Extra constraints (optional)
             <Textarea
+              name="followup_constraints"
               value={props.constraints}
               rows={3}
               onChange={(e) => props.onConstraintsChange(e.target.value)}

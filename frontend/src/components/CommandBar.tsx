@@ -82,6 +82,9 @@ export function CommandBar({
             <Plus className="h-5 w-5" strokeWidth={2} />
           </Button>
           <textarea
+            id="ask-team-question"
+            name="question"
+            aria-label="Ask your team"
             className={cn(
               "v2-command-input min-h-[56px] max-h-[220px] flex-1 resize-y rounded-2xl border border-transparent bg-[var(--v2-elevated)] px-3 py-3",
               "text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/55"
