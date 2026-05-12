@@ -1,7 +1,11 @@
-# MultiAI / Agents Studio
+# MultiAI 
 Design your own AI thinking team.
 
 Multiple AI agents debate, critique, and refine answers until consensus is reached.
+
+Multi-agent LLM consensus app with a React frontend and FastAPI backend.
+
+Product direction: Agents Studio
 
 ![Hero Screenshot](/docs/images/hero.png)
 
@@ -48,7 +52,7 @@ User question + context files
         ↓
 User-defined AI team
         ↓
-N Writer agents + N Critic agents
+Configurable Writer and Critic agents
         ↓
 Structured debate / critique / refinement loop
         ↓
@@ -123,6 +127,8 @@ backend/consensus/models.py         DebateSession and DebateRound models
 backend/storage/session_store.py    JSON session persistence
 backend/config.py                   App configuration and env values
 ```
+Note: the backend supports multiple writers and critics. The frontend is optimized for the default Writer + Critic A/B setup, with broader N-agent display support still in progress.
+
 ## Debate loop — current behavior
 
 1. User submits question, role context, team setup, max rounds, agreement threshold, and attachments.
