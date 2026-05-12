@@ -220,7 +220,7 @@ export function ChatPanel(props: Props) {
                       label={cast.writer.name}
                       avatar={cast.writer.avatar}
                       modelId={cast.writer.model}
-                      tag={`Round ${roundLabel}`}
+                      tag={undefined}
                       rawText={String(r.answer ?? "")}
                     >
                       <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
@@ -230,7 +230,7 @@ export function ChatPanel(props: Props) {
                       label={cast.criticA.name}
                       avatar={cast.criticA.avatar}
                       modelId={cast.criticA.model}
-                      tag={`Round ${roundLabel}`}
+                      tag={undefined}
                       rawText={christy}
                     >
                       <ReactMarkdown>{christy}</ReactMarkdown>
@@ -240,7 +240,7 @@ export function ChatPanel(props: Props) {
                       label={cast.criticB.name}
                       avatar={cast.criticB.avatar}
                       modelId={cast.criticB.model}
-                      tag={`Round ${roundLabel}`}
+                      tag={undefined}
                       rawText={mark}
                     >
                       <ReactMarkdown>{mark}</ReactMarkdown>
