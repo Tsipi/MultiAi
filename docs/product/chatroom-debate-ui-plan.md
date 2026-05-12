@@ -4,6 +4,9 @@
 **Scope:** Frontend only — no backend changes. Same existing NDJSON activity stream.  
 **Alternative to:** `claude_suggestions.md` (Courtroom layout)
 
+> UX implementation plan for the chatroom-style debate experience.  
+> Note: the backend supports multiple writer and critic agents. The frontend is optimized for the default Writer + Critic A/B workflow, while broader N-agent visualization support is still in progress.
+
 ---
 
 ## Design Vision
@@ -18,7 +21,7 @@ This layout scales naturally to any number of team members — add 5 critics and
 
 Unlike the courtroom's 3-column grid, the chatroom feed is a single vertical scroll — every agent, regardless of how many there are, simply posts into the same thread. No layout breaks at 4, 5, or 6 members.
 
-**N-writer / N-critic support: fully implemented (backend + frontend).** The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). All writers draft in parallel in round 1; all critics critique in parallel every round. The frontend sends the full team lists via `mergeTeamIntoPayload`. The chatroom feed displays all participants as they post. Extra members beyond the active engine slots are shown in the channel header avatar strip with 50% opacity.
+**N-writer / N-critic backend support is implemented. Frontend visualization for larger teams is still being refined.** The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). All writers draft in parallel in round 1; all critics critique in parallel every round. The frontend sends the full team lists via `mergeTeamIntoPayload`. The chatroom feed displays all participants as they post. Extra members beyond the active engine slots are shown in the channel header avatar strip with 50% opacity.
 
 ---
 

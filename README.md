@@ -5,8 +5,6 @@ Multiple AI agents debate, critique, and refine answers until consensus is reach
 
 Multi-agent LLM consensus app with a React frontend and FastAPI backend.
 
-Product direction: Agents Studio
-
 ![Hero Screenshot](/docs/images/hero.png)
 
 ## Product summary
@@ -22,24 +20,24 @@ UI/UX, deployment hardening, and advanced multi-agent capabilities are still evo
 
 ## Tech Stack
 
-### Frontend
+### Frontend at `localhost:8000`
 - React
 - TypeScript
 - Vite
 
-### Backend
+### Backend at `localhost:5173`
 - FastAPI
 - Python
 
 ### AI / LLM
-- OpenRouter
+- OpenRouter (one key → GPT, Claude, Gemini, Deepseek)
 - Multi-agent orchestration
 - Consensus scoring
 - Structured debate workflows
 
 ### Infrastructure
 - Railway
-- JSON session persistence
+- JSON session persistence - JSON files in `sessions/`
 
 ## Features
 The frontend supports a team-based setup and sends writers[] and critics[] arrays to the backend. The backend debate runner supports multiple writers drafting in parallel and multiple critics reviewing the answer in each round.

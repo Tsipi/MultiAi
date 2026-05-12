@@ -1,6 +1,7 @@
 # Multi-LLM Consensus Engine
 ## Cursor Agent Rules — Phase 1
-
+> Historical implementation notes for the original Phase 1 fixed Writer + Critic A/B consensus engine.  
+> Some behavior has evolved in the current app; see README.md for current product behavior.
 ---
 
 ## Project Overview

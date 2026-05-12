@@ -1,10 +1,70 @@
-# Deployment (Railway)
+# Deployment
 
-Do these at deploy time — not before.
+## Current Status
 
-- Start command must use `--host 0.0.0.0 --port $PORT` (not `localhost:8000`)
-- `sessions/` directory needs a Railway persistent volume (otherwise sessions vanish on redeploy)
-- Tighten CORS in `app.py` — change `allow_origins=["*"]` to your actual frontend URL
-- All `.env` variables go into Railway's dashboard environment settings (never in code)
-- Frontend deploys separately (Vercel or Railway static site) with the backend URL configured 
-Status: Work in progress. Core local architecture is implemented; deployment hardening is ongoing.
+🚧 Work in Progress
+
+The project currently supports local development and early deployment workflows.
+
+Core orchestration, debate loops, and frontend/backend communication are implemented. Production hardening and SaaS infrastructure are still evolving.
+
+---
+
+## Current Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite + TypeScript |
+| Backend | FastAPI + Python |
+| LLM Gateway | OpenRouter |
+| Persistence | JSON session storage |
+| Deployment Target | Railway |
+
+---
+
+## Local Development
+
+### Backend
+
+```bash
+pip install -r backend/requirements.txt
+uvicorn backend.api.app:app --reload --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## Environment Variables
+
+```env
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+```
+
+---
+
+## Planned Improvements
+
+Planned future deployment improvements include:
+- authentication
+- database persistence
+- cloud storage
+- production monitoring
+- multi-user isolation
+- rate limiting
+- deployment automation
+
+---
+
+## Railway
+
+The intended deployment target is Railway.
+
+Frontend and backend services are expected to run as separate deployments communicating through HTTP APIs.
