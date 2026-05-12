@@ -16,6 +16,10 @@ MultiAI is a React + FastAPI multi-agent LLM orchestration app. The user sends a
 
 The product direction is **Agents Studio**: a workspace where users define an AI team, give each member a role and model, attach context files, run the team, inspect the debate, and save the final answer.
 
+**Status: Work in Progress**
+Core local architecture and multi-agent orchestration are implemented. 
+UI/UX, deployment hardening, and advanced multi-agent capabilities are still evolving.
+
 ## Features
 The frontend supports a team-based setup and sends writers[] and critics[] arrays to the backend. The backend debate runner supports multiple writers drafting in parallel and multiple critics reviewing the answer in each round.
 
@@ -61,6 +65,9 @@ Agreement score + relevance validation
 Final synthesized answer
         ↓
 Saved session with debate transcript, cost, tokens, and model usage
+
+Note: the backend supports multiple writers and critics. 
+The frontend is optimized for the default Writer + Critic A/B setup, while broader N-agent visualization support is still in progress.
 
 ### Frontend
 
@@ -127,7 +134,7 @@ backend/consensus/models.py         DebateSession and DebateRound models
 backend/storage/session_store.py    JSON session persistence
 backend/config.py                   App configuration and env values
 ```
-Note: the backend supports multiple writers and critics. The frontend is optimized for the default Writer + Critic A/B setup, with broader N-agent display support still in progress.
+
 
 ## Debate loop — current behavior
 
@@ -174,7 +181,7 @@ Note: the backend supports multiple writers and critics. The frontend is optimiz
 | Full debate view | Implemented |
 | Follow-up sessions | Implemented / in progress |
 | Authentication / real SaaS accounts | Not implemented yet |
-| Database persistence | Not implemented; do not touch backend yet |
+| Database persistence | Not implemented; current v1 uses JSON session storag |
 
 ## Known definition gap
 
