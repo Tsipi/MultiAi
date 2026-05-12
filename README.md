@@ -20,6 +20,27 @@ The product direction is **Agents Studio**: a workspace where users define an AI
 Core local architecture and multi-agent orchestration are implemented. 
 UI/UX, deployment hardening, and advanced multi-agent capabilities are still evolving.
 
+## Tech Stack
+
+### Frontend
+- React
+- TypeScript
+- Vite
+
+### Backend
+- FastAPI
+- Python
+
+### AI / LLM
+- OpenRouter
+- Multi-agent orchestration
+- Consensus scoring
+- Structured debate workflows
+
+### Infrastructure
+- Railway
+- JSON session persistence
+
 ## Features
 The frontend supports a team-based setup and sends writers[] and critics[] arrays to the backend. The backend debate runner supports multiple writers drafting in parallel and multiple critics reviewing the answer in each round.
 
