@@ -67,7 +67,7 @@ def first_sentence(text: str) -> str:
 
 def clean_text(text: str) -> str:
     """Normalize markdown-heavy text for activity feed."""
-    value = re.sub(r"\[Critic [AB]\]", "", text)
+    value = re.sub(r"\[Critic [^\]]+\]", "", text)
     value = value.replace("*", "").replace("`", "")
     value = re.sub(r"\s+", " ", value).strip(" -:\n\t")
     return value[:220]

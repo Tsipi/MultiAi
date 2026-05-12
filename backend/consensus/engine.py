@@ -25,9 +25,8 @@ class ConsensusEngine:
         self,
         question: str,
         domain: str,
-        writer: str,
-        critic_a: str,
-        critic_b: str,
+        writers: list[str],
+        critics: list[str],
         max_rounds: int,
         threshold: int,
         clarification: str = "",
@@ -49,9 +48,8 @@ class ConsensusEngine:
         attachment_text, image_urls = build_attachment_context(normalized_attachments, self.cfg)
         image_mode = bool(image_urls)
         if image_mode:
-            writer = _fallback_for_image(writer)
-            critic_a = _fallback_for_image(critic_a)
-            critic_b = _fallback_for_image(critic_b)
+            writers = [_fallback_for_image(w) for w in writers]
+            critics = [_fallback_for_image(c) for c in critics]
             await report("Image input detected. Deepseek selections were switched to Gemini Flash.")
         question_with_context = question
         if attachment_text:
@@ -62,15 +60,22 @@ class ConsensusEngine:
             session_id=session_id,
             question=question_with_context,
             domain=domain,
-            model_writer=writer,
-            model_critic_a=critic_a,
-            model_critic_b=critic_b,
+            model_writers=list(writers),
+            model_critics=list(critics),
+            model_writer=writers[0] if writers else "",
+            model_critic_a=critics[0] if critics else "",
+            model_critic_b=critics[1] if len(critics) > 1 else "",
             thread_id=thread_id or session_id,
             parent_session_id=parent_session_id,
             is_followup=is_followup,
             source_prompt=source_prompt,
             source_final_answer=source_final_answer,
             followup_instruction=followup_instruction,
+            base_question=question,
+            attachment_files=[
+                {"name": a.name, "mime_type": a.mime_type, "kind": a.kind, "data": a.data}
+                for a in normalized_attachments
+            ],
         )
         usage_token = start_usage_collection()
         assessment = await assess_intent(question_with_context, domain, clarification, self.cfg)
@@ -81,20 +86,17 @@ class ConsensusEngine:
             session.clarification_question = assessment.clarification_question
             session.clarification_options = assessment.clarification_options or []
             await report(f"Clarification required: {assessment.reason}")
-            usage = stop_usage_collection(usage_token)
-            session.model_costs = [{"model": k, **v} for k, v in usage.items()]
-            session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
-            session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))
+            _apply_usage(session, usage_token)
             save_session(session, self.cfg.sessions_dir)
             return session
         try:
+            await report("Your Writer and both Critics are in session — drafting, challenging, then converging.")
             answer, rolling = await run_rounds(
                 session,
                 question_with_context,
                 domain,
-                writer,
-                critic_a,
-                critic_b,
+                writers,
+                critics,
                 max_rounds,
                 threshold,
                 self.cfg,
@@ -106,7 +108,7 @@ class ConsensusEngine:
                 question=question_with_context, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=session.intent_scope
             )
             await report("Synthesizing final answer")
-            session.final_answer = await call_openrouter(final_prompt, writer, self.cfg)
+            session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
             session.final_score = session.rounds[-1].consensus_score if session.rounds else 0.0
             is_ok, rel_score, rel_reason = await validate_relevance(question_with_context, session.final_answer, self.cfg)
             if not is_ok:
@@ -115,7 +117,7 @@ class ConsensusEngine:
                 refined = WRITER_REFINEMENT.format(
                     rolling_context=rolling, question=question_with_context, critique=repair, role_context=domain, intent_scope=session.intent_scope
                 )
-                session.final_answer = await call_openrouter(refined, writer, self.cfg)
+                session.final_answer = await call_openrouter(refined, writers[0], self.cfg)
                 is_ok, _, _ = await validate_relevance(question_with_context, session.final_answer, self.cfg)
                 if not is_ok:
                     retry = await assess_intent(question_with_context, domain, clarification, self.cfg)
@@ -135,10 +137,7 @@ class ConsensusEngine:
         except LLMCallError as exc:
             await report(f"Stopped due to LLM error: {exc}")
             session.final_answer = f"Stopped early due to LLM error: {exc}"
-        usage = stop_usage_collection(usage_token)
-        session.model_costs = [{"model": k, **v} for k, v in usage.items()]
-        session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
-        session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))
+        _apply_usage(session, usage_token)
         save_session(session, self.cfg.sessions_dir)
         return session
 
@@ -146,3 +145,11 @@ class ConsensusEngine:
 def _fallback_for_image(model: str) -> str:
     """Switch image-unsupported Deepseek to Gemini Flash."""
     return "google/gemini-2.5-flash" if model == "deepseek/deepseek-chat-v3.2" else model
+
+
+def _apply_usage(session: DebateSession, token: object) -> None:
+    """Stop collection and write cost/token totals onto session."""
+    usage = stop_usage_collection(token)
+    session.model_costs = [{"model": k, **v} for k, v in usage.items()]
+    session.total_cost_usd = round(sum(v["total_cost_usd"] for v in usage.values()), 6)
+    session.total_tokens = int(sum(v["total_tokens"] for v in usage.values()))

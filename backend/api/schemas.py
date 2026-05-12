@@ -1,6 +1,6 @@
 """Pydantic models for API contracts."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class AttachmentPayload(BaseModel):
@@ -15,10 +15,28 @@ class AttachmentPayload(BaseModel):
 class ConsultRequest(BaseModel):
     """Input payload for consultation endpoint."""
 
-    writer: str
-    critic_a: str
-    critic_b: str
+    # Preferred: full team lists
+    writers: list[str] = Field(default_factory=list, max_length=6)
+    critics: list[str] = Field(default_factory=list, max_length=6)
+    # Legacy single-model fields kept for backward compatibility
+    writer: str = ""
+    critic_a: str = ""
+    critic_b: str = ""
+
     max_rounds: int = Field(ge=1, le=6)
+
+    @model_validator(mode="after")
+    def _coerce_and_validate_team(self) -> "ConsultRequest":
+        """Populate list fields from legacy named fields, then enforce minimum sizes."""
+        if not self.writers and self.writer:
+            self.writers = [self.writer]
+        if not self.critics:
+            self.critics = [m for m in (self.critic_a, self.critic_b) if m]
+        if not self.writers:
+            raise ValueError("At least one writer model is required.")
+        if not self.critics:
+            raise ValueError("At least one critic model is required.")
+        return self
     consensus_score: int = Field(ge=6, le=10)
     role: str = Field(max_length=255)
     question: str
@@ -56,3 +74,5 @@ class ConsultResponse(BaseModel):
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
+    base_question: str = ""
+    attachment_files: list[dict] = Field(default_factory=list)

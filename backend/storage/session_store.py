@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+from dataclasses import fields
 from pathlib import Path
 
 from backend.consensus.models import DebateRound, DebateSession
+
+_ROUND_FIELDS = {f.name for f in fields(DebateRound)}
+_SESSION_FIELDS = {f.name for f in fields(DebateSession)}
 
 
 def save_session(session: DebateSession, sessions_dir: Path) -> Path:
@@ -17,11 +21,19 @@ def save_session(session: DebateSession, sessions_dir: Path) -> Path:
 
 
 def load_session(session_id: str, sessions_dir: Path) -> DebateSession:
-    """Load debate session and rebuild dataclasses."""
+    """Load debate session and rebuild dataclasses.
+
+    Strips unknown keys and tolerates missing optional fields so that JSON
+    files written by older schema versions still load without error.
+    """
     payload = json.loads((sessions_dir / f"{session_id}.json").read_text(encoding="utf-8"))
-    rounds = [DebateRound(**item) for item in payload.get("rounds", [])]
-    payload["rounds"] = rounds
-    return DebateSession(**payload)
+    rounds = [
+        DebateRound(**{k: v for k, v in item.items() if k in _ROUND_FIELDS})
+        for item in payload.get("rounds", [])
+    ]
+    filtered = {k: v for k, v in payload.items() if k in _SESSION_FIELDS}
+    filtered["rounds"] = rounds
+    return DebateSession(**filtered)
 
 
 def list_sessions(sessions_dir: Path) -> list[dict]:
@@ -58,7 +70,8 @@ def list_sessions(sessions_dir: Path) -> list[dict]:
 def delete_session(session_id: str, sessions_dir: Path) -> bool:
     """Delete one saved session file if present."""
     file = sessions_dir / f"{session_id}.json"
-    if not file.exists():
+    try:
+        file.unlink()
+        return True
+    except FileNotFoundError:
         return False
-    file.unlink(missing_ok=True)
-    return True

@@ -29,6 +29,9 @@ class DebateSession:
     final_answer: str = ""
     final_score: float = 0.0
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    model_writers: list[str] = field(default_factory=list)
+    model_critics: list[str] = field(default_factory=list)
+    # Legacy fields preserved for reading old session JSON files
     model_writer: str = ""
     model_critic_a: str = ""
     model_critic_b: str = ""
@@ -46,6 +49,8 @@ class DebateSession:
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
+    base_question: str = ""
+    attachment_files: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return serializable session dictionary."""

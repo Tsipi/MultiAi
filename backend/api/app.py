@@ -3,16 +3,20 @@
 import asyncio
 import json
 import logging
+from dataclasses import asdict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from backend.api.sessions import router as sessions_router
 from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
 from backend.consensus.engine import ConsensusEngine
+from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
+from backend.consensus.llm_clients import call_openrouter
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -38,7 +42,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         final_answer=session.final_answer,
         final_score=session.final_score,
         cost_hint="Displayed as estimated by selected model rates.",
-        full_discussion=[item.__dict__ for item in session.rounds],
+        full_discussion=[asdict(item) for item in session.rounds],
         status="needs_clarification" if session.needs_clarification else "completed",
         needs_clarification=session.needs_clarification,
         clarification_question=session.clarification_question,
@@ -53,18 +57,36 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         source_prompt=session.source_prompt,
         source_final_answer=session.source_final_answer,
         followup_instruction=session.followup_instruction,
+        base_question=session.base_question,
+        attachment_files=session.attachment_files,
     )
+class TitleRequest(BaseModel):
+    question: str
+    role: str = ""
+
 @app.get("/api/health")
 async def health() -> dict: return {"status": "ok"}
+
+@app.post("/api/title")
+async def generate_title(payload: TitleRequest) -> dict:
+    """Generate a short (3-6 word) lowercase title from task + role (for exports and sidebar)."""
+    q = payload.question[:2000]
+    r = (payload.role or "")[:600]
+    prompt = build_export_title_prompt(q, r)
+    try:
+        raw = await call_openrouter(prompt, CFG.export_title_model, CFG)
+        title = normalize_export_title(raw, q)
+        return {"title": title}
+    except Exception:
+        return {"title": normalize_export_title("", q)}
 @app.post("/api/consult", response_model=ConsultResponse)
 async def consult(payload: ConsultRequest) -> ConsultResponse:
     """Run consensus session and return final result plus rounds."""
     session = await ENGINE.consult(
         question=payload.question,
         domain=payload.role,
-        writer=payload.writer,
-        critic_a=payload.critic_a,
-        critic_b=payload.critic_b,
+        writers=payload.writers,
+        critics=payload.critics,
         max_rounds=payload.max_rounds,
         threshold=payload.consensus_score,
         clarification=payload.clarification,
@@ -90,9 +112,8 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
             session = await ENGINE.consult(
                 question=payload.question,
                 domain=payload.role,
-                writer=payload.writer,
-                critic_a=payload.critic_a,
-                critic_b=payload.critic_b,
+                writers=payload.writers,
+                critics=payload.critics,
                 max_rounds=payload.max_rounds,
                 threshold=payload.consensus_score,
                 clarification=payload.clarification,

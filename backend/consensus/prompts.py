@@ -56,7 +56,7 @@ Critique of your last answer:
 Provide your refined answer, incorporating valid points from the critique and staying fully relevant to the original question:
 """
 
-FINAL_SYNTHESIS = """Two expert reviewers have debated a question and converged on an answer.
+FINAL_SYNTHESIS = """A team of expert reviewers has debated a question and converged on an answer.
 Synthesize the single best final answer, clean and well-structured, with no off-topic content.
 Hard constraints:
 - Keep the answer strictly focused on the user question.
@@ -68,10 +68,10 @@ Role context: {role_context}
 Intent scope: {intent_scope}
 Question: {question}
 
-Final position A:
+Writer's final position:
 {current_answer}
 
-Final critique / position B:
+Reviewer critiques and positions:
 {critique}
 
 Provide the definitive synthesized answer:

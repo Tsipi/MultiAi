@@ -1,5 +1,11 @@
-import { MODEL_OPTIONS } from "../data/models";
-import { FACE_OPTIONS, TeamMember, findFaceByName } from "../data/experts";
+import { FACE_OPTIONS, TeamMember } from "../data/experts";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FieldLabelWithTip } from "./FieldLabelWithTip";
+import { TeamMemberDutyModelRow } from "./TeamMemberDutyModelRow";
+import { ActionGhostButton } from "./ActionGhostButton";
 
 type Props = {
   member: TeamMember;
@@ -10,52 +16,66 @@ type Props = {
 };
 
 export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove }: Props) {
-  const profile = findFaceByName(member.name);
   const chooseMember = (name: string) => {
-    const face = findFaceByName(name);
-    onUpdate({ ...member, name: face.name, avatar: face.avatar });
+    const face = FACE_OPTIONS.find((f) => f.name === name);
+    if (!face) return;
+    onUpdate({ ...member, name: face.name, avatar: face.avatar, expertiseTag: face.expertiseTag });
   };
+
   return (
-    <article className="member-card">
-      <div className="member-head">
-        <img src={member.avatar} className="team-avatar" alt={member.name} />
-        <div className="member-head-fields">
-          <label>Team member
-            <select value={member.name} onChange={(e) => chooseMember(e.target.value)}>
-              {FACE_OPTIONS.map((f) => <option key={f.name} value={f.name}>{f.name}</option>)}
-            </select>
-          </label>
-          <p className="member-tag">{profile.expertiseTag}</p>
-          <p className="member-fun-fact">{profile.funFact}</p>
+    <article className="grid min-w-0 gap-2.5 rounded-xl border border-border/65 bg-card/40 p-2.5">
+      <div className="flex items-start gap-2">
+        <img
+          src={member.avatar}
+          className="h-9 w-9 shrink-0 rounded-full border-2 border-ring/35 object-cover"
+          alt={member.name}
+        />
+        <div className="grid min-w-0 flex-1 gap-1">
+          <div className="grid gap-1">
+            <Select value={member.name} onValueChange={chooseMember}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FACE_OPTIONS.map((f) => (
+                  <SelectItem key={f.name} value={f.name}>
+                    {f.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0 rounded-full text-foreground hover:bg-rose-500/10 hover:text-rose-600"
+          title="Remove this team member from this session of questions"
+          aria-label="Remove team member from this session"
+          disabled={!canRemove}
+          onClick={onRemove}
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
-      <div className="member-main">
-        <label>Seat
-          <select value={member.duty} onChange={(e) => onUpdate({ ...member, duty: e.target.value as "writer" | "critic" })}>
-            <option value="writer">Writer</option>
-            <option value="critic">Critic</option>
-          </select>
-        </label>
-        <label>LLM
-          <select value={member.model} onChange={(e) => onUpdate({ ...member, model: e.target.value })}>
-            {MODEL_OPTIONS.map((m) => <option key={m.id} value={m.id}>{m.label} ({m.cost})</option>)}
-          </select>
-        </label>
-      </div>
-      <label>What this team member is great at
-        <input
+      <TeamMemberDutyModelRow compact member={member} onUpdate={onUpdate} />
+      <div className="grid gap-1">
+        <FieldLabelWithTip
+          compact
+          label="What this team member is great at"
+          tip="Optional focus for this seat. Empty uses the main Lead Expert Role from the composer."
+        />
+        <Input
           value={member.role}
-          placeholder={baseRole || "Example: You are an expert in growth strategy for B2B SaaS."}
+          placeholder={baseRole || "e.g. You are an expert in growth strategy for B2B SaaS."}
           onChange={(e) => onUpdate({ ...member, role: e.target.value, lockToBaseRole: false })}
         />
-      </label>
-      <div className="member-actions">
-        <button type="button" className="ghost-btn sync-btn" onClick={() => onUpdate({ ...member, role: baseRole, lockToBaseRole: true })}>
+      </div>
+      <div className="flex flex-wrap justify-start gap-1.5">
+        <ActionGhostButton onClick={() => onUpdate({ ...member, role: baseRole, lockToBaseRole: true })}>
           Adopt main expert style
-        </button>
-        <button type="button" className="ghost-btn danger" disabled={!canRemove} onClick={onRemove}>
-          Delete team member
-        </button>
+        </ActionGhostButton>
       </div>
     </article>
   );

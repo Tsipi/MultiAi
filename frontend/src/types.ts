@@ -5,6 +5,9 @@ export type ModelOption = {
 };
 
 export type ConsultPayload = {
+  writers?: string[];
+  critics?: string[];
+  // Legacy fields — kept for settings state persistence; backend prefers the list fields above
   writer: string;
   critic_a: string;
   critic_b: string;
@@ -26,6 +29,14 @@ export type AttachmentInput = {
   kind: "text" | "pdf" | "image";
   name: string;
   mime_type: string;
+  data: string;
+};
+
+/** Serialized attachment reference returned with session (data URL for opening in a new tab). */
+export type AttachmentFileRef = {
+  name: string;
+  mime_type: string;
+  kind: string;
   data: string;
 };
 
@@ -51,6 +62,8 @@ export type ConsultResult = {
   source_prompt: string;
   source_final_answer: string;
   followup_instruction: string;
+  base_question: string;
+  attachment_files: AttachmentFileRef[];
 };
 
 export type StreamHandlers = {

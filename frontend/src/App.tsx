@@ -1,27 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BarChart3, Settings2 } from "lucide-react";
 
+import { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./components/ConsensusRunsSidebar";
+import { AdvancedDrawer } from "./components/AdvancedDrawer";
+import { InsightsDrawer } from "./components/InsightsDrawer";
+import { CommandBar } from "./components/CommandBar";
+import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
-import { Composer } from "./components/Composer";
-import { SettingsBar } from "./components/SettingsBar";
-import { Sidebar } from "./components/Sidebar";
 import { TeamMember, createDefaultTeam } from "./data/experts";
-import { consultStream, deleteSession, getSession, listSessions } from "./services/api";
+import {
+  buildRunSignature,
+  mergeTeamIntoPayload,
+  selectCastFromTeam,
+  toPreview,
+  type CastSelection,
+} from "./lib/consultHelpers";
+import { appendDefaultTeamMember } from "./lib/teamRoster";
+import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
 import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { useDarkMode } from "./hooks/useDarkMode";
+import { Button } from "@/components/ui/button";
 
 const defaults: ConsultPayload = {
-  writer: "deepseek/deepseek-chat-v3.2", critic_a: "google/gemini-2.5-flash", critic_b: "google/gemini-2.5-flash",
-  max_rounds: 3, consensus_score: 8, role: "", question: ""
+  writer: "deepseek/deepseek-chat-v3.2",
+  critic_a: "google/gemini-2.5-flash",
+  critic_b: "google/gemini-2.5-flash",
+  max_rounds: 3,
+  consensus_score: 8,
+  role: "",
+  question: "",
 };
 
 export default function App() {
+  const [dark, toggleDark] = useDarkMode();
   const [form, setForm] = useState<ConsultPayload>(defaults);
-  const [team, setTeam] = useState<TeamMember[]>(createDefaultTeam(""));
+  const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
   const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
   const [toast, setToast] = useState("");
-  const [activeCast, setActiveCast] = useState<CastSelection>(selectCastFromTeam(createDefaultTeam("")));
+  const [activeCast, setActiveCast] = useState<CastSelection>(() => selectCastFromTeam(createDefaultTeam("")));
   const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>({});
   const [result, setResult] = useState<ConsultResult | null>(null);
   const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
+  const [sessionTitles, setSessionTitles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
   const [clarificationPrompt, setClarificationPrompt] = useState("");
@@ -36,38 +56,22 @@ export default function App() {
   const [followupConstraints, setFollowupConstraints] = useState("");
   const [followupSeed, setFollowupSeed] = useState("");
   const [followupError, setFollowupError] = useState("");
-  const [showFollowupSettings, setShowFollowupSettings] = useState(false);
-  const settingsRef = useRef<HTMLDivElement | null>(null);
-  const viewingSession = Boolean(selectedId);
-  const panelActivity = viewingSession ? [] : activity;
+  const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [runsSidebarOpen, setRunsSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem(RUNS_SIDEBAR_STORAGE_KEY) !== "0";
+  });
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
+  const panelActivity = activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
+
   const chooseClarification = (value: string) => {
     setClarificationChoice(value);
-    if (value !== "Other") {
-      setClarificationOtherText("");
-    }
-  };
-  const panelProps = {
-    result: displayResult, showFullDiscussion: true, loading, activity: panelActivity,
-    cast: panelCast,
-    clarificationPrompt, clarificationReason, clarificationOptions, clarificationChoice, clarificationOtherText,
-    onClarificationChoice: chooseClarification, onClarificationOtherText: setClarificationOtherText,
-    onSubmitClarification: () => runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
-    followupOpen,
-    followupInstruction,
-    followupConstraints,
-    followupChangedSinceOpen,
-    onOpenFollowup: openFollowup,
-    onFollowupInstructionChange: setFollowupInstruction,
-    onFollowupConstraintsChange: setFollowupConstraints,
-    onAdjustFollowupTeam: adjustFollowupTeam,
-    onSubmitFollowup: runFollowup,
-    onRetryFollowup: runFollowup,
-    onStartFresh: startNewQuestion,
-    followupError
+    if (value !== "Other") setClarificationOtherText("");
   };
 
   useEffect(() => {
@@ -77,37 +81,42 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    setTeam((prev) => prev.map((member) => (member.lockToBaseRole ? { ...member, role: form.role } : member)));
+    setTeam((prev) => prev.map((m) => (m.lockToBaseRole ? { ...m, role: form.role } : m)));
   }, [form.role]);
 
   useEffect(() => {
-    if (!attachments.some((a) => a.kind === "image")) {
-      return;
-    }
+    if (!attachments.some((a) => a.kind === "image")) return;
     setTeam((prev) => {
       const switched = prev.filter((m) => m.model === "deepseek/deepseek-chat-v3.2").length;
       const next = prev.map((m) =>
         m.model === "deepseek/deepseek-chat-v3.2" ? { ...m, model: "google/gemini-2.5-flash" } : m
       );
-      if (switched > 0) {
-        setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
-      }
+      if (switched > 0) setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
       return next;
     });
   }, [attachments]);
 
   useEffect(() => {
-    if (!toast) {
-      return;
-    }
+    if (!toast) return;
     const timer = window.setTimeout(() => setToast(""), 3500);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const runConsult = async (clarification = "") => {
+  useEffect(() => {
+    localStorage.setItem(RUNS_SIDEBAR_STORAGE_KEY, runsSidebarOpen ? "1" : "0");
+  }, [runsSidebarOpen]);
+
+  const runConsult = async (clarificationTag = "", questionOverride?: string) => {
+    const questionText = (questionOverride ?? form.question).trim();
+    if (!questionText) return;
     clearFollowupState();
+    setAdvancedOpen(false);
+    setRunsSidebarOpen(true);
     setLoading(true);
-    setActivity(["Queued request. Preparing debate process..."]);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    setActivity(["Queued request. Your team is assembling the debate..."]);
     setClarificationPrompt("");
     setClarificationReason("");
     setClarificationOptions([]);
@@ -115,9 +124,9 @@ export default function App() {
     setClarificationOtherText("");
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
-    const payload = mergeTeamIntoPayload(form, team, attachments, clarification);
+    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag);
     try {
-      await executeConsult(payload, cast, form.question);
+      await executeConsult(payload, cast, questionText);
     } catch (error) {
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
     } finally {
@@ -125,19 +134,27 @@ export default function App() {
     }
   };
 
+  const resendQuestion = async (question: string) => {
+    const next = question.trim();
+    if (!next) return;
+    setForm((f) => ({ ...f, question: next }));
+    await runConsult("", next);
+  };
+
   async function runFollowup() {
     const source = displayResult;
-    if (!source || !followupInstruction.trim()) {
-      return;
-    }
+    if (!source || !followupInstruction.trim()) return;
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
     setFollowupError("");
+    setAdvancedOpen(false);
+    setRunsSidebarOpen(true);
     setLoading(true);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
-    if (followupChangedSinceOpen) {
-      setActivity((prev) => [...prev, "Using updated team/settings"]);
-    }
+    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
     const followupQuestion = [
       "Original prompt:",
@@ -147,7 +164,7 @@ export default function App() {
       source.source_final_answer || source.final_answer,
       "",
       "Follow-up instruction:",
-      mergedInstruction
+      mergedInstruction,
     ].join("\n");
     const payload = mergeTeamIntoPayload(
       {
@@ -158,7 +175,7 @@ export default function App() {
         thread_id: source.thread_id || source.session_id,
         source_prompt: source.source_prompt || source.question,
         source_final_answer: source.source_final_answer || source.final_answer,
-        followup_instruction: mergedInstruction
+        followup_instruction: mergedInstruction,
       },
       team,
       [],
@@ -167,7 +184,6 @@ export default function App() {
     try {
       await executeConsult(payload, cast, mergedInstruction);
       setFollowupOpen(false);
-      setShowFollowupSettings(false);
     } catch (error) {
       setFollowupError(String(error));
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
@@ -180,7 +196,9 @@ export default function App() {
     await consultStream(payload, {
       onActivity: (message) => setActivity((prev) => [...prev, message]),
       onFinal: (next) => {
-        const canClarify = Boolean(next.needs_clarification && next.clarification_question && next.clarification_options.length);
+        const canClarify = Boolean(
+          next.needs_clarification && next.clarification_question && next.clarification_options.length
+        );
         if (canClarify) {
           setClarificationPrompt(next.clarification_question);
           setClarificationReason(next.clarification_reason);
@@ -194,24 +212,32 @@ export default function App() {
         setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
         setSelectedId(next.session_id);
-        setHistory((prev) => [toPreview({
-          session_id: next.session_id,
-          question: next.question || title,
-          timestamp: new Date().toISOString(),
-          thread_id: next.thread_id,
-          parent_session_id: next.parent_session_id,
-          is_followup: next.is_followup,
-          run_title: next.followup_instruction || next.question
-        }), ...prev.filter((p) => p.id !== next.session_id)]);
-      }
+        setHistory((prev) => [
+          toPreview({
+            session_id: next.session_id,
+            question: next.question || title,
+            timestamp: new Date().toISOString(),
+            thread_id: next.thread_id,
+            parent_session_id: next.parent_session_id,
+            is_followup: next.is_followup,
+            run_title: next.followup_instruction || next.question,
+          }),
+          ...prev.filter((p) => p.id !== next.session_id),
+        ]);
+        generateTitle(next.question || title, next.role || "")
+          .then((generatedTitle) => setSessionTitles((prev) => ({ ...prev, [next.session_id]: generatedTitle })))
+          .catch(() => {});
+      },
     });
   }
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
-    if (resultsById[id]) {
-      return;
-    }
+    if (!loading) setActivity([]);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    if (resultsById[id]) return;
     try {
       const loaded = await getSession(id);
       setResultsById((prev) => ({ ...prev, [id]: loaded }));
@@ -221,20 +247,35 @@ export default function App() {
       setActivity((prev) => [...prev, "Could not load selected session."]);
     }
   };
+
   const removeSession = async (id: string) => {
-    try { await deleteSession(id); } catch { return; }
+    try {
+      await deleteSession(id);
+    } catch {
+      return;
+    }
     let fallbackId: string | null = null;
     setHistory((prev) => {
       const next = prev.filter((x) => x.id !== id);
       fallbackId = next[0]?.id ?? null;
       return next;
     });
-    setResultsById((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    setResultsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setSessionTitles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     if (selectedId === id) {
       setSelectedId(fallbackId);
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
     }
   };
+
   function startNewQuestion() {
     setSelectedId(null);
     setResult(null);
@@ -248,126 +289,146 @@ export default function App() {
     setFollowupConstraints("");
     setFollowupSeed("");
     setFollowupError("");
-    setShowFollowupSettings(false);
   }
 
   function openFollowup() {
-    if (!displayResult) {
-      return;
-    }
+    if (!displayResult) return;
     setFollowupOpen(true);
     setFollowupSeed(runSignature);
-    if (!followupInstruction) {
-      setFollowupInstruction("");
-    }
+    if (!followupInstruction) setFollowupInstruction("");
   }
 
   function adjustFollowupTeam() {
-    setShowFollowupSettings(true);
-    settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setAdvancedOpen(true);
+  }
+
+  const panelProps = {
+    result: displayResult,
+    showFullDiscussion: true,
+    loading,
+    activity: panelActivity,
+    cast: panelCast,
+    team,
+    maxRounds: form.max_rounds,
+    consensusThreshold: form.consensus_score,
+    clarificationPrompt,
+    clarificationReason,
+    clarificationOptions,
+    clarificationChoice,
+    clarificationOtherText,
+    onClarificationChoice: chooseClarification,
+    onClarificationOtherText: setClarificationOtherText,
+    onSubmitClarification: () =>
+      runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
+    onResendQuestion: resendQuestion,
+    followupOpen,
+    followupInstruction,
+    followupConstraints,
+    followupChangedSinceOpen,
+    onOpenFollowup: openFollowup,
+    onFollowupInstructionChange: setFollowupInstruction,
+    onFollowupConstraintsChange: setFollowupConstraints,
+    onAdjustFollowupTeam: adjustFollowupTeam,
+    onSubmitFollowup: runFollowup,
+    onRetryFollowup: runFollowup,
+    onStartFresh: startNewQuestion,
+    followupError,
   };
 
   return (
-    <main className="app-shell">
-      <Sidebar sessions={history} selectedId={selectedId} onSelect={selectSession} onDelete={removeSession} />
-      <section className="content">
-        {toast && <div className="toast-banner">{toast}</div>}
-        {viewingSession && !showFollowupSettings ? (
-          <section className="panel session-view-bar">
-            <p className="muted">Viewing saved session</p>
-            <button onClick={startNewQuestion}>New question</button>
-          </section>
-        ) : (
-          <>
-            {!viewingSession && <Composer value={form} attachments={attachments} onAttachmentsChange={setAttachments} onChange={setForm} />}
-            <div ref={settingsRef}>
-              <SettingsBar
-                value={form}
-                team={team}
-                loading={loading}
-                canSubmit={Boolean(form.question.trim())}
-                onChange={setForm}
-                onTeamChange={setTeam}
-                onSubmit={() => runConsult()}
-                showSubmit={!viewingSession}
-              />
+    <div className="min-h-screen flex flex-col">
+      <TopNav dark={dark} onToggleDark={toggleDark} />
+
+      <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
+        <ConsensusRunsSidebar
+          open={runsSidebarOpen}
+          onOpenChange={setRunsSidebarOpen}
+          sessions={history}
+          selectedId={selectedId}
+          sessionTitles={sessionTitles}
+          resultsById={resultsById}
+          castBySession={castBySession}
+          chatPanelProps={panelProps}
+          onSelect={selectSession}
+          onDelete={removeSession}
+        />
+
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-14 sm:gap-6 sm:px-4 sm:py-6 sm:pb-16">
+            {toast && (
+              <div
+                className="rounded-xl border border-violet-500/30 bg-violet-500/10 text-foreground px-3 py-2.5 text-sm"
+                role="status"
+              >
+                {toast}
+              </div>
+            )}
+
+            <section className="flex justify-end">
+              <div className="flex w-full max-w-[760px] flex-wrap items-end justify-end gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-2.5 py-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={!displayResult}
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)] disabled:opacity-40"
+                  onClick={() => setInsightsOpen(true)}
+                  aria-label="Open session insights"
+                >
+                  <BarChart3 className="h-4.5 w-4.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+                  onClick={() => setAdvancedOpen(true)}
+                  aria-label="Open advanced setup"
+                >
+                  <Settings2 className="h-4.5 w-4.5" />
+                </Button>
+              </div>
+            </section>
+
+            <CommandBar
+              value={form.question}
+              greetingName="Tsipi"
+              team={team}
+              loading={loading}
+              disabled={loading}
+              attachments={attachments}
+              onAttachmentsChange={setAttachments}
+              onChange={(question) => setForm((f) => ({ ...f, question }))}
+              onSubmit={() => runConsult()}
+              onAddTeamMember={() => setTeam((t) => appendDefaultTeamMember(t, form.role))}
+              onOpenAdvanced={() => setAdvancedOpen(true)}
+            />
+
+            <div
+              ref={mainSessionPanelRef}
+              className="v2-consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4"
+            >
+              <ChatPanel {...panelProps} />
             </div>
-          </>
-        )}
-        {followupError && <div className="toast-banner">{followupError}</div>}
-        <ChatPanel {...panelProps} />
-      </section>
-    </main>
+
+            <AdvancedDrawer
+              open={advancedOpen}
+              onOpenChange={setAdvancedOpen}
+              form={form}
+              team={team}
+              attachments={attachments}
+              loading={loading}
+              canSubmit={Boolean(form.question.trim())}
+              onFormChange={setForm}
+              onTeamChange={setTeam}
+              onAttachmentsChange={setAttachments}
+              onSubmit={() => runConsult()}
+            />
+
+            <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
+          </div>
+        </main>
+      </div>
+    </div>
   );
-}
-
-type CastPerson = { name: string; avatar: string };
-type CastSelection = { writer: CastPerson; criticA: CastPerson; criticB: CastPerson };
-
-function selectCastFromTeam(team: TeamMember[]): CastSelection {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
-  return {
-    writer: { name: writer.name, avatar: writer.avatar },
-    criticA: { name: criticA.name, avatar: criticA.avatar },
-    criticB: { name: criticB.name, avatar: criticB.avatar }
-  };
-}
-
-function mergeTeamIntoPayload(
-  form: ConsultPayload,
-  team: TeamMember[],
-  attachments: AttachmentInput[],
-  clarification: string
-): ConsultPayload {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
-  const imageLoaded = Boolean(attachments.some((a) => a.kind === "image"));
-  return {
-    ...form,
-    writer: withImageFallback(writer.model, imageLoaded),
-    critic_a: withImageFallback(criticA.model, imageLoaded),
-    critic_b: withImageFallback(criticB.model, imageLoaded),
-    role: (writer.role || form.role || "You are an expert in ...").slice(0, 255),
-    attachments,
-    clarification
-  };
-}
-
-function selectEngineMembers(team: TeamMember[]): { writer: TeamMember; criticA: TeamMember; criticB: TeamMember } {
-  const writer = team.find((m) => m.duty === "writer") ?? team[0];
-  const critics = team.filter((m) => m.duty === "critic");
-  const criticA = critics[0] ?? team.find((m) => m.id !== writer.id) ?? writer;
-  const criticB = critics[1] ?? team.find((m) => m.id !== writer.id && m.id !== criticA.id) ?? criticA;
-  return { writer, criticA, criticB };
-}
-
-function withImageFallback(model: string, imageLoaded: boolean): string {
-  if (!imageLoaded) {
-    return model;
-  }
-  return model === "deepseek/deepseek-chat-v3.2" ? "google/gemini-2.5-flash" : model;
-}
-
-function toPreview(row: {
-  session_id: string;
-  question: string;
-  timestamp?: string;
-  thread_id?: string;
-  parent_session_id?: string;
-  is_followup?: boolean;
-  run_title?: string;
-}): SessionPreview {
-  return {
-    id: row.session_id,
-    question: row.question,
-    timestamp: row.timestamp,
-    thread_id: row.thread_id || row.session_id,
-    parent_session_id: row.parent_session_id || "",
-    is_followup: Boolean(row.is_followup),
-    run_title: row.run_title || row.question
-  };
-}
-
-function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
-  const seats = team.map((member) => `${member.id}:${member.duty}:${member.model}:${member.role}`).join("|");
-  return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}`;
 }
