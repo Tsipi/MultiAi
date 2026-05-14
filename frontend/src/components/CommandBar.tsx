@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Plus } from "lucide-react";
+import AgentStudioAssistant from "../../avatars/AgentStudioAssistant.png";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { readAttachments, supportedUploadTypes } from "@/services/attachments";
@@ -53,57 +54,65 @@ export function CommandBar({
         onAddTeamMember={onAddTeamMember}
         onOpenAdvanced={onOpenAdvanced}
       />
-
-      <input
-        ref={fileRef}
-        type="file"
-        className="hidden"
-        multiple
-        accept={supportedUploadTypes()}
-        onChange={(e) => void addFiles(e.target.files)}
-      />
-
-      <div
-        className={cn(
-          "rounded-[28px] border border-violet-200/60 bg-[var(--v2-surface)] p-2 pl-3 shadow-[0_8px_32px_rgba(124,58,237,0.08)]",
-          "dark:border-violet-500/25 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
-        )}
-      >
-        <div className="flex items-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            disabled={busy}
-            className="h-10 w-10 shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15"
-            aria-label="Add context files"
-            onClick={() => fileRef.current?.click()}
-          >
-            <Plus className="h-5 w-5" strokeWidth={2} />
-          </Button>
-          <textarea
-            id="ask-team-question"
-            name="question"
-            aria-label="Ask your team"
-            className={cn(
-              "v2-command-input min-h-[56px] max-h-[220px] flex-1 resize-y rounded-2xl border border-transparent bg-[var(--v2-elevated)] px-3 py-3",
-              "text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/55"
-            )}
-            placeholder="Ask your team…"
-            rows={3}
-            value={value}
-            disabled={busy}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter" || e.shiftKey) return;
-              e.preventDefault();
-              if (!value.trim() || busy) return;
-              onSubmit();
-            }}
+      <div className="flex gap-2">
+        <div className="flex items-end">
+          <img
+            src={AgentStudioAssistant}
+            alt="AI assistant"
+            className="h-24 w-24 rounded-3xl border border-white/20 bg-white/10 object-cover"
           />
         </div>
+        <div className="flex-1">
+          <input
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            multiple
+            accept={supportedUploadTypes()}
+            onChange={(e) => void addFiles(e.target.files)}
+          />
+          <div
+            className={cn(
+              "rounded-[28px] border border-violet-200/60 bg-[var(--v2-surface)] p-2 pl-3 shadow-[0_8px_32px_rgba(124,58,237,0.08)]",
+              "dark:border-violet-500/25 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+            )}
+          >
+            <div className="flex items-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={busy}
+                className="h-10 w-10 shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15"
+                aria-label="Add context files"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Plus className="h-5 w-5" strokeWidth={2} />
+              </Button>
+              <textarea
+                id="ask-team-question"
+                name="question"
+                aria-label="Ask your team"
+                className={cn(
+                  "v2-command-input min-h-[56px] max-h-[220px] w-full resize-y rounded-2xl border border-transparent bg-[var(--v2-elevated)] px-3 py-3",
+                  "text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/55"
+                )}
+                placeholder="Ask your team…"
+                rows={3}
+                value={value}
+                disabled={busy}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter" || e.shiftKey) return;
+                  e.preventDefault();
+                  if (!value.trim() || busy) return;
+                  onSubmit();
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-
       <CommandContextFooter
         busy={busy}
         loading={Boolean(loading)}

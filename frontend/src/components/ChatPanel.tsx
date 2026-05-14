@@ -54,6 +54,9 @@ type Props = {
   onStartFresh: () => void;
   followupError: string;
   onResendQuestion: (question: string) => void | Promise<void>;
+  isSavedAnswer?: boolean;
+  onAskFollowup?: () => void;
+  onStartNewSession?: () => void;
 };
 
 export function ChatPanel(props: Props) {
@@ -131,186 +134,198 @@ export function ChatPanel(props: Props) {
 
   return (
     <section className="grid gap-4">
-      <SessionPromptBlock
-        result={result}
-        team={team}
-        loading={loading}
-        onResendQuestion={props.onResendQuestion}
-      />
+      {/* Main content: Question, answer, discussion */}
+      <div className="grid gap-4">
+        <SessionPromptBlock
+          result={result}
+          team={team}
+          loading={loading}
+          onResendQuestion={props.onResendQuestion}
+          isSavedAnswer={Boolean(result)}
+          onAskFollowup={props.onAskFollowup}
+          onStartNewSession={props.onStartFresh}
+        />
 
-      {/* 1. Hero: Final Answer — most prominent */}
-      <div className="flex justify-start">
-        <div className="w-full max-w-[880px]">
-          <PinnedAnswer
-            finalAnswer={result.final_answer}
-            score={result.final_score}
-            cast={cast}
-          />
-        </div>
-      </div>
-      <div className="-mt-2 flex justify-start">
-        <div className="flex w-full max-w-[880px] flex-wrap items-center justify-between gap-3">
-          <SessionPromptDownloads
-            exportBusy={exportBusy}
-            onCopy={async () => {
-              await navigator.clipboard.writeText(result.final_answer || "");
-            }}
-            onDownloadMd={() => void runExport("md")}
-            onDownloadPdf={() => void runExport("pdf")}
-          />
-          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
-          {result.full_discussion.length > 0 && (
-            <span>
-              {result.full_discussion.length} round
-              {result.full_discussion.length !== 1 ? "s" : ""}
-            </span>
-          )}
-          <span>·</span>
-          <span>
-            Score{" "}
-            <span className="font-semibold text-foreground/80">{result.final_score.toFixed(1)}</span>{" "}
-            / 10
-          </span>
-          <span>·</span>
-          <span>{result.total_tokens.toLocaleString()} tokens</span>
-          <span>·</span>
-          <span>${result.total_cost_usd.toFixed(4)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Clarification (if any) */}
-      {showClarify && clarifyBox}
-
-      {/* 4. Debate replay — chatroom */}
-      {activity.length > 0 && (
-        <CollapsiblePanel title="Live Debate Replay" defaultOpen={false}>
-          <div className="-mx-3.5 -mb-3.5">
-            <ChatroomDebateView
-              activity={activity}
+        {/* 1. Hero: Final Answer — most prominent */}
+        <div className="flex justify-start">
+          <div className="w-full max-w-[880px]">
+            <PinnedAnswer
+              finalAnswer={result.final_answer}
+              score={result.final_score}
               cast={cast}
-              team={team}
-              loading={false}
-              maxRounds={maxRounds}
-              consensusThreshold={consensusThreshold}
             />
           </div>
-        </CollapsiblePanel>
-      )}
+        </div>
 
-      {/* 5. Director's Cut: full answer/critique text per round */}
-      {showFullDiscussion && result.full_discussion.length > 0 && (
-        <CollapsiblePanel title="Director's Cut: Full Debate" defaultOpen>
-          <div className="grid gap-0">
-            {result.full_discussion.map((r, idx) => {
-              const roundLabel = String((r.round_num as number) ?? idx + 1);
-              const { christy, mark } = splitCritique(String(r.critique ?? ""));
-              return (
-                <article
-                  key={idx}
-                  className={cn(
-                    "grid gap-2",
-                    idx > 0 && "mt-2.5 pt-2.5 border-t border-border/25"
-                  )}
-                >
-                  <strong className="text-sm">Round {roundLabel}</strong>
-                  <ol className="list-none m-0 grid gap-2 p-0">
-                    <DebateChatBubble
-                      id="john"
-                      label={cast.writer.name}
-                      avatar={cast.writer.avatar}
-                      modelId={cast.writer.model}
-                      tag={undefined}
-                      rawText={String(r.answer ?? "")}
-                    >
-                      <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
-                    </DebateChatBubble>
-                    <DebateChatBubble
-                      id="christy"
-                      label={cast.criticA.name}
-                      avatar={cast.criticA.avatar}
-                      modelId={cast.criticA.model}
-                      tag={undefined}
-                      rawText={christy}
-                    >
-                      <ReactMarkdown>{christy}</ReactMarkdown>
-                    </DebateChatBubble>
-                    <DebateChatBubble
-                      id="mark"
-                      label={cast.criticB.name}
-                      avatar={cast.criticB.avatar}
-                      modelId={cast.criticB.model}
-                      tag={undefined}
-                      rawText={mark}
-                    >
-                      <ReactMarkdown>{mark}</ReactMarkdown>
-                    </DebateChatBubble>
-                    <DebateChatBubble
-                      id="system"
-                      label="Round Summary"
-                      avatar={DEBATE_SYSTEM_AVATAR}
-                      tag={`Round ${roundLabel}`}
-                      rawText={String(r.summary ?? "")}
-                    >
-                      <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
-                    </DebateChatBubble>
-                  </ol>
-                </article>
-              );
-            })}
+        {/* 2. Stats and downloads */}
+        <div className="-mt-2 flex justify-start">
+          <div className="flex w-full max-w-[880px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <SessionPromptDownloads
+              exportBusy={exportBusy}
+              onCopy={async () => {
+                await navigator.clipboard.writeText(result.final_answer || "");
+              }}
+              onDownloadMd={() => void runExport("md")}
+              onDownloadPdf={() => void runExport("pdf")}
+            />
+            <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
+              {result.full_discussion.length > 0 && (
+                <span>
+                  {result.full_discussion.length} round
+                  {result.full_discussion.length !== 1 ? "s" : ""}
+                </span>
+              )}
+              <span>·</span>
+              <span>
+                Score{" "}
+                <span className="font-semibold text-foreground/80">{result.final_score.toFixed(1)}</span>{" "}
+                / 10
+              </span>
+              <span>·</span>
+              <span>{result.total_tokens.toLocaleString()} tokens</span>
+              <span>·</span>
+              <span>${result.total_cost_usd.toFixed(4)}</span>
+            </div>
           </div>
-        </CollapsiblePanel>
-      )}
+        </div>
 
-      {/* 6. Follow-up context */}
-      {result.is_followup && (
-        <details className="text-sm">
-          <summary className="cursor-pointer font-medium text-muted-foreground hover:text-foreground transition-colors select-none">
-            Context used
-          </summary>
-          <div className="mt-2 grid gap-2">
-            <p className="font-semibold m-0">Original prompt</p>
-            <p className="text-muted-foreground line-clamp-3 m-0">
-              {stripAttachmentBlock(result.source_prompt || result.question)}
-            </p>
-            <p className="font-semibold m-0">Previous final answer</p>
-            <p className="text-muted-foreground line-clamp-3 m-0">
-              {result.source_final_answer ||
-                "Previous answer unavailable; follow-up used original prompt only."}
-            </p>
-            <p className="font-semibold m-0">Follow-up instruction</p>
-            <p className="text-muted-foreground m-0">
-              {result.followup_instruction || "Not provided."}
-            </p>
-          </div>
-        </details>
-      )}
+        {/* 3. Clarification (if any) */}
+        {showClarify && clarifyBox}
 
-      {/* 7. Follow-up composer */}
-      <FollowupComposer
-        open={props.followupOpen}
-        instruction={props.followupInstruction}
-        constraints={props.followupConstraints}
-        loading={loading}
-        changedSinceOpen={props.followupChangedSinceOpen}
-        sourcePrompt={result.source_prompt || result.question}
-        sourceAnswer={result.source_final_answer || result.final_answer}
-        onOpen={props.onOpenFollowup}
-        onInstructionChange={props.onFollowupInstructionChange}
-        onConstraintsChange={props.onFollowupConstraintsChange}
-        onAdjustTeam={props.onAdjustFollowupTeam}
-        onSubmit={props.onSubmitFollowup}
-        onStartFresh={props.onStartFresh}
-      />
+        {/* 4. Debate replay — chatroom */}
+        {activity.length > 0 && (
+          <CollapsiblePanel title="Live Debate Replay" defaultOpen={false}>
+            <div className="-mx-3.5 -mb-3.5">
+              <ChatroomDebateView
+                activity={activity}
+                cast={cast}
+                team={team}
+                loading={false}
+                maxRounds={maxRounds}
+                consensusThreshold={consensusThreshold}
+              />
+            </div>
+          </CollapsiblePanel>
+        )}
 
-      {props.followupError && (
-        <p className="text-sm text-muted-foreground flex items-center gap-2 m-0">
-          Follow-up run failed.{" "}
-          <Button variant="outline" size="sm" onClick={props.onRetryFollowup}>
-            Retry follow-up
-          </Button>
-        </p>
-      )}
+        {/* 5. Director's Cut: full answer/critique text per round */}
+        {showFullDiscussion && result.full_discussion.length > 0 && (
+          <CollapsiblePanel
+            title="Director's Cut: Full Debate"
+            defaultOpen
+            titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
+          >
+            <div className="grid gap-0">
+              {result.full_discussion.map((r, idx) => {
+                const roundLabel = String((r.round_num as number) ?? idx + 1);
+                const { christy, mark } = splitCritique(String(r.critique ?? ""));
+                return (
+                  <article
+                    key={idx}
+                    className={cn(
+                      "grid gap-2",
+                      idx > 0 && "mt-2.5 pt-2.5 border-t border-border/25"
+                    )}
+                  >
+                    <strong className="text-sm">Round {roundLabel}</strong>
+                    <ol className="list-none m-0 grid gap-2 p-0">
+                      <DebateChatBubble
+                        id="john"
+                        label={cast.writer.name}
+                        avatar={cast.writer.avatar}
+                        modelId={cast.writer.model}
+                        tag={undefined}
+                        rawText={String(r.answer ?? "")}
+                      >
+                        <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
+                      </DebateChatBubble>
+                      <DebateChatBubble
+                        id="christy"
+                        label={cast.criticA.name}
+                        avatar={cast.criticA.avatar}
+                        modelId={cast.criticA.model}
+                        tag={undefined}
+                        rawText={christy}
+                      >
+                        <ReactMarkdown>{christy}</ReactMarkdown>
+                      </DebateChatBubble>
+                      <DebateChatBubble
+                        id="mark"
+                        label={cast.criticB.name}
+                        avatar={cast.criticB.avatar}
+                        modelId={cast.criticB.model}
+                        tag={undefined}
+                        rawText={mark}
+                      >
+                        <ReactMarkdown>{mark}</ReactMarkdown>
+                      </DebateChatBubble>
+                      <DebateChatBubble
+                        id="system"
+                        label="Round Summary"
+                        avatar={DEBATE_SYSTEM_AVATAR}
+                        tag={`Round ${roundLabel}`}
+                        rawText={String(r.summary ?? "")}
+                      >
+                        <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
+                      </DebateChatBubble>
+                    </ol>
+                  </article>
+                );
+              })}
+            </div>
+          </CollapsiblePanel>
+        )}
+
+        {/* 6. Follow-up context */}
+        {result.is_followup && (
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-muted-foreground hover:text-foreground transition-colors select-none">
+              Context used
+            </summary>
+            <div className="mt-2 grid gap-2">
+              <p className="font-semibold m-0">Original prompt</p>
+              <p className="text-muted-foreground line-clamp-3 m-0">
+                {stripAttachmentBlock(result.source_prompt || result.question)}
+              </p>
+              <p className="font-semibold m-0">Previous final answer</p>
+              <p className="text-muted-foreground line-clamp-3 m-0">
+                {result.source_final_answer ||
+                  "Previous answer unavailable; follow-up used original prompt only."}
+              </p>
+              <p className="font-semibold m-0">Follow-up instruction</p>
+              <p className="text-muted-foreground m-0">
+                {result.followup_instruction || "Not provided."}
+              </p>
+            </div>
+          </details>
+        )}
+
+        {/* 7. Follow-up composer */}
+        <FollowupComposer
+          open={props.followupOpen}
+          instruction={props.followupInstruction}
+          constraints={props.followupConstraints}
+          loading={loading}
+          changedSinceOpen={props.followupChangedSinceOpen}
+          sourcePrompt={result.source_prompt || result.question}
+          sourceAnswer={result.source_final_answer || result.final_answer}
+          onOpen={props.onOpenFollowup}
+          onInstructionChange={props.onFollowupInstructionChange}
+          onConstraintsChange={props.onFollowupConstraintsChange}
+          onAdjustTeam={props.onAdjustFollowupTeam}
+          onSubmit={props.onSubmitFollowup}
+          onStartFresh={props.onStartFresh}
+        />
+
+        {props.followupError && (
+          <p className="text-sm text-muted-foreground flex items-center gap-2 m-0">
+            Follow-up run failed.{" "}
+            <Button variant="outline" size="sm" onClick={props.onRetryFollowup}>
+              Retry follow-up
+            </Button>
+          </p>
+        )}
+      </div>
     </section>
   );
 }

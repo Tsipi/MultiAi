@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 import type { ConsultResult } from "@/types";
 import type { TeamMember } from "@/data/experts";
 import { attachmentListForDisplay, promptTextForDisplay } from "@/lib/promptDisplay";
 import { sharedLeadExpertRole } from "@/lib/teamSharedRole";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CollapsiblePanel } from "./CollapsiblePanel";
 import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
 
@@ -14,6 +14,9 @@ type Props = {
   team: TeamMember[];
   loading?: boolean;
   onResendQuestion: (question: string) => void | Promise<void>;
+  onAskFollowup?: () => void;
+  onStartNewSession?: () => void;
+  isSavedAnswer?: boolean;
 };
 
 export function SessionPromptBlock({
@@ -21,11 +24,13 @@ export function SessionPromptBlock({
   team,
   loading,
   onResendQuestion,
+  onAskFollowup,
+  onStartNewSession,
+  isSavedAnswer,
 }: Props) {
   const prompt = promptTextForDisplay(result).trim();
   const files = attachmentListForDisplay(result);
   const sharedRole = sharedLeadExpertRole(team);
-  const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(prompt);
   const [copyText, setCopyText] = useState("Copy");
@@ -33,23 +38,30 @@ export function SessionPromptBlock({
 
   return (
     <section className="grid gap-2">
-      <div className="flex justify-end">
-        <div
-          className={cn(
-            "w-full max-w-[880px] rounded-2xl border border-violet-300/45 bg-[var(--v2-elevated)] p-4",
-            "shadow-[0_2px_10px_rgba(124,58,237,0.08)]"
-          )}
-        >
-          <button type="button" onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between gap-2 text-left">
-            <h3 className="font-display m-0 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              Question
-            </h3>
-            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
-          </button>
-          {open ? (
-            <div className="mt-2">
-              {!editing && prompt ? (
-                <p className="m-0 whitespace-pre-wrap text-base font-semibold leading-snug text-foreground">{prompt}</p>
+      {isSavedAnswer ? (
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
+              Viewing saved answer
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              This answer is from a previous run.
+            </p>
+          </div>
+        </div>
+      ) : null}
+      <div className="flex justify-start">
+        <div className="w-full max-w-[880px]">
+          <CollapsiblePanel
+            title="Question"
+            defaultOpen
+            titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
+          >
+            <div className="grid gap-4">
+              {prompt ? (
+                <p className="m-0 whitespace-pre-wrap text-base font-semibold leading-snug text-foreground">
+                  {prompt}
+                </p>
               ) : null}
               {editing ? (
                 <div className="grid gap-2">
@@ -84,15 +96,28 @@ export function SessionPromptBlock({
                   <p className="font-display m-0 mb-1 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
                     Lead Expert Role
                   </p>
-                  <p className="m-0 whitespace-pre-wrap text-sm font-normal leading-relaxed text-muted-foreground">{sharedRole}</p>
+                  <p className="m-0 whitespace-pre-wrap text-sm font-normal leading-relaxed text-muted-foreground">
+                    {sharedRole}
+                  </p>
                 </div>
               ) : null}
               <SessionAttachmentList files={files} />
+              {isSavedAnswer && onAskFollowup ? (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    type="button"
+                    className="v2-primary-cta font-display h-11 rounded-xl border-0 px-6 font-semibold shadow-none"
+                    onClick={onAskFollowup}
+                  >
+                    Ask follow-up
+                  </Button>
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          </CollapsiblePanel>
         </div>
       </div>
-      {!editing && (
+      {!editing && !isSavedAnswer && (
         <SessionPromptActions
           copyText={copyText}
           onCopy={async () => {
