@@ -40,7 +40,7 @@ export function SessionPromptBlock({
     <section className="grid gap-2">
       {isSavedAnswer ? (
         <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-1 text-left">
             <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
               Viewing saved answer
             </h2>

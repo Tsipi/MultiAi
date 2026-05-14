@@ -1,111 +1,48 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BarChart3, Settings2 } from "lucide-react";
 
-import { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./components/ConsensusRunsSidebar";
+import { ConsensusRunsSidebar } from "./components/ConsensusRunsSidebar";
 import { AdvancedDrawer } from "./components/AdvancedDrawer";
 import { InsightsDrawer } from "./components/InsightsDrawer";
 import { CommandBar } from "./components/CommandBar";
 import { SavedAnswerMarketingCard } from "./components/SavedAnswerMarketingCard";
 import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
-import { TeamMember, createDefaultTeam } from "./data/experts";
-import {
-  buildRunSignature,
-  mergeTeamIntoPayload,
-  selectCastFromTeam,
-  toPreview,
-  type CastSelection,
-} from "./lib/consultHelpers";
-import { appendDefaultTeamMember } from "./lib/teamRoster";
+import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
 import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
-import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { useDarkMode } from "./hooks/useDarkMode";
+import { useComposeForm } from "./hooks/useComposeForm";
+import { useSessionHistory } from "./hooks/useSessionHistory";
+import { useClarification } from "./hooks/useClarification";
+import { useFollowup } from "./hooks/useFollowup";
+import { useToast } from "./hooks/useToast";
+import { usePanelState } from "./hooks/usePanelState";
 import { Button } from "@/components/ui/button";
-
-const defaults: ConsultPayload = {
-  writer: "deepseek/deepseek-chat-v3.2",
-  critic_a: "google/gemini-2.5-flash",
-  critic_b: "google/gemini-2.5-flash",
-  max_rounds: 3,
-  consensus_score: 8,
-  role: "",
-  question: "",
-};
 
 export default function App() {
   const [dark, toggleDark] = useDarkMode();
-  const [form, setForm] = useState<ConsultPayload>(defaults);
-  const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
-  const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
-  const [toast, setToast] = useState("");
-  const [activeCast, setActiveCast] = useState<CastSelection>(() => selectCastFromTeam(createDefaultTeam("")));
-  const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>({});
+  const { toast, setToast } = useToast();
+  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
+  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory();
+  const { clarificationPrompt, setClarificationPrompt, clarificationReason, setClarificationReason, clarificationOptions, setClarificationOptions, clarificationChoice, clarificationOtherText, setClarificationOtherText, chooseClarification, clearClarification } = useClarification();
+  const { followupOpen, setFollowupOpen, followupInstruction, setFollowupInstruction, followupConstraints, setFollowupConstraints, followupSeed, setFollowupSeed, followupError, setFollowupError, clearFollowupState } = useFollowup();
+  const { advancedOpen, setAdvancedOpen, insightsOpen, setInsightsOpen, runsSidebarOpen, setRunsSidebarOpen } = usePanelState();
+
+  // Live debate run state — mutated by executeConsult, kept here as it crosses multiple handlers
   const [result, setResult] = useState<ConsultResult | null>(null);
-  const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
-  const [sessionTitles, setSessionTitles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
-  const [clarificationPrompt, setClarificationPrompt] = useState("");
-  const [clarificationReason, setClarificationReason] = useState("");
-  const [clarificationOptions, setClarificationOptions] = useState<string[]>([]);
-  const [clarificationChoice, setClarificationChoice] = useState("");
-  const [clarificationOtherText, setClarificationOtherText] = useState("");
-  const [history, setHistory] = useState<SessionPreview[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [followupOpen, setFollowupOpen] = useState(false);
-  const [followupInstruction, setFollowupInstruction] = useState("");
-  const [followupConstraints, setFollowupConstraints] = useState("");
-  const [followupSeed, setFollowupSeed] = useState("");
-  const [followupError, setFollowupError] = useState("");
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [insightsOpen, setInsightsOpen] = useState(false);
-  const [runsSidebarOpen, setRunsSidebarOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem(RUNS_SIDEBAR_STORAGE_KEY) !== "0";
-  });
+
+  // Derived values
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
   const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
   const panelActivity = activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
-  const chooseClarification = (value: string) => {
-    setClarificationChoice(value);
-    if (value !== "Other") setClarificationOtherText("");
-  };
-
-  useEffect(() => {
-    listSessions()
-      .then((rows) => setHistory(rows.map(toPreview)))
-      .catch(() => setHistory([]));
-  }, []);
-
-  useEffect(() => {
-    setTeam((prev) => prev.map((m) => (m.lockToBaseRole ? { ...m, role: form.role } : m)));
-  }, [form.role]);
-
-  useEffect(() => {
-    if (!attachments.some((a) => a.kind === "image")) return;
-    setTeam((prev) => {
-      const switched = prev.filter((m) => m.model === "deepseek/deepseek-chat-v3.2").length;
-      const next = prev.map((m) =>
-        m.model === "deepseek/deepseek-chat-v3.2" ? { ...m, model: "google/gemini-2.5-flash" } : m
-      );
-      if (switched > 0) setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
-      return next;
-    });
-  }, [attachments]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(""), 3500);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
-  useEffect(() => {
-    localStorage.setItem(RUNS_SIDEBAR_STORAGE_KEY, runsSidebarOpen ? "1" : "0");
-  }, [runsSidebarOpen]);
+  // --- Orchestration ---
 
   const runConsult = async (clarificationTag = "", questionOverride?: string) => {
     const questionText = (questionOverride ?? form.question).trim();
@@ -118,11 +55,7 @@ export default function App() {
       mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     setActivity(["Queued request. Your team is assembling the debate..."]);
-    setClarificationPrompt("");
-    setClarificationReason("");
-    setClarificationOptions([]);
-    setClarificationChoice("");
-    setClarificationOtherText("");
+    clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
     const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag);
@@ -204,8 +137,8 @@ export default function App() {
           setClarificationPrompt(next.clarification_question);
           setClarificationReason(next.clarification_reason);
           setClarificationOptions(next.clarification_options);
-          setClarificationChoice(next.clarification_options[0] ?? "");
           setClarificationOtherText("");
+          chooseClarification(next.clarification_options[0] ?? "");
           setActivity((prev) => [...prev, "Waiting for user clarification"]);
           return;
         }
@@ -284,14 +217,6 @@ export default function App() {
     clearFollowupState();
   }
 
-  function clearFollowupState() {
-    setFollowupOpen(false);
-    setFollowupInstruction("");
-    setFollowupConstraints("");
-    setFollowupSeed("");
-    setFollowupError("");
-  }
-
   function openFollowup() {
     if (!displayResult) return;
     setFollowupOpen(true);
@@ -302,6 +227,8 @@ export default function App() {
   function adjustFollowupTeam() {
     setAdvancedOpen(true);
   }
+
+  // --- Panel props (assembled once, passed to ChatPanel and sidebar) ---
 
   const panelProps = {
     result: displayResult,
@@ -338,6 +265,8 @@ export default function App() {
     onStartNewSession: startNewQuestion,
     followupError,
   };
+
+  // --- Render ---
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -410,7 +339,7 @@ export default function App() {
                 onAttachmentsChange={setAttachments}
                 onChange={(question) => setForm((f) => ({ ...f, question }))}
                 onSubmit={() => runConsult()}
-                onAddTeamMember={() => setTeam((t) => appendDefaultTeamMember(t, form.role))}
+                onAddTeamMember={addTeamMember}
                 onOpenAdvanced={() => setAdvancedOpen(true)}
               />
             )}
