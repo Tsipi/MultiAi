@@ -55,12 +55,15 @@ export function PinnedAnswer({
         </button>
 
       {!expanded && (
-        <div className="border-t border-border/40 bg-card/50 px-4 pb-3 dark:bg-card/30">
-          <p className="m-0 mt-2 text-sm leading-relaxed text-foreground/80 line-clamp-2">{finalAnswer}</p>
+        <div className="border-t border-border/40 bg-card/50 px-4 pb-3 pt-3 dark:bg-card/30">
+          <MarkdownView
+            content={finalAnswer}
+            className="border-0 bg-transparent px-0 py-2 max-w-none shadow-none prose prose-sm prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-strong:font-bold prose-strong:text-foreground prose-li:marker:text-muted-foreground text-foreground/80 line-clamp-5 overflow-hidden"
+          />
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className="mt-1 text-xs text-violet-600 dark:text-violet-400 hover:underline"
+            className="mt-3 text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium"
           >
             Show full answer
           </button>

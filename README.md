@@ -20,12 +20,12 @@ UI/UX, deployment hardening, and advanced multi-agent capabilities are still evo
 
 ## Tech Stack
 
-### Frontend at `localhost:8000`
+### Frontend at `localhost:5173`
 - React
 - TypeScript
 - Vite
 
-### Backend at `localhost:5173`
+### Backend at `localhost:8000` 
 - FastAPI
 - Python
 

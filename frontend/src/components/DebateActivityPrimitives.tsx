@@ -43,27 +43,26 @@ export function DebateChatBubble({
 
   return (
     <li className={cn("flex gap-2 items-end", id === "john" && "flex-row-reverse")}>
-      <div className="relative h-8 w-8 shrink-0">
-        <img
-          className="h-8 w-8 rounded-full border border-border object-cover"
-          src={avatar}
-          alt={label}
-        />
-        {modelId ? (
-          <span className="absolute -bottom-0.5 -right-0.5 leading-none" aria-hidden>
-            <ModelProviderIcon modelId={modelId} title={modelId} className="!h-[13px] !w-[13px] !rounded-[4px] !text-[7px]" />
-          </span>
-        ) : null}
-      </div>
       <div
         className={cn(
           "max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",
           `bubble-${id}`
         )}
       >
-        <div className="mb-1 flex items-center justify-between gap-2">
+        <div className="mb-1 flex items-center gap-1.5">
+          <div className="relative h-6 w-6 shrink-0">
+            <img
+              className="h-6 w-6 rounded-full border border-border object-cover"
+              src={avatar}
+              alt={label}
+            />
+            {modelId && modelId !== "system" ? (
+              <span className="absolute -bottom-0.5 -right-0.5 leading-none" aria-hidden>
+                <ModelProviderIcon modelId={modelId} title={modelId} className="!h-[11px] !w-[11px] !rounded-[3px] !text-[6px]" />
+              </span>
+            ) : null}
+          </div>
           <span className="text-[0.75rem] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
-          <span className="rounded-full bg-muted/50 px-1.5 py-0.5 text-[0.67rem] text-muted-foreground">{tag}</span>
         </div>
         <div className="disc-prose text-sm leading-snug">{children}</div>
         {rawText ? (

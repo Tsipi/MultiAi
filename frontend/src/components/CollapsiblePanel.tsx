@@ -7,6 +7,7 @@ type Props = {
   title: string;
   leading?: React.ReactNode;
   titleEnd?: React.ReactNode;
+  titleClassName?: string;
   /** When true (default), panel starts expanded. */
   defaultOpen?: boolean;
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function CollapsiblePanel({
   title,
   leading,
   titleEnd,
+  titleClassName,
   defaultOpen = true,
   children,
   className,
@@ -46,7 +48,15 @@ export function CollapsiblePanel({
       >
         <span className="flex min-w-0 flex-1 items-center gap-2">
           {leading}
-          <span className={cn(panelHeadingClass, "min-w-0 shrink truncate leading-snug")}>{title}</span>
+          <span
+            className={cn(
+              panelHeadingClass,
+              "min-w-0 shrink truncate leading-snug",
+              titleClassName
+            )}
+          >
+            {title}
+          </span>
           {titleEnd}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />

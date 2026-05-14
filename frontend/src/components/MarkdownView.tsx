@@ -7,11 +7,25 @@ export function MarkdownView({ content, className }: Props) {
   return (
     <div
       className={cn(
-        "md-prose border border-border/55 rounded-lg px-5 py-4 max-w-[78ch] mx-auto bg-card/90 text-[0.95rem] leading-relaxed",
+        "md-prose border border-border/55 rounded-lg px-5 py-4 max-w-[78ch] mx-auto bg-card/90 text-[0.95rem] leading-relaxed prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-strong:font-bold prose-strong:text-foreground prose-li:marker:text-muted-foreground",
         className
       )}
     >
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <ReactMarkdown
+        components={{
+          h1: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-1.5 text-foreground">{children}</h2>,
+          h2: ({ children }) => <h3 className="text-[0.95rem] font-semibold mt-2.5 mb-1 text-foreground">{children}</h3>,
+          h3: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-0.5 text-foreground">{children}</h4>,
+          strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+          em: ({ children }) => <em className="italic text-foreground/90">{children}</em>,
+          ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 ml-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-0.5 ml-1">{children}</ol>,
+          li: ({ children }) => <li className="text-sm leading-relaxed">{children}</li>,
+          p: ({ children }) => <p className="mb-2 text-sm leading-relaxed">{children}</p>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
