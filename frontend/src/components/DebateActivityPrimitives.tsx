@@ -21,7 +21,7 @@ export function DebateChatBubble({
   label: string;
   avatar: string;
   modelId?: string;
-  tag: string;
+  tag?: string;
   rawText?: string;
   children: ReactNode;
 }) {

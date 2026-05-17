@@ -1,9 +1,10 @@
-import { Moon, Sun } from "lucide-react";
+import { Moon, Plus, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   dark: boolean;
   onToggleDark: () => void;
+  onNewRun: () => void;
 };
 
 function BrandMark() {
@@ -17,7 +18,7 @@ function BrandMark() {
   );
 }
 
-export function TopNav({ dark, onToggleDark }: Props) {
+export function TopNav({ dark, onToggleDark, onNewRun }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--v2-surface)]/92 backdrop-blur-xl">
       <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between gap-3 px-3 sm:px-5">
@@ -33,6 +34,17 @@ export function TopNav({ dark, onToggleDark }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={onNewRun}
+            className="gap-1.5 font-display text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
+            aria-label="Start a new run"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">New Run</span>
+          </Button>
           <Button
             type="button"
             variant="ghost"

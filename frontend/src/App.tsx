@@ -270,7 +270,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
