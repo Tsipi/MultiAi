@@ -1,11 +1,9 @@
 import { useMemo, useRef, useState } from "react";
-import { BarChart3, Settings2 } from "lucide-react";
 
 import { ConsensusRunsSidebar } from "./components/ConsensusRunsSidebar";
 import { AdvancedDrawer } from "./components/AdvancedDrawer";
 import { InsightsDrawer } from "./components/InsightsDrawer";
 import { CommandBar } from "./components/CommandBar";
-import { SavedAnswerMarketingCard } from "./components/SavedAnswerMarketingCard";
 import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
 import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
@@ -19,7 +17,6 @@ import { useClarification } from "./hooks/useClarification";
 import { useFollowup } from "./hooks/useFollowup";
 import { useToast } from "./hooks/useToast";
 import { usePanelState } from "./hooks/usePanelState";
-import { Button } from "@/components/ui/button";
 
 export default function App() {
   const [dark, toggleDark] = useDarkMode();
@@ -34,6 +31,8 @@ export default function App() {
   const [result, setResult] = useState<ConsultResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
+  // True only during resumeWithClarification — used to hide CommandBar without affecting fresh runs
+  const [isResuming, setIsResuming] = useState(false);
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
   // Stores the last payload sent so clarification Continue can replay the exact same run
   const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
@@ -212,6 +211,8 @@ export default function App() {
     const questionAsked = clarificationPrompt;
     pendingClarificationRef.current = null;
     clearFollowupState();
+    // Only suppress the CommandBar for follow-up resumes; fresh-run clarifications should keep it visible
+    if (pending?.payload?.is_followup) setIsResuming(true);
     setLoading(true);
     setResult(null);
     setSelectedId(null);
@@ -232,6 +233,7 @@ export default function App() {
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
     } finally {
       setLoading(false);
+      setIsResuming(false);
     }
   }
 
@@ -335,6 +337,8 @@ export default function App() {
     isSavedAnswer: Boolean(selectedId),
     onAskFollowup: openFollowup,
     onStartNewSession: startNewQuestion,
+    onOpenInsights: () => setInsightsOpen(true),
+    onOpenAdvanced: () => setAdvancedOpen(true),
     followupError,
   };
 
@@ -369,38 +373,7 @@ export default function App() {
               </div>
             )}
 
-            <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              {displayResult ? (
-                <>
-                  <SavedAnswerMarketingCard onStartNewSession={startNewQuestion} />
-                  <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-1.5 py-1.5 shadow-sm">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled={!displayResult}
-                      className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)] disabled:opacity-40"
-                      onClick={() => setInsightsOpen(true)}
-                      aria-label="Open session insights"
-                    >
-                      <BarChart3 className="h-4.5 w-4.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
-                      onClick={() => setAdvancedOpen(true)}
-                      aria-label="Open advanced setup"
-                    >
-                      <Settings2 className="h-4.5 w-4.5" />
-                    </Button>
-                  </div>
-                </>
-              ) : null}
-            </section>
-
-            {!displayResult && !loading && (
+            {!displayResult && !isResuming && (
               <CommandBar
                 value={form.question}
                 greetingName="Tsipi"

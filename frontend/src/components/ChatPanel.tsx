@@ -54,6 +54,8 @@ type Props = {
   isSavedAnswer?: boolean;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
+  onOpenInsights?: () => void;
+  onOpenAdvanced?: () => void;
 };
 
 export function ChatPanel(props: Props) {
@@ -163,6 +165,8 @@ export function ChatPanel(props: Props) {
           isSavedAnswer={Boolean(result)}
           onAskFollowup={props.onAskFollowup}
           onStartNewSession={props.onStartNewSession}
+          onOpenInsights={props.onOpenInsights}
+          onOpenAdvanced={props.onOpenAdvanced}
           clarificationPrompt={props.clarificationPrompt}
           clarificationReason={props.clarificationReason}
           followupOpen={props.followupOpen}
@@ -286,8 +290,8 @@ export function ChatPanel(props: Props) {
                           ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
                         const label = storedName || castMember?.name || modelLabel || crit.label;
                         const avatar = castMember?.avatar ?? DEBATE_SYSTEM_AVATAR;
-                        // critic 0 → left, critic 1 → right, critic 2 → left …
-                        const criticAlign = ci % 2 === 0 ? "left" : "right";
+                        // Director's Cut: writer right, critics alternate left / right
+                        const criticAlign: "left" | "right" = ci % 2 === 0 ? "left" : "right";
                         return (
                           <DebateChatBubble
                             key={ci}

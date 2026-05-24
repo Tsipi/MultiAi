@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CollapsiblePanel } from "./CollapsiblePanel";
 import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
+import { SessionViewActions } from "./SessionViewActions";
 
 type Props = {
   result: ConsultResult;
@@ -16,6 +17,8 @@ type Props = {
   onResendQuestion: (question: string) => void | Promise<void>;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
+  onOpenInsights?: () => void;
+  onOpenAdvanced?: () => void;
   isSavedAnswer?: boolean;
   clarificationPrompt?: string;
   clarificationReason?: string;
@@ -34,6 +37,8 @@ export function SessionPromptBlock({
   onResendQuestion,
   onAskFollowup,
   onStartNewSession,
+  onOpenInsights,
+  onOpenAdvanced,
   isSavedAnswer,
   clarificationPrompt,
   clarificationReason,
@@ -309,13 +314,23 @@ export function SessionPromptBlock({
   return (
     <section className="grid gap-2">
       {isSavedAnswer ? (
-        <div className="flex flex-col gap-1">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
-            Viewing saved answer
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            This answer is from a previous run{result.session_id ? <> (session <span className="font-mono">{result.session_id}</span>)</> : ""}.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
+              Viewing saved answer
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              This answer is from a previous run{result.session_id ? <> (session <span className="font-mono">{result.session_id}</span>)</> : ""}.
+            </p>
+          </div>
+          {onStartNewSession && (
+            <SessionViewActions
+              hasResult={true}
+              onNewQuestion={onStartNewSession}
+              onOpenInsights={onOpenInsights ?? (() => {})}
+              onOpenAdvanced={onOpenAdvanced ?? (() => {})}
+            />
+          )}
         </div>
       ) : null}
 

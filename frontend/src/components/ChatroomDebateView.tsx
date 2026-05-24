@@ -25,10 +25,7 @@ type Props = {
   prominent?: boolean;
 };
 
-function speakerAlign(speaker: AgentId): "left" | "right" {
-  if (speaker === "writer") return "right";
-  const m = speaker.match(/^critic(\d+)$/);
-  if (m) return parseInt(m[1], 10) % 2 === 0 ? "right" : "left";
+function speakerAlign(_speaker: AgentId): "left" | "right" {
   return "left";
 }
 
@@ -132,9 +129,19 @@ export function ChatroomDebateView({
         )}
       >
         {activity.length === 0 && loading && (
-          <p className="text-center text-xs text-muted-foreground py-6 animate-pulse">
-            Convening the team…
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 py-10">
+            <div className="flex gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-violet-400/70 animate-bounce [animation-delay:0ms]" />
+              <span className="w-2 h-2 rounded-full bg-violet-400/70 animate-bounce [animation-delay:150ms]" />
+              <span className="w-2 h-2 rounded-full bg-violet-400/70 animate-bounce [animation-delay:300ms]" />
+            </div>
+            <p className="text-sm font-medium text-foreground/70 text-center">
+              Your team is assembling…
+            </p>
+            <p className="text-xs text-muted-foreground/60 text-center max-w-[260px]">
+              Writer and Critics are preparing to tackle your question — the debate will appear here shortly.
+            </p>
+          </div>
         )}
 
         {(() => {
