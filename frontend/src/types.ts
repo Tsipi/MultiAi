@@ -4,27 +4,6 @@ export type ModelOption = {
   cost: string;
 };
 
-export type ConsultPayload = {
-  writers?: string[];
-  critics?: string[];
-  // Legacy fields — kept for settings state persistence; backend prefers the list fields above
-  writer: string;
-  critic_a: string;
-  critic_b: string;
-  max_rounds: number;
-  consensus_score: number;
-  role: string;
-  question: string;
-  clarification?: string;
-  attachments?: AttachmentInput[];
-  is_followup?: boolean;
-  parent_session_id?: string;
-  thread_id?: string;
-  source_prompt?: string;
-  source_final_answer?: string;
-  followup_instruction?: string;
-};
-
 export type AttachmentInput = {
   kind: "text" | "pdf" | "image";
   name: string;
@@ -32,7 +11,7 @@ export type AttachmentInput = {
   data: string;
 };
 
-/** Serialized attachment reference returned with session (data URL for opening in a new tab). */
+/** Serialized attachment reference returned with a session (data URL for display). */
 export type AttachmentFileRef = {
   name: string;
   mime_type: string;
@@ -40,30 +19,84 @@ export type AttachmentFileRef = {
   data: string;
 };
 
-export type ConsultResult = {
-  session_id: string;
+/** Payload sent to the backend to start a run. */
+export type ConsultPayload = {
+  // ── Input / question ──────────────────────────────────────────────────
   question: string;
   role: string;
+  attachments?: AttachmentInput[];
+
+  // ── Team ──────────────────────────────────────────────────────────────
+  // Preferred: full lists (what the backend actually reads)
+  writers?: string[];
+  critics?: string[];
+  writer_names?: string[];
+  critic_names?: string[];
+  // Legacy single-model fields — kept for backward compat; backend coerces into the lists above
+  writer: string;
+  critic_a: string;
+  critic_b: string;
+
+  // ── Debate settings ───────────────────────────────────────────────────
+  max_rounds: number;
+  consensus_score: number;
+
+  // ── Clarification flow ────────────────────────────────────────────────
+  clarification?: string;
+  clarification_question?: string;
+
+  // ── Follow-up chain ───────────────────────────────────────────────────
+  is_followup?: boolean;
+  thread_id?: string;
+  parent_session_id?: string;
+  source_prompt?: string;
+  source_final_answer?: string;
+  followup_instruction?: string;
+};
+
+/** Result returned from the backend after a completed run. */
+export type ConsultResult = {
+  // ── Identity ──────────────────────────────────────────────────────────
+  session_id: string;
+
+  // ── Input / question ──────────────────────────────────────────────────
+  question: string;
+  role: string;
+  base_question: string;
+  attachment_files: AttachmentFileRef[];
+
+  // ── Team ──────────────────────────────────────────────────────────────
+  model_writers: string[];   // OpenRouter model IDs — which LLMs ran
+  model_critics: string[];
+  writer_names: string[];    // display names shown in the UI
+  critic_names: string[];
+
+  // ── Debate output ─────────────────────────────────────────────────────
   final_answer: string;
   final_score: number;
-  cost_hint: string;
   full_discussion: Array<Record<string, unknown>>;
   status: "completed" | "needs_clarification";
+  cost_hint: string;
+
+  // ── Clarification flow ────────────────────────────────────────────────
   needs_clarification: boolean;
   clarification_question: string;
   clarification_reason: string;
   clarification_options: string[];
-  model_costs: Array<Record<string, unknown>>;
-  total_cost_usd: number;
-  total_tokens: number;
+  clarification_response: string;
+
+  // ── Follow-up chain ───────────────────────────────────────────────────
+  is_followup: boolean;
   thread_id: string;
   parent_session_id: string;
-  is_followup: boolean;
   source_prompt: string;
   source_final_answer: string;
   followup_instruction: string;
-  base_question: string;
-  attachment_files: AttachmentFileRef[];
+
+  // ── Usage & cost ──────────────────────────────────────────────────────
+  model_costs: Array<Record<string, unknown>>;
+  total_cost_usd: number;
+  total_tokens: number;
 };
 
 export type StreamHandlers = {

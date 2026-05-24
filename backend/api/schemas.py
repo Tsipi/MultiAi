@@ -15,15 +15,21 @@ class AttachmentPayload(BaseModel):
 class ConsultRequest(BaseModel):
     """Input payload for consultation endpoint."""
 
-    # Preferred: full team lists
+    # ── Input / question ────────────────────────────────────────────────────
+    question: str
+    role: str = Field(max_length=255)
+    attachments: list[AttachmentPayload] = Field(default_factory=list)
+
+    # ── Team ────────────────────────────────────────────────────────────────
+    # Preferred: full lists sent by the frontend team builder
     writers: list[str] = Field(default_factory=list, max_length=6)
     critics: list[str] = Field(default_factory=list, max_length=6)
-    # Legacy single-model fields kept for backward compatibility
+    writer_names: list[str] = Field(default_factory=list)
+    critic_names: list[str] = Field(default_factory=list)
+    # Legacy single-model fields — coerced into the list fields by the validator below
     writer: str = ""
     critic_a: str = ""
     critic_b: str = ""
-
-    max_rounds: int = Field(ge=1, le=6)
 
     @model_validator(mode="after")
     def _coerce_and_validate_team(self) -> "ConsultRequest":
@@ -37,42 +43,65 @@ class ConsultRequest(BaseModel):
         if not self.critics:
             raise ValueError("At least one critic model is required.")
         return self
+
+    # ── Debate settings ─────────────────────────────────────────────────────
+    max_rounds: int = Field(ge=1, le=6)
     consensus_score: int = Field(ge=6, le=10)
-    role: str = Field(max_length=255)
-    question: str
+
+    # ── Clarification flow ──────────────────────────────────────────────────
     clarification: str = Field(default="", max_length=512)
-    attachments: list[AttachmentPayload] = Field(default_factory=list)
+    clarification_question: str = Field(default="", max_length=1024)
+
+    # ── Follow-up chain ─────────────────────────────────────────────────────
     is_followup: bool = False
-    parent_session_id: str = ""
     thread_id: str = ""
+    parent_session_id: str = ""
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
 
 
 class ConsultResponse(BaseModel):
-    """Serialized response for frontend UI."""
+    """Serialized response returned to the frontend."""
 
+    # ── Identity ────────────────────────────────────────────────────────────
     session_id: str
+
+    # ── Input / question ────────────────────────────────────────────────────
     question: str = ""
     role: str = ""
+    base_question: str = ""
+    attachment_files: list[dict] = Field(default_factory=list)
+
+    # ── Team ────────────────────────────────────────────────────────────────
+    model_writers: list[str] = []
+    model_critics: list[str] = []
+    writer_names: list[str] = []
+    critic_names: list[str] = []
+
+    # ── Debate output ───────────────────────────────────────────────────────
     final_answer: str
     final_score: float
-    cost_hint: str
     full_discussion: list[dict]
     status: str = "completed"
+    cost_hint: str
+
+    # ── Clarification flow ──────────────────────────────────────────────────
     needs_clarification: bool = False
     clarification_question: str = ""
     clarification_reason: str = ""
     clarification_options: list[str] = []
-    model_costs: list[dict] = []
-    total_cost_usd: float = 0.0
-    total_tokens: int = 0
+    clarification_response: str = ""
+
+    # ── Follow-up chain ─────────────────────────────────────────────────────
+    is_followup: bool = False
     thread_id: str = ""
     parent_session_id: str = ""
-    is_followup: bool = False
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
-    base_question: str = ""
-    attachment_files: list[dict] = Field(default_factory=list)
+
+    # ── Usage & cost ────────────────────────────────────────────────────────
+    model_costs: list[dict] = []
+    total_cost_usd: float = 0.0
+    total_tokens: int = 0

@@ -214,6 +214,21 @@ body {
   }
 }
 
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
 /* ===== NAMED GLASS UTILITIES (used 5+ times each) ===== */
 @layer utilities {
   .glass-panel {
@@ -243,13 +258,21 @@ body {
 }
 
 /* ===== ACTIVITY CHAT BUBBLE COLOURS ===== */
-.bubble-john    { background-color: color-mix(in srgb, #d8f5d4 86%, var(--card)); }
-.bubble-christy { background-color: color-mix(in srgb, #dbeafe 85%, var(--card)); }
-.bubble-mark    { background-color: color-mix(in srgb, #fde9d3 84%, var(--card)); }
+.bubble-writer  { background-color: color-mix(in srgb, #d8f5d4 86%, var(--card)); }
+.bubble-critic1 { background-color: color-mix(in srgb, #dbeafe 85%, var(--card)); }
+.bubble-critic2 { background-color: color-mix(in srgb, #fde9d3 84%, var(--card)); }
+.bubble-critic3 { background-color: color-mix(in srgb, #ccfbf1 84%, var(--card)); }
+.bubble-critic4 { background-color: color-mix(in srgb, #ffe4e6 84%, var(--card)); }
+.bubble-critic5 { background-color: color-mix(in srgb, #fef3c7 84%, var(--card)); }
+.bubble-critic6 { background-color: color-mix(in srgb, #ecfccb 84%, var(--card)); }
 .bubble-system  { background-color: color-mix(in srgb, #eef2ff 82%, var(--card)); }
-.dark .bubble-john    { background-color: color-mix(in srgb, #d8f5d4 38%, var(--card)); }
-.dark .bubble-christy { background-color: color-mix(in srgb, #dbeafe 36%, var(--card)); }
-.dark .bubble-mark    { background-color: color-mix(in srgb, #fde9d3 35%, var(--card)); }
+.dark .bubble-writer  { background-color: color-mix(in srgb, #d8f5d4 38%, var(--card)); }
+.dark .bubble-critic1 { background-color: color-mix(in srgb, #dbeafe 36%, var(--card)); }
+.dark .bubble-critic2 { background-color: color-mix(in srgb, #fde9d3 35%, var(--card)); }
+.dark .bubble-critic3 { background-color: color-mix(in srgb, #ccfbf1 35%, var(--card)); }
+.dark .bubble-critic4 { background-color: color-mix(in srgb, #ffe4e6 35%, var(--card)); }
+.dark .bubble-critic5 { background-color: color-mix(in srgb, #fef3c7 35%, var(--card)); }
+.dark .bubble-critic6 { background-color: color-mix(in srgb, #ecfccb 35%, var(--card)); }
 .dark .bubble-system  { background-color: color-mix(in srgb, #eef2ff 33%, var(--card)); }
 
 /* ===== MARKDOWN PROSE (applied to ReactMarkdown output) ===== */

@@ -21,19 +21,16 @@ def _two_sentence_summary(summary: str) -> str:
 
 
 def _critic_name(index: int, total: int) -> str:
-    """Return display name for a critic by index."""
-    if total == 2:
-        return ("Critic A", "Critic B")[index]
+    """Return display name for a critic by 1-based position."""
     return f"Critic {index + 1}"
 
 
 def _critics_label(count: int) -> str:
     """Return a readable label for the critic group."""
     if count == 1:
-        return "the critic"
-    if count == 2:
-        return "Critic A and Critic B"
-    return f"all {count} critics"
+        return "Critic 1"
+    labels = ", ".join(f"Critic {i + 1}" for i in range(count - 1))
+    return f"{labels}, and Critic {count}"
 
 
 async def run_rounds(

@@ -12,7 +12,7 @@ import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";
 
 type Person = { name: string; avatar: string; model?: string };
-type Cast = { writer: Person; criticA: Person; criticB: Person };
+type Cast = { writer: Person; critics: Person[] };
 
 type Props = {
   activity: string[];
@@ -25,36 +25,36 @@ type Props = {
   prominent?: boolean;
 };
 
+function speakerAlign(speaker: AgentId): "left" | "right" {
+  if (speaker === "writer") return "right";
+  const m = speaker.match(/^critic(\d+)$/);
+  if (m) return parseInt(m[1], 10) % 2 === 0 ? "right" : "left";
+  return "left";
+}
+
 function resolvePerson(
   speaker: AgentId,
   cast: Cast
 ): { name: string; avatar: string; role: string } {
-  switch (speaker) {
-    case "writer":
-      return { ...cast.writer, role: "Writer" };
-    case "criticA":
-      return { ...cast.criticA, role: "Critic A" };
-    case "criticB":
-      return { ...cast.criticB, role: "Critic B" };
-    case "scorer":
-      return { name: "Scorer", avatar: DEBATE_SYSTEM_AVATAR, role: "Bench" };
-    default:
-      return { name: "System", avatar: DEBATE_SYSTEM_AVATAR, role: "System" };
+  if (speaker === "writer") return { ...cast.writer, role: "Writer" };
+  if (speaker === "scorer") return { name: "Scorer", avatar: DEBATE_SYSTEM_AVATAR, role: "Bench" };
+  const m = speaker.match(/^critic(\d+)$/);
+  if (m) {
+    const idx = parseInt(m[1], 10) - 1;
+    const member = cast.critics[idx];
+    return member
+      ? { name: member.name, avatar: member.avatar, role: "Critic" }
+      : { name: `Critic ${idx + 1}`, avatar: DEBATE_SYSTEM_AVATAR, role: "Critic" };
   }
+  return { name: "System", avatar: DEBATE_SYSTEM_AVATAR, role: "System" };
 }
 
 function resolveTypingPerson(speaker: AgentId | null, cast: Cast): Person | null {
   if (!speaker) return null;
-  switch (speaker) {
-    case "writer":
-      return cast.writer;
-    case "criticA":
-      return cast.criticA;
-    case "criticB":
-      return cast.criticB;
-    default:
-      return null;
-  }
+  if (speaker === "writer") return cast.writer;
+  const m = speaker.match(/^critic(\d+)$/);
+  if (m) return cast.critics[parseInt(m[1], 10) - 1] ?? null;
+  return null;
 }
 
 export function ChatroomDebateView({
@@ -166,6 +166,7 @@ export function ChatroomDebateView({
                       avatar={person.avatar}
                       text={msg.text}
                       isNew={isNew}
+                      align={speakerAlign(msg.speaker)}
                     />
                   );
                 })}
@@ -201,4 +202,3 @@ export function ChatroomDebateView({
     </div>
   );
 }
-

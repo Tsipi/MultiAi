@@ -22,35 +22,49 @@ class DebateRound:
 class DebateSession:
     """Complete debate session persisted to storage."""
 
+    # ── Identity ────────────────────────────────────────────────────────────
     session_id: str
-    question: str
-    domain: str
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    # ── Input / question ────────────────────────────────────────────────────
+    question: str = ""          # full question sent to LLMs (may include attachment text)
+    base_question: str = ""     # raw user question before attachment injection
+    domain: str = ""            # writer expert-role prompt (maps to "role" in API)
+    attachment_files: list[dict] = field(default_factory=list)
+
+    # ── Team ────────────────────────────────────────────────────────────────
+    # OpenRouter model IDs — determine which LLMs are called
+    model_writers: list[str] = field(default_factory=list)
+    model_critics: list[str] = field(default_factory=list)
+    # Display names shown in the UI (set by the user in the team builder)
+    writer_names: list[str] = field(default_factory=list)
+    critic_names: list[str] = field(default_factory=list)
+
+    # ── Debate output ───────────────────────────────────────────────────────
     rounds: list[DebateRound] = field(default_factory=list)
     final_answer: str = ""
     final_score: float = 0.0
-    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    model_writers: list[str] = field(default_factory=list)
-    model_critics: list[str] = field(default_factory=list)
-    # Legacy fields preserved for reading old session JSON files
-    model_writer: str = ""
-    model_critic_a: str = ""
-    model_critic_b: str = ""
-    intent_scope: str = ""
+    intent_scope: str = ""      # one-line scope extracted by intent assessment
+
+    # ── Clarification flow ──────────────────────────────────────────────────
     needs_clarification: bool = False
     clarification_question: str = ""
     clarification_reason: str = ""
     clarification_options: list[str] = field(default_factory=list)
+    clarification_response: str = ""    # user's chosen answer
+
+    # ── Follow-up chain ─────────────────────────────────────────────────────
+    is_followup: bool = False
+    thread_id: str = ""                 # shared across all runs in a thread
+    parent_session_id: str = ""
+    source_prompt: str = ""             # original question this follows up on
+    source_final_answer: str = ""       # previous answer this follows up on
+    followup_instruction: str = ""      # what the user asked to change/extend
+
+    # ── Usage & cost ────────────────────────────────────────────────────────
     model_costs: list[dict] = field(default_factory=list)
     total_cost_usd: float = 0.0
     total_tokens: int = 0
-    thread_id: str = ""
-    parent_session_id: str = ""
-    is_followup: bool = False
-    source_prompt: str = ""
-    source_final_answer: str = ""
-    followup_instruction: str = ""
-    base_question: str = ""
-    attachment_files: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return serializable session dictionary."""

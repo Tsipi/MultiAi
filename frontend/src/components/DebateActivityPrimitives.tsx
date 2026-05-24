@@ -6,7 +6,7 @@ import { ModelProviderIcon } from "./ModelProviderIcon";
 
 export type DebatePerson = { name: string; avatar: string };
 
-export type DebateSpeakerId = "john" | "christy" | "mark" | "system";
+export type DebateSpeakerId = string;
 
 export function DebateChatBubble({
   id,
@@ -15,6 +15,7 @@ export function DebateChatBubble({
   modelId,
   tag,
   rawText,
+  align,
   children,
 }: {
   id: DebateSpeakerId;
@@ -23,6 +24,7 @@ export function DebateChatBubble({
   modelId?: string;
   tag?: string;
   rawText?: string;
+  align?: "left" | "right";
   children: ReactNode;
 }) {
   const copyText = async () => {
@@ -41,8 +43,9 @@ export function DebateChatBubble({
     await navigator.clipboard.writeText(text);
   };
 
+  const isRight = align !== undefined ? align === "right" : id === "writer";
   return (
-    <li className={cn("flex gap-2 items-end", id === "john" && "flex-row-reverse")}>
+    <li className={cn("flex gap-2 items-end", isRight && "flex-row-reverse")}>
       <div
         className={cn(
           "max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",

@@ -11,6 +11,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
 import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
 import { ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { MODEL_OPTIONS } from "./data/models";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useComposeForm } from "./hooks/useComposeForm";
 import { useSessionHistory } from "./hooks/useSessionHistory";
@@ -34,23 +35,49 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
+  // Stores the last payload sent so clarification Continue can replay the exact same run
+  const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
 
   // Derived values
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
-  const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
+  const panelCast = useMemo(() => {
+    if (!selectedId) return activeCast;
+    if (castBySession[selectedId]) return castBySession[selectedId];
+    // For old sessions without a stored cast, rebuild from model IDs in the result
+    const res = resultsById[selectedId];
+    if (res?.model_critics?.length) {
+      const writerModel = res.model_writers?.[0] ?? "";
+      const writerMember = team.find((m) => m.duty === "writer" && m.model === writerModel)
+        ?? team.find((m) => m.duty === "writer")
+        ?? team[0];
+      const usedIds = new Set<string>();
+      const critics = res.model_critics.map((model, i) => {
+        const member = team.find((m) => m.model === model && !usedIds.has(m.id));
+        if (member) usedIds.add(member.id);
+        const modelLabel = MODEL_OPTIONS.find((o) => o.id === model)?.label
+          ?? (model.includes("/") ? model.split("/").pop()! : model);
+        const fallbackName = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
+        return { name: member?.name ?? fallbackName, avatar: member?.avatar ?? writerMember.avatar, model };
+      });
+      return { writer: { name: writerMember.name, avatar: writerMember.avatar, model: writerMember.model }, critics };
+    }
+    return activeCast;
+  }, [selectedId, castBySession, activeCast, resultsById, team]);
   const panelActivity = activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
   // --- Orchestration ---
 
-  const runConsult = async (clarificationTag = "", questionOverride?: string) => {
+  const runConsult = async (clarificationTag = "", questionOverride?: string, clarificationQuestion?: string) => {
     const questionText = (questionOverride ?? form.question).trim();
     if (!questionText) return;
     clearFollowupState();
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
     setLoading(true);
+    setResult(null);
+    setSelectedId(null);
     requestAnimationFrame(() => {
       mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -58,7 +85,7 @@ export default function App() {
     clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
-    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag);
+    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag, clarificationQuestion);
     try {
       await executeConsult(payload, cast, questionText);
     } catch (error) {
@@ -78,7 +105,8 @@ export default function App() {
   async function runFollowup() {
     const source = displayResult;
     if (!source || !followupInstruction.trim()) return;
-    const cast = selectCastFromTeam(team);
+    // Use the session's cast (panelCast reflects the viewed session's team)
+    const cast = panelCast;
     setActiveCast(cast);
     setFollowupError("");
     setAdvancedOpen(false);
@@ -100,7 +128,8 @@ export default function App() {
       "Follow-up instruction:",
       mergedInstruction,
     ].join("\n");
-    const payload = mergeTeamIntoPayload(
+    // Build base payload from form (role, settings, etc.) then override with session's models/names
+    const basePayload = mergeTeamIntoPayload(
       {
         ...form,
         question: followupQuestion,
@@ -110,11 +139,22 @@ export default function App() {
         source_prompt: source.source_prompt || source.question,
         source_final_answer: source.source_final_answer || source.final_answer,
         followup_instruction: mergedInstruction,
+        role: source.role || form.role,
       },
       team,
       [],
       ""
     );
+    const payload = {
+      ...basePayload,
+      writers: [cast.writer.model],
+      critics: cast.critics.map((c) => c.model),
+      writer: cast.writer.model,
+      critic_a: cast.critics[0]?.model ?? "",
+      critic_b: cast.critics[1]?.model ?? "",
+      writer_names: [cast.writer.name],
+      critic_names: cast.critics.map((c) => c.name),
+    };
     try {
       await executeConsult(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -134,6 +174,7 @@ export default function App() {
           next.needs_clarification && next.clarification_question && next.clarification_options.length
         );
         if (canClarify) {
+          pendingClarificationRef.current = { payload, cast, title };
           setClarificationPrompt(next.clarification_question);
           setClarificationReason(next.clarification_reason);
           setClarificationOptions(next.clarification_options);
@@ -142,6 +183,7 @@ export default function App() {
           setActivity((prev) => [...prev, "Waiting for user clarification"]);
           return;
         }
+        pendingClarificationRef.current = null;
         setResult(next);
         setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
@@ -163,6 +205,34 @@ export default function App() {
           .catch(() => {});
       },
     });
+  }
+
+  async function resumeWithClarification(answer: string) {
+    const pending = pendingClarificationRef.current;
+    const questionAsked = clarificationPrompt;
+    pendingClarificationRef.current = null;
+    clearFollowupState();
+    setLoading(true);
+    setResult(null);
+    setSelectedId(null);
+    clearClarification();
+    setActivity(["Resuming with your clarification…"]);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    const { payload: basePayload, cast: baseCast, title: baseTitle } = pending ?? {
+      payload: mergeTeamIntoPayload({ ...form }, team, attachments, "", ""),
+      cast: selectCastFromTeam(team),
+      title: form.question,
+    };
+    const nextPayload: ConsultPayload = { ...basePayload, clarification: answer, clarification_question: questionAsked };
+    try {
+      await executeConsult(nextPayload, baseCast, baseTitle);
+    } catch (error) {
+      setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const selectSession = async (id: string) => {
@@ -246,8 +316,10 @@ export default function App() {
     clarificationOtherText,
     onClarificationChoice: chooseClarification,
     onClarificationOtherText: setClarificationOtherText,
-    onSubmitClarification: () =>
-      runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
+    onSubmitClarification: () => {
+      const answer = clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice;
+      void resumeWithClarification(answer);
+    },
     onResendQuestion: resendQuestion,
     followupOpen,
     followupInstruction,
@@ -328,7 +400,7 @@ export default function App() {
               ) : null}
             </section>
 
-            {!displayResult && (
+            {!displayResult && !loading && (
               <CommandBar
                 value={form.question}
                 greetingName="Tsipi"

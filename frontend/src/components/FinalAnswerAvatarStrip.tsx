@@ -13,9 +13,9 @@ export function FinalAnswerHeaderRoster({ faces, className }: Props) {
   if (!faces.length) return null;
   return (
     <div className={cn("flex items-center gap-1", className)}>
-      {faces.map((p) => (
+      {faces.map((p, i) => (
         <div
-          key={p.name}
+          key={`${p.name}-${i}`}
           className="relative h-7 w-7 shrink-0"
           title={`${p.name} (${p.model})`}
         >

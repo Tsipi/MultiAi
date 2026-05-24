@@ -18,20 +18,28 @@ type Props = {
 export function ClarificationBox(props: Props) {
   const usingOther = props.selected === "Other";
   const canSubmit = props.selected && (!usingOther || props.otherText.trim());
+
   return (
-    <div className="mb-3 border border-ring/40 rounded-lg p-3 grid gap-2">
-      <h2 className="text-[1.06rem] font-semibold tracking-tight m-0">Clarification Needed</h2>
-      <p className="text-sm text-muted-foreground m-0">{props.reason}</p>
-      <p className="text-sm m-0">{props.question}</p>
+    <div className="rounded-xl border border-violet-500/20 bg-[var(--v2-surface)] p-4 grid gap-3 shadow-sm">
+      <div>
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300 m-0">
+          Clarification Needed
+        </p>
+        {props.reason && (
+          <p className="mt-1.5 text-sm text-muted-foreground m-0">{props.reason}</p>
+        )}
+        <p className="mt-2 text-sm font-medium text-foreground m-0">{props.question}</p>
+      </div>
+
       <div className="grid gap-1.5">
         {props.options.map((opt) => (
           <button
             key={opt}
             className={cn(
-              "text-left w-full rounded-md border px-3 py-2 text-sm transition-colors cursor-pointer shadow-none",
+              "text-left w-full rounded-lg border px-3 py-2.5 text-sm transition-colors cursor-pointer",
               props.selected === opt
-                ? "border-ring bg-ring/15 text-foreground font-medium"
-                : "border-border bg-card/90 text-foreground hover:border-ring/40"
+                ? "border-violet-500/60 bg-violet-500/10 text-foreground font-medium"
+                : "border-border/60 bg-card/80 text-foreground hover:border-violet-400/40 hover:bg-violet-500/5"
             )}
             onClick={() => props.onSelect(opt)}
           >
@@ -39,6 +47,7 @@ export function ClarificationBox(props: Props) {
           </button>
         ))}
       </div>
+
       {usingOther && (
         <Label>
           Other (please specify)
@@ -49,9 +58,22 @@ export function ClarificationBox(props: Props) {
           />
         </Label>
       )}
-      <Button onClick={props.onSubmit} disabled={props.loading || !canSubmit}>
-        Continue with Clarification
-      </Button>
+
+      <div className="flex items-center gap-3">
+        <Button
+          variant="secondary"
+          className="font-display h-10 rounded-xl px-6 font-semibold"
+          onClick={props.onSubmit}
+          disabled={props.loading || !canSubmit}
+        >
+          {props.loading ? "Starting debate…" : "Continue"}
+        </Button>
+        {props.loading && (
+          <p className="text-sm text-muted-foreground m-0 animate-pulse">
+            Your team is assembling the debate…
+          </p>
+        )}
+      </div>
     </div>
   );
 }

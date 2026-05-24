@@ -49,6 +49,10 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         clarification_reason=session.clarification_reason,
         clarification_options=session.clarification_options,
         model_costs=session.model_costs,
+        model_writers=session.model_writers,
+        model_critics=session.model_critics,
+        writer_names=session.writer_names,
+        critic_names=session.critic_names,
         total_cost_usd=session.total_cost_usd,
         total_tokens=session.total_tokens,
         thread_id=session.thread_id,
@@ -59,6 +63,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         followup_instruction=session.followup_instruction,
         base_question=session.base_question,
         attachment_files=session.attachment_files,
+        clarification_response=session.clarification_response,
     )
 class TitleRequest(BaseModel):
     question: str
@@ -90,6 +95,7 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
         max_rounds=payload.max_rounds,
         threshold=payload.consensus_score,
         clarification=payload.clarification,
+        clarification_question_asked=payload.clarification_question,
         attachments=payload.attachments,
         is_followup=payload.is_followup,
         parent_session_id=payload.parent_session_id,
@@ -97,6 +103,8 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
         source_prompt=payload.source_prompt,
         source_final_answer=payload.source_final_answer,
         followup_instruction=payload.followup_instruction,
+        writer_names=payload.writer_names,
+        critic_names=payload.critic_names,
     )
     return _to_response(session)
 @app.post("/api/consult-stream")
@@ -117,6 +125,7 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
                 max_rounds=payload.max_rounds,
                 threshold=payload.consensus_score,
                 clarification=payload.clarification,
+                clarification_question_asked=payload.clarification_question,
                 attachments=payload.attachments,
                 is_followup=payload.is_followup,
                 parent_session_id=payload.parent_session_id,
@@ -124,6 +133,8 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
                 source_prompt=payload.source_prompt,
                 source_final_answer=payload.source_final_answer,
                 followup_instruction=payload.followup_instruction,
+                writer_names=payload.writer_names,
+                critic_names=payload.critic_names,
                 progress_hook=activity,
             )
             await queue.put({"type": "final", "data": _to_response(session).model_dump()})

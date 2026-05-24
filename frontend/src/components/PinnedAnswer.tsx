@@ -7,7 +7,7 @@ import { FinalAnswerHeaderRoster, type RosterFace } from "./FinalAnswerAvatarStr
 type Props = {
   finalAnswer: string;
   score: number;
-  cast?: { writer: RosterFace; criticA: RosterFace; criticB: RosterFace };
+  cast?: { writer: RosterFace; critics: RosterFace[] };
 };
 
 export function PinnedAnswer({
@@ -16,7 +16,7 @@ export function PinnedAnswer({
   cast,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const faces = cast ? [cast.writer, cast.criticA, cast.criticB] : [];
+  const faces = cast ? [cast.writer, ...cast.critics] : [];
 
   return (
     <div

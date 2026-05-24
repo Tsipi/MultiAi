@@ -5,11 +5,10 @@ import { ChatroomDebateView } from "./ChatroomDebateView";
 import { cn } from "@/lib/utils";
 import { panelHeadingClass } from "@/lib/panelStyles";
 import { ConsultResult, SessionPreview } from "../types";
+import { type CastSelection } from "@/lib/consultHelpers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type Person = { name: string; avatar: string; model: string };
-type CastSelection = { writer: Person; criticA: Person; criticB: Person };
 type ChatPanelProps = React.ComponentProps<typeof ChatPanel>;
 
 export type AnswersPanelProps = {
@@ -49,6 +48,9 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
     if (selectedId) setExpandedId(selectedId);
   }, [selectedId, compact]);
 
+  const sessionNumberMap = Object.fromEntries(
+    sessions.map((s, i) => [s.id, sessions.length - i])
+  );
   const threads = groupByThread(sessions);
   const query = searchText.trim().toLowerCase();
   const filteredThreads = !query
@@ -178,6 +180,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 sessionTitles[thread.parent.id] ||
                 (thread.parent.run_title || thread.parent.question || "Untitled run").slice(0, 70)
               }
+              sessionNumber={sessionNumberMap[thread.parent.id] ?? 0}
               isExpanded={!compact && expandedId === thread.parent.id}
               isSelected={compact && selectedId === thread.parent.id}
               listSelectOnly={compact}
@@ -199,6 +202,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 title={
                   sessionTitles[run.id] || (run.run_title || run.question || "Untitled run").slice(0, 70)
                 }
+                sessionNumber={sessionNumberMap[run.id] ?? 0}
                 isExpanded={!compact && expandedId === run.id}
                 isSelected={compact && selectedId === run.id}
                 listSelectOnly={compact}
@@ -263,6 +267,9 @@ function buildSessionChatProps(
     onStartFresh: activeChatProps.onStartFresh,
     onResendQuestion: () => {},
     followupError: "",
+    isSavedAnswer: true,
+    onAskFollowup: () => {},
+    onStartNewSession: activeChatProps.onStartNewSession,
     team: activeChatProps.team,
     maxRounds: activeChatProps.maxRounds,
     consensusThreshold: activeChatProps.consensusThreshold,
@@ -272,6 +279,7 @@ function buildSessionChatProps(
 function AccordionItem({
   session,
   title,
+  sessionNumber = 0,
   isExpanded,
   isSelected,
   listSelectOnly,
@@ -283,6 +291,7 @@ function AccordionItem({
 }: {
   session: SessionPreview;
   title: string;
+  sessionNumber?: number;
   isExpanded: boolean;
   isSelected: boolean;
   listSelectOnly: boolean;
@@ -313,14 +322,19 @@ function AccordionItem({
             aria-current={isSelected ? "true" : undefined}
           >
             <div className="flex-1 min-w-0">
-              <span
-                className={cn(
-                  "block leading-snug line-clamp-2 text-sm",
-                  child ? "font-normal text-foreground/85" : "font-medium"
+              <div className="flex items-start justify-between gap-1">
+                <span
+                  className={cn(
+                    "leading-snug line-clamp-2 text-sm",
+                    child ? "font-normal text-foreground/85" : "font-medium"
+                  )}
+                >
+                  {title}
+                </span>
+                {sessionNumber > 0 && (
+                  <span className="text-[0.62rem] text-muted-foreground/55 shrink-0 mt-0.5">#{sessionNumber}</span>
                 )}
-              >
-                {title}
-              </span>
+              </div>
               {description && (
                 <span className="text-[0.72rem] text-muted-foreground leading-tight block">{description}</span>
               )}
@@ -365,7 +379,12 @@ function AccordionItem({
               {title}
             </span>
             {description && (
-              <span className="text-[0.72rem] text-muted-foreground leading-tight block">{description}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[0.72rem] text-muted-foreground leading-tight">{description}</span>
+                {sessionNumber > 0 && (
+                  <span className="text-[0.62rem] text-muted-foreground/55 shrink-0 ml-1">#{sessionNumber}</span>
+                )}
+              </div>
             )}
           </div>
         </button>

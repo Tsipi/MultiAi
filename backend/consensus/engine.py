@@ -30,6 +30,7 @@ class ConsensusEngine:
         max_rounds: int,
         threshold: int,
         clarification: str = "",
+        clarification_question_asked: str = "",
         attachments: list[AttachmentIn] | None = None,
         is_followup: bool = False,
         parent_session_id: str = "",
@@ -37,6 +38,8 @@ class ConsensusEngine:
         source_prompt: str = "",
         source_final_answer: str = "",
         followup_instruction: str = "",
+        writer_names: list[str] | None = None,
+        critic_names: list[str] | None = None,
         progress_hook: Callable[[str], Awaitable[None]] | None = None,
     ) -> DebateSession:
         """Run multi-round consensus process and save session."""
@@ -62,9 +65,8 @@ class ConsensusEngine:
             domain=domain,
             model_writers=list(writers),
             model_critics=list(critics),
-            model_writer=writers[0] if writers else "",
-            model_critic_a=critics[0] if critics else "",
-            model_critic_b=critics[1] if len(critics) > 1 else "",
+            writer_names=list(writer_names or []),
+            critic_names=list(critic_names or []),
             thread_id=thread_id or session_id,
             parent_session_id=parent_session_id,
             is_followup=is_followup,
@@ -77,6 +79,9 @@ class ConsensusEngine:
                 for a in normalized_attachments
             ],
         )
+        if clarification:
+            session.clarification_question = clarification_question_asked
+            session.clarification_response = clarification
         usage_token = start_usage_collection()
         assessment = await assess_intent(question_with_context, domain, clarification, self.cfg)
         session.intent_scope = assessment.intent_scope

@@ -3,7 +3,16 @@
  * arrives via the NDJSON stream. No React, no side-effects.
  */
 
-export type AgentId = "writer" | "criticA" | "criticB" | "scorer" | "system";
+export type AgentId =
+  | "writer"
+  | "critic1"
+  | "critic2"
+  | "critic3"
+  | "critic4"
+  | "critic5"
+  | "critic6"
+  | "scorer"
+  | "system";
 
 export type ChatroomMessage = {
   id: number;
@@ -28,18 +37,23 @@ const RE_ROUND_NUM     = /^Round (\d+):/i;
 const RE_SCORE_LINE    = /consensus ([\d.]+)[,\s]+relevance ([\d.]+)/i;
 const RE_THRESHOLD     = /consensus threshold reached at round (\d+)/i;
 const RE_WRITER_TYPING = /writer (is drafting|rewrites)/i;
-const RE_CRITIC_A      = /critic a/i;
-const RE_CRITIC_B      = /critic b/i;
+const RE_CRITIC_NUM    = /\bcritic (\d+)\b/i;
 const RE_SCORER        = /^Round \d+: consensus/i;
 const RE_SYNTH         = /synthesizing final answer/i;
 const RE_COMPLETE      = /completed successfully/i;
 const RE_QUEUED        = /queued request/i;
 
+function toCriticId(n: number): AgentId | null {
+  if (n >= 1 && n <= 6) return `critic${n}` as AgentId;
+  return null;
+}
+
 function detectSpeaker(text: string): AgentId {
   if (RE_SCORER.test(text))        return "scorer";
-  if (RE_CRITIC_A.test(text))      return "criticA";
-  if (RE_CRITIC_B.test(text))      return "criticB";
+  // Writer check before critic — "Writer rewrites based on Critic 1..." must not fall to critic
   if (RE_WRITER_TYPING.test(text)) return "writer";
+  const cm = text.match(RE_CRITIC_NUM);
+  if (cm) return toCriticId(parseInt(cm[1], 10)) ?? "system";
   if (RE_ROUND_NUM.test(text))     return "writer";
   return "system";
 }
@@ -48,9 +62,9 @@ function detectActiveSpeaker(text: string): AgentId | null {
   if (RE_COMPLETE.test(text) || RE_THRESHOLD.test(text)) return null;
   if (RE_SYNTH.test(text))         return "system";
   if (RE_SCORER.test(text))        return "scorer";
-  if (RE_CRITIC_A.test(text))      return "criticA";
-  if (RE_CRITIC_B.test(text))      return "criticB";
   if (RE_WRITER_TYPING.test(text)) return "writer";
+  const cm = text.match(RE_CRITIC_NUM);
+  if (cm) return toCriticId(parseInt(cm[1], 10));
   if (RE_ROUND_NUM.test(text))     return "writer";
   return "system";
 }
