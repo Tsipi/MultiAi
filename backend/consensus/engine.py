@@ -109,8 +109,18 @@ class ConsensusEngine:
                 image_urls=image_urls,
             )
             final_critique = session.rounds[-1].critique if session.rounds else ""
+            # For follow-ups both {question} and {intent_scope} were the full 500-word context
+            # blob, drowning the format instructions. Use just the follow-up instruction for both.
+            if is_followup and followup_instruction:
+                synthesis_question = followup_instruction
+                if source_prompt:
+                    synthesis_question += f"\n\n(Follow-up to: {source_prompt[:300]})"
+                synthesis_scope = followup_instruction
+            else:
+                synthesis_question = question_with_context
+                synthesis_scope = session.intent_scope
             final_prompt = FINAL_SYNTHESIS.format(
-                question=question_with_context, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=session.intent_scope
+                question=synthesis_question, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=synthesis_scope
             )
             await report("Synthesizing final answer")
             session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
