@@ -6,7 +6,7 @@ import { downloadMarkdown, downloadPdf, exportDateLocal } from "../services/expo
 import { generateTitle } from "../services/api";
 import { CollapsiblePanel } from "./CollapsiblePanel";
 import { promptTextForExport } from "@/lib/promptDisplay";
-import { FollowupComposer } from "./FollowupComposer";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DebateChatBubble, DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
@@ -181,7 +181,7 @@ export function ChatPanel(props: Props) {
           team={team}
           loading={loading}
           onResendQuestion={props.onResendQuestion}
-          isSavedAnswer={Boolean(result)}
+          isSavedAnswer={props.isSavedAnswer}
           onAskFollowup={props.onAskFollowup}
           onStartNewSession={props.onStartNewSession}
           onOpenInsights={props.onOpenInsights}
@@ -375,7 +375,6 @@ function splitCritiques(
   if (parts.length > 0) return parts;
 
   // Fallback: legacy alphabetic blocks [Critic A], [Critic B], ...
-  const letters = ["A", "B", "C", "D", "E", "F"];
   const reLeg = /\[Critic ([A-F])\]([\s\S]*?)(?=\[Critic [A-F]\]|$)/gi;
   while ((m = reLeg.exec(merged)) !== null) {
     const text = m[2].trim();
