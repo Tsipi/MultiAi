@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
+import { ModelProviderIcon } from "./ModelProviderIcon";
 
 type Props = {
   speaker: AgentId;
@@ -7,6 +8,7 @@ type Props = {
   role: string;
   avatar: string;
   text: string;
+  modelId?: string;
   isNew?: boolean;
   align?: "left" | "right";
 };
@@ -23,7 +25,7 @@ const NAME_COLOR: Record<AgentId, string> = {
   system:  "text-muted-foreground",
 };
 
-export function ChatMessage({ speaker, name, role, avatar, text, isNew, align = "left" }: Props) {
+export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew, align = "left" }: Props) {
   const right = align === "right";
   return (
     <div
@@ -33,11 +35,22 @@ export function ChatMessage({ speaker, name, role, avatar, text, isNew, align = 
         isNew && "animate-in fade-in slide-in-from-bottom-1 duration-250"
       )}
     >
-      <img
-        src={avatar}
-        alt={name}
-        className="h-9 w-9 shrink-0 rounded-full border border-border object-cover mt-0.5"
-      />
+      <div className="relative shrink-0 mt-0.5">
+        <img
+          src={avatar}
+          alt={name}
+          className="h-9 w-9 rounded-full border border-border object-cover"
+        />
+        {modelId && (
+          <span className="absolute -bottom-0.5 -right-0.5 flex leading-none" aria-hidden>
+            <ModelProviderIcon
+              modelId={modelId}
+              title={modelId}
+              className="!h-[15px] !w-[15px] !min-h-0 !rounded-[4px] !text-[7px]"
+            />
+          </span>
+        )}
+      </div>
       <div className={cn("min-w-0 flex-1", right && "items-end")}>
         <div className={cn("flex items-baseline gap-2 flex-wrap mb-0.5", right && "flex-row-reverse")}>
           <span className={cn("text-sm font-semibold leading-none", NAME_COLOR[speaker])}>
@@ -48,6 +61,32 @@ export function ChatMessage({ speaker, name, role, avatar, text, isNew, align = 
           </span>
         </div>
         <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+type SkeletonMessageProps = { lines?: [string, string?, string?]; delay?: string };
+
+export function SkeletonMessage({ lines = ["w-4/5", "w-3/5"], delay = "0ms" }: SkeletonMessageProps) {
+  return (
+    <div
+      className="flex gap-3 px-1 py-1"
+      style={{ animationDelay: delay }}
+    >
+      <div className="h-9 w-9 shrink-0 rounded-full bg-muted/60 animate-pulse mt-0.5" />
+      <div className="min-w-0 flex-1 grid gap-1.5 pt-0.5">
+        <div className="flex items-baseline gap-2 mb-0.5">
+          <div className="h-2.5 w-14 rounded bg-muted/70 animate-pulse" style={{ animationDelay: delay }} />
+          <div className="h-2 w-9 rounded-full bg-muted/50 animate-pulse" style={{ animationDelay: delay }} />
+        </div>
+        {lines.filter(Boolean).map((w, i) => (
+          <div
+            key={i}
+            className={cn("h-2.5 rounded bg-muted/50 animate-pulse", w)}
+            style={{ animationDelay: `calc(${delay} + ${i * 80}ms)` }}
+          />
+        ))}
       </div>
     </div>
   );

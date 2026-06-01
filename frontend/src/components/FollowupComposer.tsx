@@ -19,6 +19,18 @@ type Props = {
   onStartFresh: () => void;
 };
 
+function SourceAnchor({ prompt }: { prompt: string }) {
+  if (!prompt) return null;
+  return (
+    <p className="m-0 flex min-w-0 items-baseline gap-1 text-xs text-muted-foreground">
+      <span className="shrink-0">Building on:</span>
+      <span className="min-w-0 truncate font-medium italic text-foreground/70">
+        "{prompt}"
+      </span>
+    </p>
+  );
+}
+
 export function FollowupComposer(props: Props) {
   const canSubmit = Boolean(props.instruction.trim()) && !props.loading;
 
@@ -32,13 +44,16 @@ export function FollowupComposer(props: Props) {
     >
       {!props.open ? (
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground m-0 mb-1">
               Continue this conversation in the same thread.
             </p>
             <p className="text-sm text-muted-foreground m-0 leading-relaxed">
               The next run uses your original prompt and the final answer above as context.
             </p>
+            <div className="mt-1.5">
+              <SourceAnchor prompt={props.sourcePrompt} />
+            </div>
           </div>
           <Button
             type="button"
@@ -50,10 +65,13 @@ export function FollowupComposer(props: Props) {
         </div>
       ) : (
         <div className="grid gap-3">
-          <p className="text-sm text-muted-foreground m-0">
-            Describe what you want next. We send this together with the original prompt and the latest
-            final answer.
-          </p>
+          <div className="grid gap-1">
+            <p className="text-sm text-muted-foreground m-0">
+              Describe what you want next. We send this together with the original prompt and the latest
+              final answer.
+            </p>
+            <SourceAnchor prompt={props.sourcePrompt} />
+          </div>
 
           <Label>
             Follow-up task or question

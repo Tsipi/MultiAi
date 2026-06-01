@@ -1,14 +1,15 @@
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
 import type { ConsultResult } from "@/types";
 import type { TeamMember } from "@/data/experts";
 import { attachmentListForDisplay, promptTextForDisplay, stripAttachmentBlock } from "@/lib/promptDisplay";
 import { sharedLeadExpertRole } from "@/lib/teamSharedRole";
 import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import { CollapsiblePanel } from "./CollapsiblePanel";
 import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
 import { SessionViewActions } from "./SessionViewActions";
+import { MarkdownView } from "./MarkdownView";
 
 type Props = {
   result: ConsultResult;
@@ -78,15 +79,19 @@ export function SessionPromptBlock({
         </p>
       </div>
 
-      {/* 2. Previous answer — rendered as markdown so ** bold works */}
-      <div className="grid gap-1.5">
-        <p className={sectionLabel}>Previous answer</p>
-        <div className="rounded-xl border border-violet-500/15 bg-card/60 px-4 py-3 text-sm text-foreground prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown>
-            {result.source_final_answer || "Previous answer unavailable."}
-          </ReactMarkdown>
+      {/* 2. Previous answer — collapsible to keep the panel compact */}
+      <details className="group/prev">
+        <summary className="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden flex items-center justify-between gap-2 hover:opacity-70 transition-opacity">
+          <p className={sectionLabel + " pointer-events-none"}>Previous answer</p>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open/prev:rotate-180" />
+        </summary>
+        <div className="mt-2 max-h-56 overflow-y-auto">
+          <MarkdownView
+            content={result.source_final_answer || "Previous answer unavailable."}
+            className="border-violet-500/15 bg-card/60 text-sm max-w-none shadow-none"
+          />
         </div>
-      </div>
+      </details>
 
       {/* 3. Follow-up instruction (this session) */}
       <div className="grid gap-1.5">

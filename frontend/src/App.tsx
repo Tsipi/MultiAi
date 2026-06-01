@@ -10,6 +10,7 @@ import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature,
 import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
 import { ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { MODEL_OPTIONS } from "./data/models";
+import { mkMember, type TeamMember } from "./data/experts";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useComposeForm } from "./hooks/useComposeForm";
 import { useSessionHistory } from "./hooks/useSessionHistory";
@@ -289,6 +290,33 @@ export default function App() {
     clearFollowupState();
   }
 
+  /** Rebuild a TeamMember[] from the session cast so the form/drawer shows the right people. */
+  function castToTeam(cast: CastSelection, baseRole: string): TeamMember[] {
+    const writer = mkMember(cast.writer.name.toLowerCase(), cast.writer.name, cast.writer.avatar, cast.writer.model, "writer", baseRole);
+    const critics = cast.critics.map((c) => mkMember(c.name.toLowerCase(), c.name, c.avatar, c.model, "critic", baseRole));
+    return [writer, ...critics];
+  }
+
+  /** "New question" — restores the viewed session's team so CommandBar shows the right squad. */
+  function startNewQuestionWithSessionTeam() {
+    if (selectedId) {
+      const baseRole = displayResult?.role || form.role;
+      setTeam(castToTeam(panelCast, baseRole));
+      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+    }
+    startNewQuestion();
+  }
+
+  /** Open Advanced Setup pre-loaded with the viewed session's team. */
+  function openAdvancedWithSessionTeam() {
+    if (selectedId) {
+      const baseRole = displayResult?.role || form.role;
+      setTeam(castToTeam(panelCast, baseRole));
+      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+    }
+    setAdvancedOpen(true);
+  }
+
   function openFollowup() {
     if (!displayResult) return;
     setFollowupOpen(true);
@@ -336,9 +364,9 @@ export default function App() {
     onStartFresh: startNewQuestion,
     isSavedAnswer: Boolean(selectedId),
     onAskFollowup: openFollowup,
-    onStartNewSession: startNewQuestion,
+    onStartNewSession: startNewQuestionWithSessionTeam,
     onOpenInsights: () => setInsightsOpen(true),
-    onOpenAdvanced: () => setAdvancedOpen(true),
+    onOpenAdvanced: openAdvancedWithSessionTeam,
     followupError,
   };
 

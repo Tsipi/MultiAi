@@ -22,6 +22,12 @@ export function renderMarkdown(doc: jsPDF, markdown: string, startY: number): nu
       y += level === 1 ? 4 : 2;
       continue;
     }
+    // Standalone bold line: **Section Title** — rendered as a bold sub-heading
+    const boldLine = line.match(/^\*\*(.+)\*\*$/);
+    if (boldLine) {
+      y = writeLines(doc, boldLine[1], y, width, 12, "bold", 18);
+      continue;
+    }
     const italic = line.match(/^\*(?!\s)(.+)\*$/);
     if (italic) {
       y = writeLines(doc, cleanInline(italic[1]), y, width, 11, "italic", 16);

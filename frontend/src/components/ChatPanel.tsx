@@ -143,15 +143,34 @@ export function ChatPanel(props: Props) {
     const role = result.role || "";
     setExportBusy(true);
     try {
-      const title = await generateTitle(prompt, role);
+      // Sidebar title: AI-generated short label (3-6 words) — fine for markdown filename
+      // PDF title: the actual question text so it reads as a proper document heading
+      const sidebarTitle = await generateTitle(prompt, role);
+      const pdfTitle = pdfTitleFromResult(result);
       const exportDate = exportDateLocal();
-      const payload = { title, role: result.role, prompt, answer: result.final_answer, exportDate };
-      if (kind === "md") downloadMarkdown(payload);
-      else downloadPdf(payload);
+      const participants = [
+        { name: cast.writer.name, role: "Writer" as const, model: cast.writer.model, avatar: cast.writer.avatar },
+        ...cast.critics.map((c) => ({ name: c.name, role: "Critic" as const, model: c.model, avatar: c.avatar })),
+      ];
+      if (kind === "md") {
+        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate });
+      } else {
+        await downloadPdf({ title: pdfTitle, role: result.role, prompt, answer: result.final_answer, exportDate, participants });
+      }
     } finally {
       setExportBusy(false);
     }
   };
+
+  /** Up to 20 words of the original question — readable as a PDF document heading. */
+  function pdfTitleFromResult(r: NonNullable<typeof result>): string {
+    const raw = (r.is_followup
+      ? r.followup_instruction || r.source_prompt || r.question
+      : r.question
+    )?.trim().replace(/\s+/g, " ") ?? "";
+    const words = raw.split(" ");
+    return words.length <= 20 ? raw : words.slice(0, 20).join(" ") + "…";
+  }
 
   return (
     <section className="grid gap-4">
@@ -229,22 +248,26 @@ export function ChatPanel(props: Props) {
 
         {/* 4. Debate replay — chatroom */}
         {activity.length > 0 && (
-          <CollapsiblePanel
-            title="Live Debate Replay"
-            titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
-            defaultOpen={false}
-          >
-            <div className="-mx-3.5 -mb-3.5">
-              <ChatroomDebateView
-                activity={activity}
-                cast={cast}
-                team={team}
-                loading={false}
-                maxRounds={maxRounds}
-                consensusThreshold={consensusThreshold}
-              />
+          <div className="flex justify-start">
+            <div className="w-full max-w-[880px]">
+              <CollapsiblePanel
+                title="Live Debate Replay"
+                titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
+                defaultOpen={false}
+              >
+                <div className="-mx-3.5 -mb-3.5 -mt-3">
+                  <ChatroomDebateView
+                    activity={activity}
+                    cast={cast}
+                    team={team}
+                    loading={false}
+                    maxRounds={maxRounds}
+                    consensusThreshold={consensusThreshold}
+                  />
+                </div>
+              </CollapsiblePanel>
             </div>
-          </CollapsiblePanel>
+          </div>
         )}
 
         {/* 5. Director's Cut: full answer/critique text per round */}

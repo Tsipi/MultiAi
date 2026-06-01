@@ -47,15 +47,10 @@ export async function getSession(sessionId: string): Promise<ConsultResult> {
 }
 
 function titleFallback(question: string): string {
-  const words = question
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 2)
-    .slice(0, 6);
-  if (words.length >= 3) return words.join(" ");
-  if (words.length > 0) return words.join(" ");
-  return "consensus export";
+  const trimmed = question.trim().replace(/\s+/g, " ");
+  const words = trimmed.split(" ").slice(0, 12);
+  const title = words.join(" ");
+  return (title.length < trimmed.length ? title + "…" : title) || "Consensus Export";
 }
 
 export async function generateTitle(question: string, role = ""): Promise<string> {
