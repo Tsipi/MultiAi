@@ -1,4 +1,9 @@
+# Env files
 .env
+.env.*
+!.env.example
+
+
 sessions/
 __pycache__/
 *.pyc
@@ -8,4 +13,8 @@ node_modules/
 dist/
 coverage/
 
+# Claude Code memory (local only)
 .claude/settings.local.json
+
+# Local VSCode settings
+.vscode/settings.json
