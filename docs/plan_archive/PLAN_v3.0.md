@@ -318,9 +318,3 @@ After debate completes:
 
 ---
 
-## Notes for Future Versions
-
-- **v4 (N critics):** Chatroom requires zero layout changes — extra critics just post in the feed. Only `parseActivityMessages.ts` needs new patterns for `Critic C`, `Critic D`, etc.
-- **v4 (mobile):** Chatroom is already mobile-native — it's a vertical scroll with 36px avatars. The only change needed is collapsing `ChannelHeader` to hide the avatar row.
-- **v4 (general users):** Add reaction emojis to messages (👍 for agreement, 🤔 for challenge). Replace "consensus 8.1 / 10" in `ScoreBadge` with "Your team strongly agrees" in plain language.
-- **v4 (streaming text):** When the backend streams token-by-token, replace `ChatMessage.text` with a streaming text component — the message bubble expands as tokens arrive, like Claude.ai or ChatGPT. No structural changes needed.

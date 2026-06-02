@@ -85,8 +85,7 @@ Final synthesized answer
         ↓
 Saved session with debate transcript, cost, tokens, and model usage
 
-Note: the backend supports multiple writers and critics. 
-The frontend is optimized for the default Writer + Critic A/B setup, while broader N-agent visualization support is still in progress.
+The backend and frontend both support N writers and N critics (1–6 each). Writers draft in parallel in round 1; critics critique in parallel every round. The UI team builder supports adding and configuring each agent individually.
 
 ### Frontend
 
@@ -226,8 +225,8 @@ The UI is moving toward true **per-agent role/tone/model configuration**, but th
 ### Backend
 
 ```bash
-pip install -r backend/requirements.txt
-uvicorn backend.api.app:app --reload --port 8000
+uv pip install -r backend/requirements.txt
+uv run uvicorn backend.api.app:app --reload --port 8000
 ```
 
 ### Frontend
