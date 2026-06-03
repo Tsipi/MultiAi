@@ -1,10 +1,11 @@
-import { Moon, Plus, Sun } from "lucide-react";
+import { Moon, Plus, Sun, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   dark: boolean;
   onToggleDark: () => void;
   onNewRun: () => void;
+  onOpenTemplates: () => void;
 };
 
 function BrandMark() {
@@ -18,7 +19,7 @@ function BrandMark() {
   );
 }
 
-export function TopNav({ dark, onToggleDark, onNewRun }: Props) {
+export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--v2-surface)]/92 backdrop-blur-xl">
       <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between gap-3 px-3 sm:px-5">
@@ -44,6 +45,16 @@ export function TopNav({ dark, onToggleDark, onNewRun }: Props) {
           >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">New Run</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onOpenTemplates}
+            className="gap-1.5 font-display text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Templates</span>
           </Button>
           <Button
             type="button"

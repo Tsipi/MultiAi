@@ -145,7 +145,7 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 
 **Frontend**
 - **Tailwind CSS v4** — uses `@import "tailwindcss"`, `@theme inline`, `@variant dark`. Not v3. Do not follow v3 config docs.
-- **No routing library** — single-page app; UI state drives what is shown, not URL. Do not add a router without explicit instruction.
+- **Routing: React Router v6** (`react-router-dom`). Routes: `/app/new` (empty compose), `/app/run/:id` (session view), `/shared/:slug` (public stub, v4.2). Navigate with `useNavigate`. Read URL params with `useParams`. Do not add SSR, file-based routing, or a second router without instruction.
 - **No global state library** — state is held in custom hooks called from `App.tsx`. Do not add Redux, Zustand, Jotai, etc. without explicit instruction.
 - Path alias `@` → `frontend/src/` (configured in both `vite.config.ts` and `tsconfig.json` — keep in sync if changed).
 - Dark mode is class-based: `.dark` toggled on `<html>` by `useDarkMode` hook.

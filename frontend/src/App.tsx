@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { ConsensusRunsSidebar } from "./components/ConsensusRunsSidebar";
 import { AdvancedDrawer } from "./components/AdvancedDrawer";
@@ -7,10 +8,12 @@ import { CommandBar } from "./components/CommandBar";
 import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
 import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
-import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
+import { consultStream, deleteSession, generateTitle, getSession } from "./services/api";
 import { ConsultPayload, ConsultResult, SessionPreview } from "./types";
 import { MODEL_OPTIONS } from "./data/models";
 import { mkMember, type TeamMember } from "./data/experts";
+import { type TeamTemplate } from "./data/templates";
+import { TemplateDrawer } from "./components/TemplateDrawer";
 import { useDarkMode } from "./hooks/useDarkMode";
 import { useComposeForm } from "./hooks/useComposeForm";
 import { useSessionHistory } from "./hooks/useSessionHistory";
@@ -20,6 +23,8 @@ import { useToast } from "./hooks/useToast";
 import { usePanelState } from "./hooks/usePanelState";
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [dark, toggleDark] = useDarkMode();
   const { toast, setToast } = useToast();
   const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
@@ -34,6 +39,8 @@ export default function App() {
   const [activity, setActivity] = useState<string[]>([]);
   // True only during resumeWithClarification — used to hide CommandBar without affecting fresh runs
   const [isResuming, setIsResuming] = useState(false);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
   // Stores the last payload sent so clarification Continue can replay the exact same run
   const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
@@ -67,6 +74,20 @@ export default function App() {
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
+  // Sync state from URL — handles browser back/forward and direct links
+  useEffect(() => {
+    const runMatch = location.pathname.match(/^\/app\/run\/(.+)$/);
+    if (runMatch) {
+      void selectSession(runMatch[1]);
+    } else if (location.pathname === "/app/new" || location.pathname === "/") {
+      setSelectedId(null);
+      setResult(null);
+      setActivity([]);
+      clearFollowupState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   // --- Orchestration ---
 
   const runConsult = async (clarificationTag = "", questionOverride?: string, clarificationQuestion?: string) => {
@@ -78,6 +99,7 @@ export default function App() {
     setLoading(true);
     setResult(null);
     setSelectedId(null);
+    navigate("/app/new");
     requestAnimationFrame(() => {
       mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -188,6 +210,7 @@ export default function App() {
         setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
         setSelectedId(next.session_id);
+        navigate(`/app/run/${next.session_id}`);
         setHistory((prev) => [
           toPreview({
             session_id: next.session_id,
@@ -280,10 +303,12 @@ export default function App() {
     if (selectedId === id) {
       setSelectedId(fallbackId);
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
+      navigate(fallbackId ? `/app/run/${fallbackId}` : "/app/new");
     }
   };
 
   function startNewQuestion() {
+    navigate("/app/new");
     setSelectedId(null);
     setResult(null);
     setActivity([]);
@@ -326,6 +351,11 @@ export default function App() {
 
   function adjustFollowupTeam() {
     setAdvancedOpen(true);
+  }
+
+  function handleSelectTemplate(template: TeamTemplate) {
+    setTeam(template.members);
+    setActiveTemplateId(template.id);
   }
 
   // --- Panel props (assembled once, passed to ChatPanel and sidebar) ---
@@ -372,9 +402,17 @@ export default function App() {
 
   // --- Render ---
 
+  if (location.pathname.startsWith("/shared/")) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
+        Public shared runs are coming in v4.2.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} onOpenTemplates={() => setTemplatesOpen(true)} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
@@ -386,7 +424,7 @@ export default function App() {
           resultsById={resultsById}
           castBySession={castBySession}
           chatPanelProps={panelProps}
-          onSelect={selectSession}
+          onSelect={(id) => navigate(`/app/run/${id}`)}
           onDelete={removeSession}
         />
 
@@ -414,6 +452,8 @@ export default function App() {
                 onSubmit={() => runConsult()}
                 onAddTeamMember={addTeamMember}
                 onOpenAdvanced={() => setAdvancedOpen(true)}
+                activeTemplateId={activeTemplateId}
+                onSelectTemplate={handleSelectTemplate}
               />
             )}
 
@@ -439,6 +479,12 @@ export default function App() {
             />
 
             <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
+            <TemplateDrawer
+              open={templatesOpen}
+              onClose={() => setTemplatesOpen(false)}
+              activeTemplateId={activeTemplateId}
+              onSelect={handleSelectTemplate}
+            />
           </div>
         </main>
       </div>

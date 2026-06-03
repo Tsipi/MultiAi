@@ -9,7 +9,7 @@
 
 | Version | Theme | Scope | Status |
 |---------|-------|-------|--------|
-| **v4.0** | UI Foundation | React Router v6 + Team Templates (frontend only) | In progress |
+| **v4.0** | UI Foundation | React Router v6 + Team Templates (frontend only) | **Complete** |
 | v4.1 | Persistence & Auth | Real DB, API persistence, user accounts | Not started |
 | v4.2 | Sharing & Export | Public run pages, full debate export | Not started |
 | v5.0 | Next.js + SEO | Migration, template pages, SSR/SSG | Not started |
@@ -21,8 +21,8 @@
 | Phase | Goal | Status |
 |-------|------|--------|
 | 1 — Empty-state UX | `New Run` button in TopNav | **Done** |
-| 1b — Client-side routing | React Router v6; `/app/new`, `/app/run/:id` | Not started |
-| 2 — Team Templates | Template chips + drawer; 8 starter templates | Not started |
+| 1b — Client-side routing | React Router v6; `/app/new`, `/app/run/:id` | **Done** |
+| 2 — Team Templates | Template chips + drawer; 8 starter templates | **Done** |
 
 Full spec: `docs/plan_archive/PLAN_v4.0.md`
 

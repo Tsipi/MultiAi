@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { listSessions } from "@/services/api";
 import { ConsultResult, SessionPreview } from "@/types";
-import { type CastSelection } from "@/lib/consultHelpers";
-import { toPreview } from "@/lib/consultHelpers";
+import { type CastSelection, toPreview } from "@/lib/consultHelpers";
 
 const CAST_STORAGE_KEY = "multiAi_castBySession";
 
