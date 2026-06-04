@@ -623,5 +623,21 @@ The following are tracked in later versions and must not be started here:
 - [ ] Add `Templates` button to `TopNav.tsx` — opens the drawer
 
 **5. Visual feedback**
-- [ ] When a template is active, `CommandBarHeaderRow` or `CommandBarTeamAvatars` shows which template is loaded
-- [ ] User can still manually edit the team after selecting a template
+- When a template is active, team avatars show each member's name and short role below their photo
+- Selecting a template does not lock the team — the user can still edit members freely
+
+---
+
+### Phase 3 — Backend performance & accuracy (done 2026-06-04)
+
+**Scorer + writer in parallel**
+The scorer and writer refinement were sequential but independent. Both now run via `asyncio.gather`, saving ~0.5 s per round.
+
+**Per-round relevance removed**
+`validate_relevance` ran once per round plus once after synthesis — 4 calls in a 3-round session. Removed from the loop; the final check in `engine.py` is kept.
+
+**Live pricing from OpenRouter**
+Cost estimates used a hardcoded table. On startup, `costs.py` now fetches rates from `/api/v1/models` and caches them. Falls back to the hardcoded table if the fetch fails.
+
+**Follow-up root anchor**
+Follow-ups were referencing the immediate parent's question, causing drift in long chains. A `root_question` field now flows through the full stack and is always used as the "Original prompt" anchor.

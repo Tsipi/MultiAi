@@ -35,11 +35,11 @@ export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew,
         isNew && "animate-in fade-in slide-in-from-bottom-1 duration-250"
       )}
     >
-      <div className="relative shrink-0 mt-0.5">
+      <div className="relative h-9 w-9 shrink-0 mt-0.5">
         <img
           src={avatar}
           alt={name}
-          className="h-9 w-9 rounded-full border border-border object-cover"
+          className="h-full w-full rounded-full border border-border object-cover block"
         />
         {modelId && (
           <span className="absolute -bottom-0.5 -right-0.5 flex leading-none" aria-hidden>

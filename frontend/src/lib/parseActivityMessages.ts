@@ -34,7 +34,7 @@ export type ChatroomState = {
 
 // ── Patterns ─────────────────────────────────────────────────────────────────
 const RE_ROUND_NUM     = /^Round (\d+):/i;
-const RE_SCORE_LINE    = /consensus ([\d.]+)[,\s]+relevance ([\d.]+)/i;
+const RE_SCORE_LINE    = /consensus ([\d.]+)(?:[,\s]+relevance ([\d.]+))?/i;
 const RE_THRESHOLD     = /consensus threshold reached at round (\d+)/i;
 const RE_WRITER_TYPING = /writer (is drafting|rewrites)/i;
 const RE_CRITIC_NUM    = /\bcritic (\d+)\b/i;
@@ -141,8 +141,8 @@ export function parseActivityMessages(activity: string[]): ChatroomState {
 
 export function extractScoreFromMessage(
   text: string
-): { consensus: number; relevance: number } | null {
+): { consensus: number; relevance: number | null } | null {
   const m = text.match(RE_SCORE_LINE);
   if (!m) return null;
-  return { consensus: parseFloat(m[1]), relevance: parseFloat(m[2]) };
+  return { consensus: parseFloat(m[1]), relevance: m[2] != null ? parseFloat(m[2]) : null };
 }

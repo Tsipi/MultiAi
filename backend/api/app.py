@@ -15,6 +15,7 @@ from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
 from backend.consensus.engine import ConsensusEngine
+from backend.consensus.costs import load_live_prices
 from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
 from backend.consensus.llm_clients import call_openrouter
 
@@ -32,6 +33,10 @@ app.add_middleware(
 CFG = AppConfig()
 ENGINE = ConsensusEngine(CFG)
 app.include_router(sessions_router)
+
+@app.on_event("startup")
+async def _startup() -> None:
+    await load_live_prices(CFG.openrouter_api_key, CFG.openrouter_base_url)
 
 def _to_response(session: DebateSession) -> ConsultResponse:
     """Convert session object to API response schema."""
@@ -58,6 +63,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         thread_id=session.thread_id,
         parent_session_id=session.parent_session_id,
         is_followup=session.is_followup,
+        root_question=session.root_question,
         source_prompt=session.source_prompt,
         source_final_answer=session.source_final_answer,
         followup_instruction=session.followup_instruction,
@@ -100,6 +106,7 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
         is_followup=payload.is_followup,
         parent_session_id=payload.parent_session_id,
         thread_id=payload.thread_id,
+        root_question=payload.root_question,
         source_prompt=payload.source_prompt,
         source_final_answer=payload.source_final_answer,
         followup_instruction=payload.followup_instruction,
@@ -130,6 +137,7 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
                 is_followup=payload.is_followup,
                 parent_session_id=payload.parent_session_id,
                 thread_id=payload.thread_id,
+                root_question=payload.root_question,
                 source_prompt=payload.source_prompt,
                 source_final_answer=payload.source_final_answer,
                 followup_instruction=payload.followup_instruction,

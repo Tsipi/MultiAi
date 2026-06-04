@@ -56,6 +56,7 @@ class ConsultRequest(BaseModel):
     is_followup: bool = False
     thread_id: str = ""
     parent_session_id: str = ""
+    root_question: str = ""
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""
@@ -97,6 +98,7 @@ class ConsultResponse(BaseModel):
     is_followup: bool = False
     thread_id: str = ""
     parent_session_id: str = ""
+    root_question: str = ""
     source_prompt: str = ""
     source_final_answer: str = ""
     followup_instruction: str = ""

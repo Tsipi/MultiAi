@@ -11,7 +11,6 @@ from backend.consensus.parsing import extract_revised_answer
 from backend.consensus.prompts import CRITIQUE, WRITER_INITIAL, WRITER_REFINEMENT
 from backend.consensus.scorer import score_consensus, score_consensus_multi
 from backend.consensus.summarizer import summarize_round
-from backend.consensus.validator import validate_relevance
 
 
 def _two_sentence_summary(summary: str) -> str:
@@ -77,32 +76,31 @@ async def run_rounds(
 
         revised_answers = [extract_revised_answer(c) for c in critiques]
         merged = "\n\n".join(f"[{_critic_name(i, len(critics))}]\n{c}" for i, c in enumerate(critiques))
-        if len(revised_answers) >= 2:
-            score, reason = await score_consensus_multi(revised_answers, cfg)
-        else:
-            # Single critic: score writer's current answer vs critic's suggestion
-            score, reason = await score_consensus(answer, revised_answers[0], cfg)
 
         refine = WRITER_REFINEMENT.format(
             rolling_context=rolling, question=question, critique=merged,
             role_context=domain, intent_scope=session.intent_scope,
         )
         await report(f"Writer rewrites based on {_critics_label(len(critics))}.")
-        refined_answer = await call_openrouter(refine, primary_writer, cfg)
 
-        (relevance_ok, relevance_score, relevance_reason), summary = await asyncio.gather(
-            validate_relevance(question, refined_answer, cfg),
-            summarize_round(refined_answer, merged, cfg),
-        )
-        session.rounds.append(DebateRound(
-            idx, refined_answer, merged, score, reason, summary, relevance_score, relevance_reason
-        ))
+        # Scorer and writer refinement are independent — run in parallel
+        if len(revised_answers) >= 2:
+            (score, reason), refined_answer = await asyncio.gather(
+                score_consensus_multi(revised_answers, cfg),
+                call_openrouter(refine, primary_writer, cfg),
+            )
+        else:
+            (score, reason), refined_answer = await asyncio.gather(
+                score_consensus(answer, revised_answers[0], cfg),
+                call_openrouter(refine, primary_writer, cfg),
+            )
+
+        summary = await summarize_round(refined_answer, merged, cfg)
+        session.rounds.append(DebateRound(idx, refined_answer, merged, score, reason, summary))
         rolling += f"\n[Round {idx} summary]: {summary}"
-        await report(
-            f"Round {idx}: consensus {score:.1f}, relevance {relevance_score:.1f}. {_two_sentence_summary(summary)}"
-        )
+        await report(f"Round {idx}: consensus {score:.1f}. {_two_sentence_summary(summary)}")
         answer = refined_answer
-        if score >= threshold and relevance_ok:
+        if score >= threshold:
             await report(f"Consensus threshold reached at round {idx}")
             break
 

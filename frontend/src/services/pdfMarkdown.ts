@@ -35,17 +35,80 @@ export function renderMarkdown(doc: jsPDF, markdown: string, startY: number): nu
     }
     const bullet = line.match(/^[-*]\s+(.*)$/);
     if (bullet) {
-      y = writeLines(doc, `• ${cleanInline(bullet[1])}`, y, width - 12, 11, "normal", 16, MARGIN_X + 12);
+      y = writeLineWithLinks(doc, `• ${bullet[1]}`, y, width - 12, 11, "normal", 16, MARGIN_X + 12);
       continue;
     }
     const ordered = line.match(/^(\d+)\.\s+(.*)$/);
     if (ordered) {
-      y = writeLines(doc, `${ordered[1]}. ${cleanInline(ordered[2])}`, y, width - 12, 11, "normal", 16, MARGIN_X + 12);
+      y = writeLineWithLinks(doc, `${ordered[1]}. ${ordered[2]}`, y, width - 12, 11, "normal", 16, MARGIN_X + 12);
       continue;
     }
-    y = writeLines(doc, cleanInline(line), y, width, 11, "normal", 16);
+    y = writeLineWithLinks(doc, line, y, width, 11, "normal", 16);
   }
   return y;
+}
+
+const LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+/** Renders a line of text, turning markdown links into blue underlined clickable text. */
+function writeLineWithLinks(
+  doc: jsPDF,
+  text: string,
+  y: number,
+  width: number,
+  size: number,
+  style: "normal" | "bold" | "italic",
+  lineHeight: number,
+  x = MARGIN_X
+): number {
+  LINK_RE.lastIndex = 0;
+  if (!LINK_RE.test(text)) {
+    LINK_RE.lastIndex = 0;
+    return writeLines(doc, cleanInline(text), y, width, size, style, lineHeight, x);
+  }
+  LINK_RE.lastIndex = 0;
+
+  // Split line into plain-text and link segments
+  type Seg = { kind: "text"; content: string } | { kind: "link"; label: string; url: string };
+  const segments: Seg[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = LINK_RE.exec(text)) !== null) {
+    if (m.index > last) segments.push({ kind: "text", content: text.slice(last, m.index) });
+    segments.push({ kind: "link", label: m[1], url: m[2] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) segments.push({ kind: "text", content: text.slice(last) });
+
+  y = ensurePageSpace(doc, y, lineHeight);
+  doc.setFont("helvetica", style);
+  doc.setFontSize(size);
+  let curX = x;
+
+  for (const seg of segments) {
+    if (seg.kind === "text") {
+      const cleaned = cleanInline(seg.content);
+      if (!cleaned) continue;
+      doc.setTextColor(0, 0, 0);
+      doc.text(cleaned, curX, y);
+      curX += doc.getTextWidth(cleaned);
+    } else {
+      doc.setTextColor(37, 99, 235); // blue-600
+      doc.text(seg.label, curX, y);
+      const lw = doc.getTextWidth(seg.label);
+      // Underline
+      doc.setDrawColor(37, 99, 235);
+      doc.setLineWidth(0.4);
+      doc.line(curX, y + 1.2, curX + lw, y + 1.2);
+      // Clickable annotation
+      doc.link(curX, y - lineHeight * 0.75, lw, lineHeight, { url: seg.url });
+      curX += lw;
+    }
+  }
+
+  doc.setTextColor(0, 0, 0);
+  doc.setDrawColor(0, 0, 0);
+  return y + lineHeight;
 }
 
 function writeLines(

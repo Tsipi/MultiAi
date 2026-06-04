@@ -44,6 +44,16 @@ export const TEAM_TEMPLATES: TeamTemplate[] = [
     ],
   },
   {
+    id: "tourist-planner",
+    name: "Tourist Planner Team",
+    description: "Travel itineraries, where to stay, day trips, and practical logistics.",
+    members: [
+      member("Josh", "writer", "Travel planner — designs itineraries, recommends where to stay, and maps day trips by region and transport", "openai/gpt-5.4"),
+      member("Erika", "critic", "Local travel expert — challenges generic picks, adds seasonal context, hidden gems, and on-the-ground accuracy", "anthropic/claude-sonnet-4.6"),
+      member("Sandy", "critic", "Logistics & budget advisor — reviews booking timing, transport options, costs, and practical friction points", "google/gemini-2.5-flash"),
+    ],
+  },
+  {
     id: "ux-product",
     name: "UX / Product Team",
     description: "Product decisions, user flows, and feature trade-offs.",

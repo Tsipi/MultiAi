@@ -280,6 +280,9 @@ body {
 .md-prose h1, .md-prose h2, .md-prose h3 { margin: 18px 0 10px; line-height: 1.25; font-weight: 640; }
 .md-prose ul, .md-prose ol { margin: 10px 0 12px 22px; padding: 0; }
 .md-prose li { line-height: 1.72; margin: 3px 0; }
+/* Keep list markers aligned with text: strip paragraph margins inside list items */
+.md-prose li > p:first-child { margin-top: 0; }
+.md-prose li > p:last-child { margin-bottom: 0; }
 
 /* ===== DISCUSSION PROSE (inside chat bubbles) ===== */
 .disc-prose p { margin: 0 0 8px; line-height: 1.55; font-size: 0.92rem; }

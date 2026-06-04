@@ -57,6 +57,7 @@ export function CommandBar({
         greetingName={greetingName}
         team={team}
         busy={busy}
+        showRoles={Boolean(activeTemplateId)}
         onAddTeamMember={onAddTeamMember}
         onOpenAdvanced={onOpenAdvanced}
       />

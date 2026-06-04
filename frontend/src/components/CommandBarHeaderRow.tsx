@@ -5,6 +5,7 @@ type Props = {
   greetingName: string;
   team: TeamMember[];
   busy: boolean;
+  showRoles?: boolean;
   onAddTeamMember: () => void;
   onOpenAdvanced: () => void;
 };
@@ -14,6 +15,7 @@ export function CommandBarHeaderRow({
   greetingName,
   team,
   busy,
+  showRoles,
   onAddTeamMember,
   onOpenAdvanced,
 }: Props) {
@@ -31,6 +33,7 @@ export function CommandBarHeaderRow({
       <CommandBarTeamAvatars
         team={team}
         disabled={busy}
+        showRoles={showRoles}
         onAddTeamMember={onAddTeamMember}
         onOpenAdvanced={onOpenAdvanced}
       />

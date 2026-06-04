@@ -23,6 +23,27 @@
 | 1 — Empty-state UX | `New Run` button in TopNav | **Done** |
 | 1b — Client-side routing | React Router v6; `/app/new`, `/app/run/:id` | **Done** |
 | 2 — Team Templates | Template chips + drawer; 8 starter templates | **Done** |
+| 3 — Backend performance & accuracy | Speed fixes + live pricing + follow-up root anchor | **Done** |
+
+### v4.0 Phase 3 — Backend performance & accuracy (done 2026-06-04)
+
+**Speed — parallel scorer + writer refinement**
+Scorer and writer refinement were running sequentially each round despite being independent.
+Both now run inside `asyncio.gather`, saving ~0.5 s per round.
+
+**Speed — remove per-round relevance validation**
+`validate_relevance` was being called once per debate round AND again after final synthesis.
+Removed from the loop entirely; the final-answer check in the engine is kept.
+Eliminates N redundant Deepseek calls per session.
+
+**Pricing — live rates from OpenRouter**
+`costs.py` now fetches `/api/v1/models` at backend startup and caches prices in memory.
+All models get accurate rates automatically. Falls back to the hardcoded table if the fetch fails.
+
+**Follow-up — root question anchor**
+Each follow-up was using the immediate parent's question as "Original prompt", causing context
+drift in chains longer than one hop. Added a `root_question` field to the session and payload;
+follow-ups now always anchor to the first question in the thread, regardless of depth.
 
 Full spec: `docs/plan_archive/PLAN_v4.0.md`
 

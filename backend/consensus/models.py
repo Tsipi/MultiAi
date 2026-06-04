@@ -57,8 +57,9 @@ class DebateSession:
     is_followup: bool = False
     thread_id: str = ""                 # shared across all runs in a thread
     parent_session_id: str = ""
-    source_prompt: str = ""             # original question this follows up on
-    source_final_answer: str = ""       # previous answer this follows up on
+    root_question: str = ""             # the very first question in this thread (never changes across follow-ups)
+    source_prompt: str = ""             # immediate parent's question
+    source_final_answer: str = ""       # immediate parent's final answer
     followup_instruction: str = ""      # what the user asked to change/extend
 
     # ── Usage & cost ────────────────────────────────────────────────────────

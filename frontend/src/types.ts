@@ -49,6 +49,7 @@ export type ConsultPayload = {
   is_followup?: boolean;
   thread_id?: string;
   parent_session_id?: string;
+  root_question?: string;
   source_prompt?: string;
   source_final_answer?: string;
   followup_instruction?: string;
@@ -89,6 +90,7 @@ export type ConsultResult = {
   is_followup: boolean;
   thread_id: string;
   parent_session_id: string;
+  root_question: string;
   source_prompt: string;
   source_final_answer: string;
   followup_instruction: string;

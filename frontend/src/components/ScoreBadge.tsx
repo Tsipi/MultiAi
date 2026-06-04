@@ -5,7 +5,10 @@ type Props = { text: string; previousScore: number | null };
 
 export function ScoreBadge({ text, previousScore }: Props) {
   const parsed = extractScoreFromMessage(text);
-  const summaryMatch = text.match(/relevance [\d.]+[.\s]+(.*)/i);
+  // Try after "relevance X.X." first (old format), fall back to after "consensus X.X." (new format)
+  const summaryMatch =
+    text.match(/relevance\s+[\d.]+\.?\s+(.*)/i) ??
+    text.match(/consensus\s+[\d.]+\.?\s+(.*)/i);
   const summary = summaryMatch?.[1]?.trim() ?? "";
   const score = parsed?.consensus ?? null;
   const improved = score !== null && previousScore !== null && score > previousScore;
@@ -38,8 +41,8 @@ export function ScoreBadge({ text, previousScore }: Props) {
           </span>
         )}
         {parsed?.relevance != null && (
-          <span className="text-[0.7rem] text-muted-foreground">
-            · Relevance {parsed.relevance.toFixed(1)}
+          <span className="text-[0.7rem] text-muted-foreground/70">
+            · rel {parsed.relevance.toFixed(1)}
           </span>
         )}
       </div>

@@ -140,9 +140,11 @@ export default function App() {
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
     if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
+    // Always anchor to the root question so context doesn't drift across follow-up chains
+    const rootQ = source.root_question || source.source_prompt || source.question;
     const followupQuestion = [
       "Original prompt:",
-      source.source_prompt || source.question,
+      rootQ,
       "",
       "Previous final answer:",
       source.source_final_answer || source.final_answer,
@@ -176,6 +178,7 @@ export default function App() {
       critic_b: cast.critics[1]?.model ?? "",
       writer_names: [cast.writer.name],
       critic_names: cast.critics.map((c) => c.name),
+      root_question: rootQ,
     };
     try {
       await executeConsult(payload, cast, mergedInstruction);
