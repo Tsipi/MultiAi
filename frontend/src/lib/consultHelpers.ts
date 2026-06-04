@@ -2,14 +2,14 @@ import { TeamMember } from "@/data/experts";
 import { AttachmentInput, ConsultPayload, SessionPreview } from "@/types";
 
 export type CastPerson = { name: string; avatar: string; model: string };
-export type CastSelection = { writer: CastPerson; criticA: CastPerson; criticB: CastPerson };
+export type CastSelection = { writer: CastPerson; critics: CastPerson[] };
 
 export function selectCastFromTeam(team: TeamMember[]): CastSelection {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
+  const writer = team.find((m) => m.duty === "writer") ?? team[0];
+  const critics = team.filter((m) => m.duty === "critic");
   return {
     writer: { name: writer.name, avatar: writer.avatar, model: writer.model },
-    criticA: { name: criticA.name, avatar: criticA.avatar, model: criticA.model },
-    criticB: { name: criticB.name, avatar: criticB.avatar, model: criticB.model },
+    critics: critics.map((c) => ({ name: c.name, avatar: c.avatar, model: c.model })),
   };
 }
 
@@ -17,38 +17,28 @@ export function mergeTeamIntoPayload(
   form: ConsultPayload,
   team: TeamMember[],
   attachments: AttachmentInput[],
-  clarification: string
+  clarification: string,
+  clarificationQuestion?: string
 ): ConsultPayload {
-  const { writer, criticA, criticB } = selectEngineMembers(team);
+  const writer = team.find((m) => m.duty === "writer") ?? team[0];
+  const critics = team.filter((m) => m.duty === "critic");
   const imageLoaded = Boolean(attachments.some((a) => a.kind === "image"));
-
-  const allWriters = team.filter((m) => m.duty === "writer");
-  const allCritics = team.filter((m) => m.duty === "critic");
 
   return {
     ...form,
-    writers: allWriters.map((m) => withImageFallback(m.model, imageLoaded)),
-    critics: allCritics.map((m) => withImageFallback(m.model, imageLoaded)),
+    writers: team.filter((m) => m.duty === "writer").map((m) => withImageFallback(m.model, imageLoaded)),
+    critics: critics.map((m) => withImageFallback(m.model, imageLoaded)),
+    writer_names: team.filter((m) => m.duty === "writer").map((m) => m.name),
+    critic_names: critics.map((m) => m.name),
     // Legacy fields so old backend versions and session replays still work
     writer: withImageFallback(writer.model, imageLoaded),
-    critic_a: withImageFallback(criticA.model, imageLoaded),
-    critic_b: withImageFallback(criticB.model, imageLoaded),
+    critic_a: withImageFallback(critics[0]?.model ?? "", imageLoaded),
+    critic_b: withImageFallback(critics[1]?.model ?? "", imageLoaded),
     role: (writer.role || form.role || "You are an expert in ...").slice(0, 255),
     attachments,
     clarification,
+    clarification_question: clarificationQuestion ?? "",
   };
-}
-
-export function selectEngineMembers(team: TeamMember[]): {
-  writer: TeamMember;
-  criticA: TeamMember;
-  criticB: TeamMember;
-} {
-  const writer = team.find((m) => m.duty === "writer") ?? team[0];
-  const critics = team.filter((m) => m.duty === "critic");
-  const criticA = critics[0] ?? team.find((m) => m.id !== writer.id) ?? writer;
-  const criticB = critics[1] ?? team.find((m) => m.id !== writer.id && m.id !== criticA.id) ?? criticA;
-  return { writer, criticA, criticB };
 }
 
 export function withImageFallback(model: string, imageLoaded: boolean): string {

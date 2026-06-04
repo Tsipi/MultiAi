@@ -1,5 +1,5 @@
 ## Project Overview
-MultiAi is a SaaS web app providing a multi-LLM consensus dashboard — better answers through structured AI agent collaboration. Users sign in, then view, manage, and interact with a live debate between AI agents.
+MultiAi is a SaaS web app providing a multi-LLM consensus dashboard — better answers through structured AI agent collaboration. Users view, manage, and interact with a live debate between AI agents. Authentication is not yet implemented.
 
 The debate UX is a **Slack-style chatroom** (`ChatroomDebateView`). Each agent has a distinct avatar and name; they post messages into a single scrollable feed as the debate progresses. Round boundaries appear as channel dividers. The Scorer posts like a status-update bot. Typing indicators appear between messages. The final answer is pinned at the top of the channel — permanently visible. This layout scales naturally to any number of team members.
 
@@ -32,8 +32,9 @@ uv run pytest tests/test_scorer.py::test_name # Single test
 ### uv setup (first time only)
 ```bash
 winget install astral-sh.uv   # install uv (PowerShell)
-uv sync                        # create .venv and install all dependencies
+uv pip install -r backend/requirements.txt  # install Python deps into .venv
 ```
+Note: Python deps are in `backend/requirements.txt` (no version pins). There is no `pyproject.toml`. Use `uv pip install -r` rather than `uv sync`.
 
 ## Architecture
 
@@ -46,14 +47,17 @@ A Summarizer (always Deepseek v3.2) compresses each round into a rolling context
 
 ```
 POST /api/consult-stream
+  → Attachments normalized (text extracted; images checked — Deepseek seats swapped to Gemini Flash if image input detected)
+  → Intent assessed — returns clarification state if question is too ambiguous
   → ConsensusEngine.run()
-    → Round 1: Writer answers fresh
+    → Round 1: Writer(s) answer fresh (parallel if N writers)
     → Loop:
-        Critics A & B critique (use rolling_context, not full transcript)
+        Critics critique in parallel (use rolling_context, not full transcript)
         Scorer rates 1–10 (Deepseek v3.2 only, 600-char excerpts)
         Summarizer compresses round → appended to rolling_context (Deepseek v3.2, max_tokens=200)
         If score >= threshold → break
         Writer refines answer
+        Relevance validation: refined answer checked against original question
     → Writer synthesizes final answer
   → Session saved as sessions/YYYYMMDD_HHMMSS.json
 ```
@@ -79,6 +83,8 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 - **Cap:** max 6 writers, max 6 critics (enforced in `schemas.py`).
 
 ### Key modules
+
+**Backend**
 | File | Responsibility |
 |------|---------------|
 | `backend/consensus/engine.py` | `ConsensusEngine` — main debate orchestrator |
@@ -86,16 +92,48 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `backend/consensus/llm_clients.py` | OpenRouter wrapper; defines `LLMCallError` |
 | `backend/consensus/scorer.py` | `score_consensus() → (float, str)` |
 | `backend/consensus/summarizer.py` | `summarize_round() → str` |
+| `backend/consensus/validator.py` | Relevance validation of refined answer vs original question |
 | `backend/consensus/models.py` | `DebateRound`, `DebateSession` dataclasses |
+| `backend/consensus/prompts.py` | All LLM prompt templates (locked — do not modify without instruction) |
 | `backend/consensus/intent.py` | Intent ambiguity detection and clarification |
-| `backend/config.py` | All constants and env var loading |
-| `backend/api/app.py` | FastAPI routes (`/api/consult`, `/api/consult-stream`, `/api/health`) |
-| `backend/storage/session_store.py` | Save/load sessions as JSON files |
-| `frontend/src/App.tsx` | Main React component; session state, API calls |
+| `backend/consensus/attachments.py` | File/image attachment normalization; Deepseek→Gemini image fallback |
+| `backend/consensus/usage_tracker.py` | Per-model token and cost tracking |
+| `backend/consensus/costs.py` | Cost calculation |
+| `backend/consensus/parsing.py` | LLM output parsing (extracts revised answers, scores) |
+| `backend/consensus/activity_text.py` | Generates NDJSON activity stream lines |
+| `backend/consensus/model_registry.py` | Model registry |
+| `backend/consensus/export_title.py` | Short session title generation |
+| `backend/config.py` | All constants and env var loading (`AppConfig`) |
+| `backend/api/app.py` | FastAPI app — routes, CORS, engine singleton |
+| `backend/api/schemas.py` | Pydantic request/response models (`ConsultRequest`, `ConsultResponse`) |
+| `backend/api/sessions.py` | Sessions sub-router (`/api/sessions/*`) |
+| `backend/storage/session_store.py` | Stateless JSON session persistence |
+
+**Frontend**
+| File | Responsibility |
+|------|---------------|
+| `frontend/src/App.tsx` | Root component — orchestrates hooks, owns live run state (`result`, `loading`, `activity`) |
+| `frontend/src/types.ts` | Shared TypeScript types (`ConsultPayload`, `ConsultResult`, `SessionPreview`, etc.) |
+| `frontend/src/hooks/useDarkMode.ts` | Dark mode toggle — adds/removes `.dark` class on `<html>` |
+| `frontend/src/hooks/useComposeForm.ts` | Form, team, attachments, activeCast state + related effects |
+| `frontend/src/hooks/useSessionHistory.ts` | Session list, selected session, cached results |
+| `frontend/src/hooks/useClarification.ts` | Clarification prompt/options/choice state |
+| `frontend/src/hooks/useFollowup.ts` | Follow-up composition state |
+| `frontend/src/hooks/useToast.ts` | Toast notification + auto-clear |
+| `frontend/src/hooks/usePanelState.ts` | Drawer/panel open states + sidebar localStorage persistence |
+| `frontend/src/lib/consultHelpers.ts` | `mergeTeamIntoPayload`, `selectCastFromTeam`, `buildRunSignature` |
+| `frontend/src/lib/parseActivityMessages.ts` | Pure fn: `string[]` → `ChatroomState` |
+| `frontend/src/lib/detectActiveAgent.ts` | Infers current speaker from activity stream |
+| `frontend/src/lib/utils.ts` | `cn()` — clsx + tailwind-merge |
+| `frontend/src/data/experts.ts` | Team member presets and `createDefaultTeam()` |
+| `frontend/src/data/models.ts` | Model options list |
 | `frontend/src/services/api.ts` | Backend fetch wrapper |
+| `frontend/src/services/attachments.ts` | File/attachment handling |
+| `frontend/src/services/exporter.ts` | Export (markdown/PDF) |
 
 ## Coding standards
 
+**Python**
 - Python 3.11+: type hints on all function signatures, dataclasses for models
 - All constants and limits defined in `config.py` — no magic numbers
 - All file paths use `pathlib.Path`
@@ -104,6 +142,13 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 - LLM clients are module-level singletons (lazy init) — the only allowed global state
 - Return `DebateSession` or `DebateRound` from engine functions — never raw dicts
 - Logging via `logging` module only (never `print()`): INFO for completions, WARNING for parse failures/budget exceeded, ERROR for API/IO failures
+
+**Frontend**
+- **Tailwind CSS v4** — uses `@import "tailwindcss"`, `@theme inline`, `@variant dark`. Not v3. Do not follow v3 config docs.
+- **Routing: React Router v6** (`react-router-dom`). Routes: `/app/new` (empty compose), `/app/run/:id` (session view), `/shared/:slug` (public stub, v4.2). Navigate with `useNavigate`. Read URL params with `useParams`. Do not add SSR, file-based routing, or a second router without instruction.
+- **No global state library** — state is held in custom hooks called from `App.tsx`. Do not add Redux, Zustand, Jotai, etc. without explicit instruction.
+- Path alias `@` → `frontend/src/` (configured in both `vite.config.ts` and `tsconfig.json` — keep in sync if changed).
+- Dark mode is class-based: `.dark` toggled on `<html>` by `useDarkMode` hook.
 
 ## Prompt templates
 
@@ -149,49 +194,5 @@ SUMMARIZER_MODEL=deepseek/deepseek-chat-v3.2
 
 ## Current Plan
 
-**Version:** v3 — Slack-Style Chatroom Debate Experience  
-**Authored:** 2026-04-09  
-**Scope:** Frontend only — no backend changes. Same existing NDJSON activity stream.
-
-### Design vision
-
-The debate feels like watching a team Slack channel in real-time. Agents post messages one after another as the debate progresses. Each has a distinct avatar and name. Round boundaries appear as Slack-style date dividers. The Scorer drops in like a bot posting a status update. Typing indicators appear between messages. The final answer appears as a pinned message at the top of the channel — the most important thing, permanently visible. This layout scales naturally to any number of team members.
-
-### New components to create
-
-| File | Description |
-|------|-------------|
-| `frontend/src/components/ChatroomDebateView.tsx` | Main chatroom container — replaces `DebateActivityFeed` during live runs and historical replay |
-| `frontend/src/components/ChatMessage.tsx` | Individual Slack-style message row (avatar, name, role badge, timestamp, text) |
-| `frontend/src/components/ScoreBadge.tsx` | Scorer bot post row — visually distinct from peer messages |
-| `frontend/src/components/RoundDivider.tsx` | Round section separator, styled like Slack date dividers |
-| `frontend/src/components/TypingRow.tsx` | Active speaker typing indicator with staggered bouncing dots |
-| `frontend/src/components/ChannelHeader.tsx` | Top bar: channel name, Live badge, round counter, animated score, team avatars |
-| `frontend/src/components/PinnedAnswer.tsx` | Sticky final answer card below header; collapsed by default, expands on toggle |
-| `frontend/src/components/ConsensusReachedBanner.tsx` | Inline consensus-reached callout, styled as a Slack info callout |
-| `frontend/src/lib/parseActivityMessages.ts` | Pure fn: `string[]` → `ChatroomState` — derives speaker, round, score, consensus from activity lines |
-
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `frontend/src/components/ChatPanel.tsx` | Replace `DebateActivityFeed` with `ChatroomDebateView`; reorder result blocks |
-| `frontend/src/index.css` | Agent color CSS custom properties |
-
-### Agent color palette
-
-| Agent | Color token |
-|-------|-------------|
-| Writer | `text-violet-600 / dark:text-violet-400` |
-| Critic A | `text-blue-600 / dark:text-blue-400` |
-| Critic B | `text-orange-600 / dark:text-orange-400` |
-| Extra critics (future) | cycle: teal → rose → amber |
-
-### Key constraints
-
-- **Frontend only** — the NDJSON activity stream from the backend is unchanged.
-- `parseActivityMessages` is a pure function with no React or side effects — all state derivation lives there.
-- The `ChatroomDebateView` receives `activity: string[]`, `cast`, `team`, `loading`, `maxRounds`, `consensusThreshold`, and optionally `result`.
-- `PinnedAnswer` is sticky below `ChannelHeader`; it only renders once `result` is populated.
-- Auto-scroll to bottom while loading; snap to top when result arrives; pause auto-scroll if the user manually scrolls up and show a "Jump to live" button.
-- Extra team members beyond the 3 engine slots are shown in the channel header avatar row with 50% opacity and a "(not in session)" tooltip — they do not post messages.
+v3 (Slack-style chatroom debate view) — **complete**. All deliverables shipped.  
+Active plan: see `PLAN.md` at the repo root.

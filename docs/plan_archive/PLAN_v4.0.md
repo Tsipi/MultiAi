@@ -1,10 +1,12 @@
-# Version 4
+# Version 4.0 — UI Foundation
 
-**Date:** 2026-04-19
+**Date:** 2026-04-19  
+**Scope:** Frontend only — routing and team templates. No DB, no auth, no backend changes.  
+**Next:** v4.1 (persistence + auth) → v4.2 (sharing + export) → v5.0 (Next.js + SEO)
 
 ## Objective
 
-Fix the current UX gap around returning to an empty state, introduce team templates in a way that improves activation instead of adding clutter, and prepare the product for persistence, public sharing, and SEO growth.
+Add real URLs to the app and make team templates a first-class feature in the compose flow. Both are pure frontend changes — nothing in the backend is touched.
 
 ---
 
@@ -517,127 +519,125 @@ The app should know explicitly whether the user is:
 
 ---
 
-## 10. Recommended implementation order
+---
 
-## Phase 1 — Fix the empty-state UX
+## Out of scope for v4.0
 
-Goal: remove dependency on refresh.
+The following are tracked in later versions and must not be started here:
 
-Tasks:
-
-* add top nav `New Run`
-* add route `/app/new`
-* reset builder and output state on click
-* keep sidebar selection in sync
-
-## Phase 2 — Add templates
-
-Goal: improve activation and reuse.
-
-Tasks:
-
-* add `Templates` in top nav
-* add template chips/cards below prompt
-* create template modal or drawer
-* preload team config from template
-
-## Phase 3 — Add backend persistence
-
-Goal: make runs durable.
-
-Tasks:
-
-* store runs in DB
-* store outputs in DB
-* fetch sidebar from backend
-* load full run by ID
-
-## Phase 4 — Add public sharing
-
-Goal: support viral and SEO-worthy content.
-
-Tasks:
-
-* add `Share publicly` action
-* generate slug
-* create public answer page
-* mark page indexable only when public
-
-## Phase 5 — Add SEO system
-
-Goal: turn product behavior into acquisition.
-
-Tasks:
-
-* create template landing pages
-* create use-case pages
-* add metadata system
-* add SSR/SSG support
-* add sitemap and robots rules
+* Database, API persistence, user accounts → **v4.1**
+* Public sharing, export full debate → **v4.2**
+* SEO pages, Next.js migration → **v5.0**
 
 ---
 
-## 11. Component suggestions
+## Implementation
 
-### Top nav
+### Phase 1 — Empty-state UX ✅ DONE
 
-* `AppHeader`
-* `NewRunButton`
-* `TemplatesButton`
-* `UserMenu`
-
-### Sidebar
-
-* `RunSearch`
-* `RunList`
-* `RunListItem`
-* `SidebarNewRunIcon`
-
-### Empty state builder
-
-* `HeroPrompt`
-* `TemplateShortcutRow`
-* `PromptComposer`
-* `TeamPreview`
-* `AskTeamButton`
-
-### Run page
-
-* `QuestionCard`
-* `FileList`
-* `FinalAnswerCard`
-* `MetricsBar`
-* `RunActions`
-
-### Templates
-
-* `TemplateDrawer`
-* `TemplateCard`
-* `TemplatePreview`
-* `SaveTemplateDialog`
+* ✅ `+ New Run` button in `TopNav.tsx`, wired to `startNewQuestion` in `App.tsx`
+* ✅ `startNewQuestion` clears `selectedId`, `result`, `activity`
+* ✅ Sidebar selection synced via `setSelectedId(null)`
 
 ---
 
-## 12. Design rules for Version 4
+### Phase 1b — Client-Side Routing (React Router v6)
 
-* New Run must always be one click away
-* Empty state should feel intentional and premium
-* Templates must be easy to discover before the first run
-* Sidebar is history, not the place for product education
-* Public SEO pages must be separate from private dashboard screens
-* Sharing should be optional and explicit
+**Goal:** Give every screen a real URL — sessions become shareable, browser back/forward works, and v4.2 public sharing becomes possible.  
+**Library:** `react-router-dom` v6. Not TanStack Router, not Next.js (v5 scope).  
+**Prerequisite for:** v4.2 (sharing) and v5.0 (SEO).
+
+#### Routes
+
+| Route | What it shows |
+|-------|---------------|
+| `/` | Redirect → `/app/new` |
+| `/app/new` | Empty compose state (CommandBar, no result) |
+| `/app/run/:id` | Session view — loads session by URL param |
+| `/shared/:slug` | Stub now — filled in v4.2 |
+
+#### Subtasks
+
+**1. Install and wire the router**
+- [ ] `npm install react-router-dom` in `frontend/`
+- [ ] `frontend/src/main.tsx` — wrap `<App />` in `<BrowserRouter>`
+
+**2. Define routes**
+- [ ] `App.tsx` — add `<Routes>` with the four routes above
+- [ ] `/` → `<Navigate to="/app/new" replace />`
+- [ ] `/app/new` → existing empty compose view (CommandBar visible, no result)
+- [ ] `/app/run/:id` → session view (ChatPanel + result)
+- [ ] `/shared/:slug` → `<div>Coming soon</div>` placeholder
+
+**3. Replace state-driven navigation with URL navigation**
+- [ ] `startNewQuestion` in `App.tsx` — replace `setSelectedId(null)` with `navigate('/app/new')`
+- [ ] Sidebar session click — replace `setSelectedId(id)` with `navigate('/app/run/${id}')`
+- [ ] `TopNav` New Run button — already calls `startNewQuestion`, no change needed
+
+**4. Read session ID from URL on load**
+- [ ] In `/app/run/:id` route — call `useParams()` to get `id`
+- [ ] On mount / when `id` changes — call existing `selectSession(id)` to load the session
+- [ ] If `id` not found in history — show a "Session not found" fallback message
+
+**5. Update CLAUDE.md**
+- [ ] Replace the "No routing library" line with:
+  > Routing: React Router v6 (`react-router-dom`). Routes: `/app/new`, `/app/run/:id`, `/shared/:slug`. Navigate with `useNavigate`. Read params with `useParams`. Do not add SSR or file-based routing without instruction.
 
 ---
 
-## 13. Final recommendation
+### Phase 2 — Team Templates
 
-The next correct move is not just to visually tweak the screen.
+**Goal:** Make team templates a first-class feature in the compose flow so users can start faster and discover the product's range.  
+**Scope:** Frontend only — templates are hardcoded data in `frontend/src/data/`. No backend API needed.
 
-The real move is to define the app around:
+#### Starter templates (hardcoded)
 
-1. explicit page states (`new` vs `run/:id`)
-2. first-class templates
-3. persistent backend runs
-4. optional public pages for SEO and growth
+1. Programmer Team
+2. UX / Product Team
+3. Startup GTM Team
+4. Research & Writing Team
+5. Investment Debate Team
+6. Technical Architecture Review Team
+7. Resume / Career Team
+8. Marketing Campaign Team
 
-That will fix the UX issue, improve activation, and create a scalable product structure.
+#### Subtasks
+
+**1. Add template data**
+- [ ] `frontend/src/data/templates.ts` — define a `TeamTemplate` type and export the 8 templates above
+- [ ] Each template has: `id`, `name`, `description`, `members` (array of `TeamMember`)
+
+**2. Template chips below the prompt**
+- [ ] New component `TemplateShortcutRow.tsx` — renders 4–5 chips (most popular templates)
+- [ ] Place it in `CommandBar.tsx` between the textarea and `CommandContextFooter`
+- [ ] Clicking a chip calls `onSelectTemplate(template)` passed down from `App.tsx`
+
+**3. Wire template selection in App.tsx**
+- [ ] `onSelectTemplate` handler — calls `setTeam(template.members)` to preload the team
+- [ ] Does not auto-submit — user still clicks Ask
+
+**4. Templates drawer in top nav**
+- [ ] New component `TemplateDrawer.tsx` — slide-in panel listing all 8 templates
+- [ ] Each card shows: name, description, member roles
+- [ ] "Use this team" button calls `onSelectTemplate` and closes the drawer
+- [ ] Add `Templates` button to `TopNav.tsx` — opens the drawer
+
+**5. Visual feedback**
+- When a template is active, team avatars show each member's name and short role below their photo
+- Selecting a template does not lock the team — the user can still edit members freely
+
+---
+
+### Phase 3 — Backend performance & accuracy (done 2026-06-04)
+
+**Scorer + writer in parallel**
+The scorer and writer refinement were sequential but independent. Both now run via `asyncio.gather`, saving ~0.5 s per round.
+
+**Per-round relevance removed**
+`validate_relevance` ran once per round plus once after synthesis — 4 calls in a 3-round session. Removed from the loop; the final check in `engine.py` is kept.
+
+**Live pricing from OpenRouter**
+Cost estimates used a hardcoded table. On startup, `costs.py` now fetches rates from `/api/v1/models` and caches them. Falls back to the hardcoded table if the fetch fails.
+
+**Follow-up root anchor**
+Follow-ups were referencing the immediate parent's question, causing drift in long chains. A `root_question` field now flows through the full stack and is always used as the "Original prompt" anchor.

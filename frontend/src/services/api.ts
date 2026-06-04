@@ -47,15 +47,10 @@ export async function getSession(sessionId: string): Promise<ConsultResult> {
 }
 
 function titleFallback(question: string): string {
-  const words = question
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 2)
-    .slice(0, 6);
-  if (words.length >= 3) return words.join(" ");
-  if (words.length > 0) return words.join(" ");
-  return "consensus export";
+  const trimmed = question.trim().replace(/\s+/g, " ");
+  const words = trimmed.split(" ").slice(0, 12);
+  const title = words.join(" ");
+  return (title.length < trimmed.length ? title + "…" : title) || "Consensus Export";
 }
 
 export async function generateTitle(question: string, role = ""): Promise<string> {
@@ -123,29 +118,48 @@ export async function consultStream(payload: ConsultPayload, handlers: StreamHan
 function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>): ConsultResult {
   const needsClarification = toBoolean(raw.needs_clarification);
   return {
+    // ── Identity ────────────────────────────────────────────────────────
     session_id: String(raw.session_id ?? ""),
+
+    // ── Input / question ────────────────────────────────────────────────
     question: String(raw.question ?? ""),
     role: String(raw.role ?? raw.domain ?? ""),
+    base_question: String(raw.base_question ?? ""),
+    attachment_files: normalizeAttachmentFiles(raw.attachment_files),
+
+    // ── Team ────────────────────────────────────────────────────────────
+    model_writers: Array.isArray(raw.model_writers) ? raw.model_writers.map(String) : [],
+    model_critics: Array.isArray(raw.model_critics) ? raw.model_critics.map(String) : [],
+    writer_names: Array.isArray(raw.writer_names) ? raw.writer_names.map(String) : [],
+    critic_names: Array.isArray(raw.critic_names) ? raw.critic_names.map(String) : [],
+
+    // ── Debate output ───────────────────────────────────────────────────
     final_answer: String(raw.final_answer ?? ""),
     final_score: Number(raw.final_score ?? 0),
-    cost_hint: String(raw.cost_hint ?? "Displayed as estimated by selected model rates."),
+    // full_discussion falls back to raw.rounds for old session JSON format
     full_discussion: Array.isArray(raw.full_discussion) ? raw.full_discussion : (Array.isArray(raw.rounds) ? raw.rounds : []),
     status: needsClarification ? "needs_clarification" : "completed",
+    cost_hint: String(raw.cost_hint ?? "Displayed as estimated by selected model rates."),
+
+    // ── Clarification flow ──────────────────────────────────────────────
     needs_clarification: needsClarification,
     clarification_question: String(raw.clarification_question ?? ""),
     clarification_reason: String(raw.clarification_reason ?? ""),
     clarification_options: Array.isArray(raw.clarification_options) ? raw.clarification_options.map((x) => String(x)) : [],
-    model_costs: Array.isArray(raw.model_costs) ? raw.model_costs : [],
-    total_cost_usd: Number(raw.total_cost_usd ?? 0),
-    total_tokens: Number(raw.total_tokens ?? 0),
+    clarification_response: String(raw.clarification_response ?? ""),
+
+    // ── Follow-up chain ─────────────────────────────────────────────────
+    is_followup: toBoolean(raw.is_followup),
     thread_id: String(raw.thread_id ?? raw.session_id ?? ""),
     parent_session_id: String(raw.parent_session_id ?? ""),
-    is_followup: toBoolean(raw.is_followup),
     source_prompt: String(raw.source_prompt ?? ""),
     source_final_answer: String(raw.source_final_answer ?? ""),
     followup_instruction: String(raw.followup_instruction ?? ""),
-    base_question: String(raw.base_question ?? ""),
-    attachment_files: normalizeAttachmentFiles(raw.attachment_files)
+
+    // ── Usage & cost ────────────────────────────────────────────────────
+    model_costs: Array.isArray(raw.model_costs) ? raw.model_costs : [],
+    total_cost_usd: Number(raw.total_cost_usd ?? 0),
+    total_tokens: Number(raw.total_tokens ?? 0),
   };
 }
 

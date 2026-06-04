@@ -27,6 +27,17 @@ def load_session(session_id: str, sessions_dir: Path) -> DebateSession:
     files written by older schema versions still load without error.
     """
     payload = json.loads((sessions_dir / f"{session_id}.json").read_text(encoding="utf-8"))
+    # Promote legacy model fields → canonical list fields (for old session JSON formats)
+    if not payload.get("model_writers"):
+        if payload.get("writer_models"):          # very old: writer_models list
+            payload["model_writers"] = payload["writer_models"]
+        elif payload.get("model_writer"):         # old: single model_writer string
+            payload["model_writers"] = [payload["model_writer"]]
+    if not payload.get("model_critics"):
+        if payload.get("critic_models"):          # very old: critic_models list
+            payload["model_critics"] = payload["critic_models"]
+        else:                                     # old: model_critic_a / model_critic_b strings
+            payload["model_critics"] = [m for m in [payload.get("model_critic_a", ""), payload.get("model_critic_b", "")] if m]
     rounds = [
         DebateRound(**{k: v for k, v in item.items() if k in _ROUND_FIELDS})
         for item in payload.get("rounds", [])

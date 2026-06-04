@@ -15,6 +15,7 @@ from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
 from backend.consensus.engine import ConsensusEngine
+from backend.consensus.costs import load_live_prices
 from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
 from backend.consensus.llm_clients import call_openrouter
 
@@ -33,6 +34,10 @@ CFG = AppConfig()
 ENGINE = ConsensusEngine(CFG)
 app.include_router(sessions_router)
 
+@app.on_event("startup")
+async def _startup() -> None:
+    await load_live_prices(CFG.openrouter_api_key, CFG.openrouter_base_url)
+
 def _to_response(session: DebateSession) -> ConsultResponse:
     """Convert session object to API response schema."""
     return ConsultResponse(
@@ -49,16 +54,22 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         clarification_reason=session.clarification_reason,
         clarification_options=session.clarification_options,
         model_costs=session.model_costs,
+        model_writers=session.model_writers,
+        model_critics=session.model_critics,
+        writer_names=session.writer_names,
+        critic_names=session.critic_names,
         total_cost_usd=session.total_cost_usd,
         total_tokens=session.total_tokens,
         thread_id=session.thread_id,
         parent_session_id=session.parent_session_id,
         is_followup=session.is_followup,
+        root_question=session.root_question,
         source_prompt=session.source_prompt,
         source_final_answer=session.source_final_answer,
         followup_instruction=session.followup_instruction,
         base_question=session.base_question,
         attachment_files=session.attachment_files,
+        clarification_response=session.clarification_response,
     )
 class TitleRequest(BaseModel):
     question: str
@@ -90,13 +101,17 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
         max_rounds=payload.max_rounds,
         threshold=payload.consensus_score,
         clarification=payload.clarification,
+        clarification_question_asked=payload.clarification_question,
         attachments=payload.attachments,
         is_followup=payload.is_followup,
         parent_session_id=payload.parent_session_id,
         thread_id=payload.thread_id,
+        root_question=payload.root_question,
         source_prompt=payload.source_prompt,
         source_final_answer=payload.source_final_answer,
         followup_instruction=payload.followup_instruction,
+        writer_names=payload.writer_names,
+        critic_names=payload.critic_names,
     )
     return _to_response(session)
 @app.post("/api/consult-stream")
@@ -117,13 +132,17 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
                 max_rounds=payload.max_rounds,
                 threshold=payload.consensus_score,
                 clarification=payload.clarification,
+                clarification_question_asked=payload.clarification_question,
                 attachments=payload.attachments,
                 is_followup=payload.is_followup,
                 parent_session_id=payload.parent_session_id,
                 thread_id=payload.thread_id,
+                root_question=payload.root_question,
                 source_prompt=payload.source_prompt,
                 source_final_answer=payload.source_final_answer,
                 followup_instruction=payload.followup_instruction,
+                writer_names=payload.writer_names,
+                critic_names=payload.critic_names,
                 progress_hook=activity,
             )
             await queue.put({"type": "final", "data": _to_response(session).model_dump()})

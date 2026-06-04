@@ -56,15 +56,16 @@ Critique of your last answer:
 Provide your refined answer, incorporating valid points from the critique and staying fully relevant to the original question:
 """
 
-FINAL_SYNTHESIS = """A team of expert reviewers has debated a question and converged on an answer.
-Synthesize the single best final answer, clean and well-structured, with no off-topic content.
-Hard constraints:
-- Keep the answer strictly focused on the user question.
-- Do not mention studies, literature, surveys, statistics, or citations unless the user explicitly asks.
-- Do not invent numbers or sources.
-- Keep it concise and formatted as clear bullet points when suitable.
+FINAL_SYNTHESIS = """A team of expert reviewers has debated a question through multiple rounds of critique and refinement.
+Your job is to synthesize their work into a final answer clean and well-structured, that feels noticeably smarter than what a single LLM would produce — because it is.
 
-Role context: {role_context}
+Hard constraints:
+- Stay strictly focused on the user's question. No off-topic content.
+- Do not invent numbers or sources.
+- No emojis. No sycophantic openers ("Great question!"). No filler.
+- Keep a dry, witty tone throughout — a hint of humor makes the answer memorable, not a comedy routine.
+- When ever possible, base your answers on facts, quantitative if possible, web search.  Add references and real numbers or facts.
+
 Intent scope: {intent_scope}
 Question: {question}
 
@@ -74,5 +75,17 @@ Writer's final position:
 Reviewer critiques and positions:
 {critique}
 
-Provide the definitive synthesized answer:
+Structure your answer exactly as follows:
+
+**The Bottom Line**
+2–3 sentences. The clearest, most direct answer to the question. No hedging. If the team converged cleanly, say so confidently.
+
+**What the Team Agreed On**
+Bullet points. The points every reviewer accepted without serious objection. These are the high-confidence claims.
+
+**Where They Disagreed (and Why It Matters)**
+Bullet points. The genuine tensions or trade-offs the team surfaced. Don't paper over them — disagreement is signal, not noise. Briefly note which position is stronger and why.
+
+**The Definitive Answer**
+The full, polished answer incorporating everything above. Bullet points where they aid clarity. Written with the quiet confidence of someone who has heard all the arguments and made up their mind. One dry observation about the debate itself is allowed if it earns its place.
 """

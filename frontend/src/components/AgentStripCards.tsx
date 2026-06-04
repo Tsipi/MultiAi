@@ -14,9 +14,12 @@ export const BENCH_META = {
 
 export function memberHot(member: TeamMember, roster: TeamMember[], slot: AgentSlot): boolean {
   if (slot === "writer") return member.duty === "writer";
-  const critics = roster.filter((x) => x.duty === "critic");
-  if (slot === "criticA") return critics[0]?.id === member.id;
-  if (slot === "criticB") return critics[1]?.id === member.id;
+  const m = slot.match(/^critic(\d+)$/);
+  if (m) {
+    const idx = parseInt(m[1], 10) - 1;
+    const critics = roster.filter((x) => x.duty === "critic");
+    return critics[idx]?.id === member.id;
+  }
   return false;
 }
 

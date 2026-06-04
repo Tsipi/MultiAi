@@ -1,131 +1,113 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Settings2 } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-import { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./components/ConsensusRunsSidebar";
+import { ConsensusRunsSidebar } from "./components/ConsensusRunsSidebar";
 import { AdvancedDrawer } from "./components/AdvancedDrawer";
 import { InsightsDrawer } from "./components/InsightsDrawer";
 import { CommandBar } from "./components/CommandBar";
-import { SavedAnswerMarketingCard } from "./components/SavedAnswerMarketingCard";
 import { TopNav } from "./components/TopNav";
 import { ChatPanel } from "./components/ChatPanel";
-import { TeamMember, createDefaultTeam } from "./data/experts";
-import {
-  buildRunSignature,
-  mergeTeamIntoPayload,
-  selectCastFromTeam,
-  toPreview,
-  type CastSelection,
-} from "./lib/consultHelpers";
-import { appendDefaultTeamMember } from "./lib/teamRoster";
-import { consultStream, deleteSession, generateTitle, getSession, listSessions } from "./services/api";
-import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { mergeTeamIntoPayload, selectCastFromTeam, toPreview, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
+import { consultStream, deleteSession, generateTitle, getSession } from "./services/api";
+import { ConsultPayload, ConsultResult, SessionPreview } from "./types";
+import { MODEL_OPTIONS } from "./data/models";
+import { mkMember, type TeamMember } from "./data/experts";
+import { type TeamTemplate } from "./data/templates";
+import { TemplateDrawer } from "./components/TemplateDrawer";
 import { useDarkMode } from "./hooks/useDarkMode";
-import { Button } from "@/components/ui/button";
-
-const defaults: ConsultPayload = {
-  writer: "deepseek/deepseek-chat-v3.2",
-  critic_a: "google/gemini-2.5-flash",
-  critic_b: "google/gemini-2.5-flash",
-  max_rounds: 3,
-  consensus_score: 8,
-  role: "",
-  question: "",
-};
+import { useComposeForm } from "./hooks/useComposeForm";
+import { useSessionHistory } from "./hooks/useSessionHistory";
+import { useClarification } from "./hooks/useClarification";
+import { useFollowup } from "./hooks/useFollowup";
+import { useToast } from "./hooks/useToast";
+import { usePanelState } from "./hooks/usePanelState";
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [dark, toggleDark] = useDarkMode();
-  const [form, setForm] = useState<ConsultPayload>(defaults);
-  const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
-  const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
-  const [toast, setToast] = useState("");
-  const [activeCast, setActiveCast] = useState<CastSelection>(() => selectCastFromTeam(createDefaultTeam("")));
-  const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>({});
+  const { toast, setToast } = useToast();
+  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
+  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory();
+  const { clarificationPrompt, setClarificationPrompt, clarificationReason, setClarificationReason, clarificationOptions, setClarificationOptions, clarificationChoice, clarificationOtherText, setClarificationOtherText, chooseClarification, clearClarification } = useClarification();
+  const { followupOpen, setFollowupOpen, followupInstruction, setFollowupInstruction, followupConstraints, setFollowupConstraints, followupSeed, setFollowupSeed, followupError, setFollowupError, clearFollowupState } = useFollowup();
+  const { advancedOpen, setAdvancedOpen, insightsOpen, setInsightsOpen, runsSidebarOpen, setRunsSidebarOpen } = usePanelState();
+
+  // Live debate run state — mutated by executeConsult, kept here as it crosses multiple handlers
   const [result, setResult] = useState<ConsultResult | null>(null);
-  const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
-  const [sessionTitles, setSessionTitles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<string[]>([]);
-  const [clarificationPrompt, setClarificationPrompt] = useState("");
-  const [clarificationReason, setClarificationReason] = useState("");
-  const [clarificationOptions, setClarificationOptions] = useState<string[]>([]);
-  const [clarificationChoice, setClarificationChoice] = useState("");
-  const [clarificationOtherText, setClarificationOtherText] = useState("");
-  const [history, setHistory] = useState<SessionPreview[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [followupOpen, setFollowupOpen] = useState(false);
-  const [followupInstruction, setFollowupInstruction] = useState("");
-  const [followupConstraints, setFollowupConstraints] = useState("");
-  const [followupSeed, setFollowupSeed] = useState("");
-  const [followupError, setFollowupError] = useState("");
+  // True only during resumeWithClarification — used to hide CommandBar without affecting fresh runs
+  const [isResuming, setIsResuming] = useState(false);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const mainSessionPanelRef = useRef<HTMLDivElement | null>(null);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [insightsOpen, setInsightsOpen] = useState(false);
-  const [runsSidebarOpen, setRunsSidebarOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem(RUNS_SIDEBAR_STORAGE_KEY) !== "0";
-  });
+  // Stores the last payload sent so clarification Continue can replay the exact same run
+  const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
+
+  // Derived values
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
-  const panelCast = selectedId ? castBySession[selectedId] ?? activeCast : activeCast;
+  const panelCast = useMemo(() => {
+    if (!selectedId) return activeCast;
+    if (castBySession[selectedId]) return castBySession[selectedId];
+    // For old sessions without a stored cast, rebuild from model IDs in the result
+    const res = resultsById[selectedId];
+    if (res?.model_critics?.length) {
+      const writerModel = res.model_writers?.[0] ?? "";
+      const writerMember = team.find((m) => m.duty === "writer" && m.model === writerModel)
+        ?? team.find((m) => m.duty === "writer")
+        ?? team[0];
+      const usedIds = new Set<string>();
+      const critics = res.model_critics.map((model, i) => {
+        const member = team.find((m) => m.model === model && !usedIds.has(m.id));
+        if (member) usedIds.add(member.id);
+        const modelLabel = MODEL_OPTIONS.find((o) => o.id === model)?.label
+          ?? (model.includes("/") ? model.split("/").pop()! : model);
+        const fallbackName = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
+        return { name: member?.name ?? fallbackName, avatar: member?.avatar ?? writerMember.avatar, model };
+      });
+      return { writer: { name: writerMember.name, avatar: writerMember.avatar, model: writerMember.model }, critics };
+    }
+    return activeCast;
+  }, [selectedId, castBySession, activeCast, resultsById, team]);
   const panelActivity = activity;
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
-  const chooseClarification = (value: string) => {
-    setClarificationChoice(value);
-    if (value !== "Other") setClarificationOtherText("");
-  };
-
+  // Sync state from URL — handles browser back/forward and direct links
   useEffect(() => {
-    listSessions()
-      .then((rows) => setHistory(rows.map(toPreview)))
-      .catch(() => setHistory([]));
-  }, []);
+    const runMatch = location.pathname.match(/^\/app\/run\/(.+)$/);
+    if (runMatch) {
+      void selectSession(runMatch[1]);
+    } else if (location.pathname === "/app/new" || location.pathname === "/") {
+      setSelectedId(null);
+      setResult(null);
+      setActivity([]);
+      clearFollowupState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
-  useEffect(() => {
-    setTeam((prev) => prev.map((m) => (m.lockToBaseRole ? { ...m, role: form.role } : m)));
-  }, [form.role]);
+  // --- Orchestration ---
 
-  useEffect(() => {
-    if (!attachments.some((a) => a.kind === "image")) return;
-    setTeam((prev) => {
-      const switched = prev.filter((m) => m.model === "deepseek/deepseek-chat-v3.2").length;
-      const next = prev.map((m) =>
-        m.model === "deepseek/deepseek-chat-v3.2" ? { ...m, model: "google/gemini-2.5-flash" } : m
-      );
-      if (switched > 0) setToast(`Image detected: switched ${switched} Deepseek seat(s) to Gemini Flash for vision support.`);
-      return next;
-    });
-  }, [attachments]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(""), 3500);
-    return () => window.clearTimeout(timer);
-  }, [toast]);
-
-  useEffect(() => {
-    localStorage.setItem(RUNS_SIDEBAR_STORAGE_KEY, runsSidebarOpen ? "1" : "0");
-  }, [runsSidebarOpen]);
-
-  const runConsult = async (clarificationTag = "", questionOverride?: string) => {
+  const runConsult = async (clarificationTag = "", questionOverride?: string, clarificationQuestion?: string) => {
     const questionText = (questionOverride ?? form.question).trim();
     if (!questionText) return;
     clearFollowupState();
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
     setLoading(true);
+    setResult(null);
+    setSelectedId(null);
+    navigate("/app/new");
     requestAnimationFrame(() => {
       mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     setActivity(["Queued request. Your team is assembling the debate..."]);
-    setClarificationPrompt("");
-    setClarificationReason("");
-    setClarificationOptions([]);
-    setClarificationChoice("");
-    setClarificationOtherText("");
+    clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
-    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag);
+    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag, clarificationQuestion);
     try {
       await executeConsult(payload, cast, questionText);
     } catch (error) {
@@ -145,7 +127,8 @@ export default function App() {
   async function runFollowup() {
     const source = displayResult;
     if (!source || !followupInstruction.trim()) return;
-    const cast = selectCastFromTeam(team);
+    // Use the session's cast (panelCast reflects the viewed session's team)
+    const cast = panelCast;
     setActiveCast(cast);
     setFollowupError("");
     setAdvancedOpen(false);
@@ -157,9 +140,11 @@ export default function App() {
     setActivity([`Starting follow-up run from session ${source.session_id}`]);
     if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
+    // Always anchor to the root question so context doesn't drift across follow-up chains
+    const rootQ = source.root_question || source.source_prompt || source.question;
     const followupQuestion = [
       "Original prompt:",
-      source.source_prompt || source.question,
+      rootQ,
       "",
       "Previous final answer:",
       source.source_final_answer || source.final_answer,
@@ -167,7 +152,8 @@ export default function App() {
       "Follow-up instruction:",
       mergedInstruction,
     ].join("\n");
-    const payload = mergeTeamIntoPayload(
+    // Build base payload from form (role, settings, etc.) then override with session's models/names
+    const basePayload = mergeTeamIntoPayload(
       {
         ...form,
         question: followupQuestion,
@@ -177,11 +163,23 @@ export default function App() {
         source_prompt: source.source_prompt || source.question,
         source_final_answer: source.source_final_answer || source.final_answer,
         followup_instruction: mergedInstruction,
+        role: source.role || form.role,
       },
       team,
       [],
       ""
     );
+    const payload = {
+      ...basePayload,
+      writers: [cast.writer.model],
+      critics: cast.critics.map((c) => c.model),
+      writer: cast.writer.model,
+      critic_a: cast.critics[0]?.model ?? "",
+      critic_b: cast.critics[1]?.model ?? "",
+      writer_names: [cast.writer.name],
+      critic_names: cast.critics.map((c) => c.name),
+      root_question: rootQ,
+    };
     try {
       await executeConsult(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -201,18 +199,21 @@ export default function App() {
           next.needs_clarification && next.clarification_question && next.clarification_options.length
         );
         if (canClarify) {
+          pendingClarificationRef.current = { payload, cast, title };
           setClarificationPrompt(next.clarification_question);
           setClarificationReason(next.clarification_reason);
           setClarificationOptions(next.clarification_options);
-          setClarificationChoice(next.clarification_options[0] ?? "");
           setClarificationOtherText("");
+          chooseClarification(next.clarification_options[0] ?? "");
           setActivity((prev) => [...prev, "Waiting for user clarification"]);
           return;
         }
+        pendingClarificationRef.current = null;
         setResult(next);
         setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
         setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
         setSelectedId(next.session_id);
+        navigate(`/app/run/${next.session_id}`);
         setHistory((prev) => [
           toPreview({
             session_id: next.session_id,
@@ -230,6 +231,37 @@ export default function App() {
           .catch(() => {});
       },
     });
+  }
+
+  async function resumeWithClarification(answer: string) {
+    const pending = pendingClarificationRef.current;
+    const questionAsked = clarificationPrompt;
+    pendingClarificationRef.current = null;
+    clearFollowupState();
+    // Only suppress the CommandBar for follow-up resumes; fresh-run clarifications should keep it visible
+    if (pending?.payload?.is_followup) setIsResuming(true);
+    setLoading(true);
+    setResult(null);
+    setSelectedId(null);
+    clearClarification();
+    setActivity(["Resuming with your clarification…"]);
+    requestAnimationFrame(() => {
+      mainSessionPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    const { payload: basePayload, cast: baseCast, title: baseTitle } = pending ?? {
+      payload: mergeTeamIntoPayload({ ...form }, team, attachments, "", ""),
+      cast: selectCastFromTeam(team),
+      title: form.question,
+    };
+    const nextPayload: ConsultPayload = { ...basePayload, clarification: answer, clarification_question: questionAsked };
+    try {
+      await executeConsult(nextPayload, baseCast, baseTitle);
+    } catch (error) {
+      setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+    } finally {
+      setLoading(false);
+      setIsResuming(false);
+    }
   }
 
   const selectSession = async (id: string) => {
@@ -274,22 +306,43 @@ export default function App() {
     if (selectedId === id) {
       setSelectedId(fallbackId);
       setResult(fallbackId ? resultsById[fallbackId] ?? null : null);
+      navigate(fallbackId ? `/app/run/${fallbackId}` : "/app/new");
     }
   };
 
   function startNewQuestion() {
+    navigate("/app/new");
     setSelectedId(null);
     setResult(null);
     setActivity([]);
     clearFollowupState();
   }
 
-  function clearFollowupState() {
-    setFollowupOpen(false);
-    setFollowupInstruction("");
-    setFollowupConstraints("");
-    setFollowupSeed("");
-    setFollowupError("");
+  /** Rebuild a TeamMember[] from the session cast so the form/drawer shows the right people. */
+  function castToTeam(cast: CastSelection, baseRole: string): TeamMember[] {
+    const writer = mkMember(cast.writer.name.toLowerCase(), cast.writer.name, cast.writer.avatar, cast.writer.model, "writer", baseRole);
+    const critics = cast.critics.map((c) => mkMember(c.name.toLowerCase(), c.name, c.avatar, c.model, "critic", baseRole));
+    return [writer, ...critics];
+  }
+
+  /** "New question" — restores the viewed session's team so CommandBar shows the right squad. */
+  function startNewQuestionWithSessionTeam() {
+    if (selectedId) {
+      const baseRole = displayResult?.role || form.role;
+      setTeam(castToTeam(panelCast, baseRole));
+      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+    }
+    startNewQuestion();
+  }
+
+  /** Open Advanced Setup pre-loaded with the viewed session's team. */
+  function openAdvancedWithSessionTeam() {
+    if (selectedId) {
+      const baseRole = displayResult?.role || form.role;
+      setTeam(castToTeam(panelCast, baseRole));
+      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+    }
+    setAdvancedOpen(true);
   }
 
   function openFollowup() {
@@ -302,6 +355,13 @@ export default function App() {
   function adjustFollowupTeam() {
     setAdvancedOpen(true);
   }
+
+  function handleSelectTemplate(template: TeamTemplate) {
+    setTeam(template.members);
+    setActiveTemplateId(template.id);
+  }
+
+  // --- Panel props (assembled once, passed to ChatPanel and sidebar) ---
 
   const panelProps = {
     result: displayResult,
@@ -319,8 +379,10 @@ export default function App() {
     clarificationOtherText,
     onClarificationChoice: chooseClarification,
     onClarificationOtherText: setClarificationOtherText,
-    onSubmitClarification: () =>
-      runConsult(clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice),
+    onSubmitClarification: () => {
+      const answer = clarificationChoice === "Other" ? clarificationOtherText.trim() : clarificationChoice;
+      void resumeWithClarification(answer);
+    },
     onResendQuestion: resendQuestion,
     followupOpen,
     followupInstruction,
@@ -335,13 +397,25 @@ export default function App() {
     onStartFresh: startNewQuestion,
     isSavedAnswer: Boolean(selectedId),
     onAskFollowup: openFollowup,
-    onStartNewSession: startNewQuestion,
+    onStartNewSession: startNewQuestionWithSessionTeam,
+    onOpenInsights: () => setInsightsOpen(true),
+    onOpenAdvanced: openAdvancedWithSessionTeam,
     followupError,
   };
 
+  // --- Render ---
+
+  if (location.pathname.startsWith("/shared/")) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
+        Public shared runs are coming in v4.2.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} onOpenTemplates={() => setTemplatesOpen(true)} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
@@ -353,7 +427,7 @@ export default function App() {
           resultsById={resultsById}
           castBySession={castBySession}
           chatPanelProps={panelProps}
-          onSelect={selectSession}
+          onSelect={(id) => navigate(`/app/run/${id}`)}
           onDelete={removeSession}
         />
 
@@ -368,38 +442,7 @@ export default function App() {
               </div>
             )}
 
-            <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              {displayResult ? (
-                <>
-                  <SavedAnswerMarketingCard onStartNewSession={startNewQuestion} />
-                  <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-1.5 py-1.5 shadow-sm">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled={!displayResult}
-                      className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)] disabled:opacity-40"
-                      onClick={() => setInsightsOpen(true)}
-                      aria-label="Open session insights"
-                    >
-                      <BarChart3 className="h-4.5 w-4.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
-                      onClick={() => setAdvancedOpen(true)}
-                      aria-label="Open advanced setup"
-                    >
-                      <Settings2 className="h-4.5 w-4.5" />
-                    </Button>
-                  </div>
-                </>
-              ) : null}
-            </section>
-
-            {!displayResult && (
+            {!displayResult && !isResuming && (
               <CommandBar
                 value={form.question}
                 greetingName="Tsipi"
@@ -410,8 +453,10 @@ export default function App() {
                 onAttachmentsChange={setAttachments}
                 onChange={(question) => setForm((f) => ({ ...f, question }))}
                 onSubmit={() => runConsult()}
-                onAddTeamMember={() => setTeam((t) => appendDefaultTeamMember(t, form.role))}
+                onAddTeamMember={addTeamMember}
                 onOpenAdvanced={() => setAdvancedOpen(true)}
+                activeTemplateId={activeTemplateId}
+                onSelectTemplate={handleSelectTemplate}
               />
             )}
 
@@ -437,6 +482,12 @@ export default function App() {
             />
 
             <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
+            <TemplateDrawer
+              open={templatesOpen}
+              onClose={() => setTemplatesOpen(false)}
+              activeTemplateId={activeTemplateId}
+              onSelect={handleSelectTemplate}
+            />
           </div>
         </main>
       </div>

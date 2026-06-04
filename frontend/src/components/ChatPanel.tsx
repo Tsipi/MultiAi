@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConsultResult } from "../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "./ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal } from "../services/exporter";
 import { generateTitle } from "../services/api";
 import { CollapsiblePanel } from "./CollapsiblePanel";
-import {
-  promptTextForDisplay,
-  promptTextForExport,
-  stripAttachmentBlock,
-} from "@/lib/promptDisplay";
-import { FollowupComposer } from "./FollowupComposer";
+import { promptTextForExport } from "@/lib/promptDisplay";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DebateChatBubble, DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
@@ -19,6 +15,7 @@ import { PinnedAnswer } from "./PinnedAnswer";
 import { SessionPromptBlock } from "./SessionPromptBlock";
 import { SessionPromptDownloads } from "./SessionPromptDownloads";
 import type { TeamMember } from "@/data/experts";
+import { MODEL_OPTIONS } from "@/data/models";
 
 type Person = { name: string; avatar: string; model: string };
 
@@ -29,7 +26,7 @@ type Props = {
   /** Suppress the inline feed when a parent already renders it (avoids duplicates). */
   suppressActivityFeed?: boolean;
   activity: string[];
-  cast: { writer: Person; criticA: Person; criticB: Person };
+  cast: { writer: Person; critics: Person[] };
   team: TeamMember[];
   maxRounds: number;
   consensusThreshold: number;
@@ -57,10 +54,14 @@ type Props = {
   isSavedAnswer?: boolean;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
+  onOpenInsights?: () => void;
+  onOpenAdvanced?: () => void;
 };
 
 export function ChatPanel(props: Props) {
   const [exportBusy, setExportBusy] = useState(false);
+  const followupRef = useRef<HTMLDivElement>(null);
+  const clarificationRef = useRef<HTMLDivElement>(null);
   const {
     result,
     showFullDiscussion,
@@ -74,6 +75,20 @@ export function ChatPanel(props: Props) {
 
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
+
+  // Scroll to the follow-up composer whenever it opens
+  useEffect(() => {
+    if (props.followupOpen) {
+      followupRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [props.followupOpen]);
+
+  // Scroll to the clarification box when it appears mid-session (e.g. after a follow-up)
+  useEffect(() => {
+    if (showClarify) {
+      clarificationRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showClarify]);
 
   const clarifyBox = (
     <ClarificationBox
@@ -104,14 +119,20 @@ export function ChatPanel(props: Props) {
   if (!result) {
     return (
       <section className="grid gap-4">
+        {showClarify && (
+          <div ref={clarificationRef} className="scroll-mt-20">
+            {clarifyBox}
+          </div>
+        )}
         {showActivity ? (
           chatroomView
         ) : (
-          <p className="text-sm text-muted-foreground m-0">
-            Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.
-          </p>
+          !showClarify && (
+            <p className="text-sm text-muted-foreground m-0">
+              Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.
+            </p>
+          )
         )}
-        {showClarify && clarifyBox}
       </section>
     );
   }
@@ -122,15 +143,34 @@ export function ChatPanel(props: Props) {
     const role = result.role || "";
     setExportBusy(true);
     try {
-      const title = await generateTitle(prompt, role);
+      // Sidebar title: AI-generated short label (3-6 words) — fine for markdown filename
+      // PDF title: the actual question text so it reads as a proper document heading
+      const sidebarTitle = await generateTitle(prompt, role);
+      const pdfTitle = pdfTitleFromResult(result);
       const exportDate = exportDateLocal();
-      const payload = { title, role: result.role, prompt, answer: result.final_answer, exportDate };
-      if (kind === "md") downloadMarkdown(payload);
-      else downloadPdf(payload);
+      const participants = [
+        { name: cast.writer.name, role: "Writer" as const, model: cast.writer.model, avatar: cast.writer.avatar },
+        ...cast.critics.map((c) => ({ name: c.name, role: "Critic" as const, model: c.model, avatar: c.avatar })),
+      ];
+      if (kind === "md") {
+        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate });
+      } else {
+        await downloadPdf({ title: pdfTitle, role: result.role, prompt, answer: result.final_answer, exportDate, participants });
+      }
     } finally {
       setExportBusy(false);
     }
   };
+
+  /** Up to 20 words of the original question — readable as a PDF document heading. */
+  function pdfTitleFromResult(r: NonNullable<typeof result>): string {
+    const raw = (r.is_followup
+      ? r.followup_instruction || r.source_prompt || r.question
+      : r.question
+    )?.trim().replace(/\s+/g, " ") ?? "";
+    const words = raw.split(" ");
+    return words.length <= 20 ? raw : words.slice(0, 20).join(" ") + "…";
+  }
 
   return (
     <section className="grid gap-4">
@@ -141,10 +181,27 @@ export function ChatPanel(props: Props) {
           team={team}
           loading={loading}
           onResendQuestion={props.onResendQuestion}
-          isSavedAnswer={Boolean(result)}
+          isSavedAnswer={props.isSavedAnswer}
           onAskFollowup={props.onAskFollowup}
-          onStartNewSession={props.onStartFresh}
+          onStartNewSession={props.onStartNewSession}
+          onOpenInsights={props.onOpenInsights}
+          onOpenAdvanced={props.onOpenAdvanced}
+          clarificationPrompt={props.clarificationPrompt}
+          clarificationReason={props.clarificationReason}
+          followupOpen={props.followupOpen}
+          followupInstruction={props.followupInstruction}
+          followupConstraints={props.followupConstraints}
+          onFollowupInstructionChange={props.onFollowupInstructionChange}
+          onFollowupConstraintsChange={props.onFollowupConstraintsChange}
+          onSubmitFollowup={props.onSubmitFollowup}
         />
+
+        {/* Clarification box — shown below the Question card when a follow-up triggers ambiguity */}
+        {showClarify && (
+          <div ref={clarificationRef} className="scroll-mt-20">
+            {clarifyBox}
+          </div>
+        )}
 
         {/* 1. Hero: Final Answer — most prominent */}
         <div className="flex justify-start">
@@ -189,23 +246,28 @@ export function ChatPanel(props: Props) {
           </div>
         </div>
 
-        {/* 3. Clarification (if any) */}
-        {showClarify && clarifyBox}
-
         {/* 4. Debate replay — chatroom */}
         {activity.length > 0 && (
-          <CollapsiblePanel title="Live Debate Replay" defaultOpen={false}>
-            <div className="-mx-3.5 -mb-3.5">
-              <ChatroomDebateView
-                activity={activity}
-                cast={cast}
-                team={team}
-                loading={false}
-                maxRounds={maxRounds}
-                consensusThreshold={consensusThreshold}
-              />
+          <div className="flex justify-start">
+            <div className="w-full max-w-[880px]">
+              <CollapsiblePanel
+                title="Live Debate Replay"
+                titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
+                defaultOpen={false}
+              >
+                <div className="-mx-3.5 -mb-3.5 -mt-3">
+                  <ChatroomDebateView
+                    activity={activity}
+                    cast={cast}
+                    team={team}
+                    loading={false}
+                    maxRounds={maxRounds}
+                    consensusThreshold={consensusThreshold}
+                  />
+                </div>
+              </CollapsiblePanel>
             </div>
-          </CollapsiblePanel>
+          </div>
         )}
 
         {/* 5. Director's Cut: full answer/critique text per round */}
@@ -218,7 +280,12 @@ export function ChatPanel(props: Props) {
             <div className="grid gap-0">
               {result.full_discussion.map((r, idx) => {
                 const roundLabel = String((r.round_num as number) ?? idx + 1);
-                const { christy, mark } = splitCritique(String(r.critique ?? ""));
+                const criticCount = Math.max(
+                  result.critic_names?.length ?? 0,
+                  cast.critics.length,
+                );
+                const critiques = splitCritiques(String(r.critique ?? ""), criticCount);
+                const writerName = result.writer_names?.[0] || cast.writer.name;
                 return (
                   <article
                     key={idx}
@@ -230,35 +297,38 @@ export function ChatPanel(props: Props) {
                     <strong className="text-sm">Round {roundLabel}</strong>
                     <ol className="list-none m-0 grid gap-2 p-0">
                       <DebateChatBubble
-                        id="john"
-                        label={cast.writer.name}
+                        id="writer"
+                        label={writerName}
                         avatar={cast.writer.avatar}
                         modelId={cast.writer.model}
-                        tag={undefined}
                         rawText={String(r.answer ?? "")}
                       >
                         <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
                       </DebateChatBubble>
-                      <DebateChatBubble
-                        id="christy"
-                        label={cast.criticA.name}
-                        avatar={cast.criticA.avatar}
-                        modelId={cast.criticA.model}
-                        tag={undefined}
-                        rawText={christy}
-                      >
-                        <ReactMarkdown>{christy}</ReactMarkdown>
-                      </DebateChatBubble>
-                      <DebateChatBubble
-                        id="mark"
-                        label={cast.criticB.name}
-                        avatar={cast.criticB.avatar}
-                        modelId={cast.criticB.model}
-                        tag={undefined}
-                        rawText={mark}
-                      >
-                        <ReactMarkdown>{mark}</ReactMarkdown>
-                      </DebateChatBubble>
+                      {critiques.map((crit, ci) => {
+                        const storedName = result.critic_names?.[ci];
+                        const castMember = cast.critics[ci];
+                        const modelId = result.model_critics?.[ci] ?? castMember?.model ?? "";
+                        const modelLabel = MODEL_OPTIONS.find((o) => o.id === modelId)?.label
+                          ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
+                        const label = storedName || castMember?.name || modelLabel || crit.label;
+                        const avatar = castMember?.avatar ?? DEBATE_SYSTEM_AVATAR;
+                        // Director's Cut: writer right, critics alternate left / right
+                        const criticAlign: "left" | "right" = ci % 2 === 0 ? "left" : "right";
+                        return (
+                          <DebateChatBubble
+                            key={ci}
+                            id={`critic${ci + 1}`}
+                            label={label}
+                            avatar={avatar}
+                            modelId={castMember?.model}
+                            rawText={crit.text}
+                            align={criticAlign}
+                          >
+                            <ReactMarkdown>{crit.text}</ReactMarkdown>
+                          </DebateChatBubble>
+                        );
+                      })}
                       <DebateChatBubble
                         id="system"
                         label="Round Summary"
@@ -276,47 +346,6 @@ export function ChatPanel(props: Props) {
           </CollapsiblePanel>
         )}
 
-        {/* 6. Follow-up context */}
-        {result.is_followup && (
-          <details className="text-sm">
-            <summary className="cursor-pointer font-medium text-muted-foreground hover:text-foreground transition-colors select-none">
-              Context used
-            </summary>
-            <div className="mt-2 grid gap-2">
-              <p className="font-semibold m-0">Original prompt</p>
-              <p className="text-muted-foreground line-clamp-3 m-0">
-                {stripAttachmentBlock(result.source_prompt || result.question)}
-              </p>
-              <p className="font-semibold m-0">Previous final answer</p>
-              <p className="text-muted-foreground line-clamp-3 m-0">
-                {result.source_final_answer ||
-                  "Previous answer unavailable; follow-up used original prompt only."}
-              </p>
-              <p className="font-semibold m-0">Follow-up instruction</p>
-              <p className="text-muted-foreground m-0">
-                {result.followup_instruction || "Not provided."}
-              </p>
-            </div>
-          </details>
-        )}
-
-        {/* 7. Follow-up composer */}
-        <FollowupComposer
-          open={props.followupOpen}
-          instruction={props.followupInstruction}
-          constraints={props.followupConstraints}
-          loading={loading}
-          changedSinceOpen={props.followupChangedSinceOpen}
-          sourcePrompt={result.source_prompt || result.question}
-          sourceAnswer={result.source_final_answer || result.final_answer}
-          onOpen={props.onOpenFollowup}
-          onInstructionChange={props.onFollowupInstructionChange}
-          onConstraintsChange={props.onFollowupConstraintsChange}
-          onAdjustTeam={props.onAdjustFollowupTeam}
-          onSubmit={props.onSubmitFollowup}
-          onStartFresh={props.onStartFresh}
-        />
-
         {props.followupError && (
           <p className="text-sm text-muted-foreground flex items-center gap-2 m-0">
             Follow-up run failed.{" "}
@@ -330,13 +359,35 @@ export function ChatPanel(props: Props) {
   );
 }
 
-function splitCritique(merged: string): { christy: string; mark: string } {
-  const a = merged.match(/\[Critic A\]\s*([\s\S]*?)(?=\[Critic B\]|$)/i)?.[1]?.trim() ?? "";
-  const b = merged.match(/\[Critic B\]\s*([\s\S]*)$/i)?.[1]?.trim() ?? "";
-  if (!a && !b)
-    return { christy: merged, mark: "No separate Mark critique captured in this round." };
-  return {
-    christy: a || "No separate Christy critique captured in this round.",
-    mark: b || "No separate Mark critique captured in this round.",
-  };
+/** Split a merged critique block into per-critic sections. */
+function splitCritiques(
+  merged: string,
+  criticCount: number
+): { label: string; text: string }[] {
+  // Try numbered blocks: [Critic 1], [Critic 2], ...
+  const re = /\[Critic (\d+)\]([\s\S]*?)(?=\[Critic \d+\]|$)/gi;
+  const parts: { label: string; text: string }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(merged)) !== null) {
+    const text = m[2].trim();
+    if (text) parts.push({ label: `Critic ${m[1]}`, text });
+  }
+  if (parts.length > 0) return parts;
+
+  // Fallback: legacy alphabetic blocks [Critic A], [Critic B], ...
+  const reLeg = /\[Critic ([A-F])\]([\s\S]*?)(?=\[Critic [A-F]\]|$)/gi;
+  while ((m = reLeg.exec(merged)) !== null) {
+    const text = m[2].trim();
+    if (text) parts.push({ label: `Critic ${m[1]}`, text });
+  }
+  if (parts.length > 0) return parts;
+
+  // Final fallback: treat the whole block as a single critic
+  if (merged.trim()) return [{ label: "Critic 1", text: merged.trim() }];
+
+  // Empty — produce empty slots matching criticCount so layout stays consistent
+  return Array.from({ length: Math.max(criticCount, 1) }, (_, i) => ({
+    label: `Critic ${i + 1}`,
+    text: "",
+  }));
 }

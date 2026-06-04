@@ -30,13 +30,17 @@ class ConsensusEngine:
         max_rounds: int,
         threshold: int,
         clarification: str = "",
+        clarification_question_asked: str = "",
         attachments: list[AttachmentIn] | None = None,
         is_followup: bool = False,
         parent_session_id: str = "",
         thread_id: str = "",
+        root_question: str = "",
         source_prompt: str = "",
         source_final_answer: str = "",
         followup_instruction: str = "",
+        writer_names: list[str] | None = None,
+        critic_names: list[str] | None = None,
         progress_hook: Callable[[str], Awaitable[None]] | None = None,
     ) -> DebateSession:
         """Run multi-round consensus process and save session."""
@@ -62,12 +66,12 @@ class ConsensusEngine:
             domain=domain,
             model_writers=list(writers),
             model_critics=list(critics),
-            model_writer=writers[0] if writers else "",
-            model_critic_a=critics[0] if critics else "",
-            model_critic_b=critics[1] if len(critics) > 1 else "",
+            writer_names=list(writer_names or []),
+            critic_names=list(critic_names or []),
             thread_id=thread_id or session_id,
             parent_session_id=parent_session_id,
             is_followup=is_followup,
+            root_question=root_question or (question if not is_followup else ""),
             source_prompt=source_prompt,
             source_final_answer=source_final_answer,
             followup_instruction=followup_instruction,
@@ -77,6 +81,9 @@ class ConsensusEngine:
                 for a in normalized_attachments
             ],
         )
+        if clarification:
+            session.clarification_question = clarification_question_asked
+            session.clarification_response = clarification
         usage_token = start_usage_collection()
         assessment = await assess_intent(question_with_context, domain, clarification, self.cfg)
         session.intent_scope = assessment.intent_scope
@@ -104,8 +111,18 @@ class ConsensusEngine:
                 image_urls=image_urls,
             )
             final_critique = session.rounds[-1].critique if session.rounds else ""
+            # For follow-ups both {question} and {intent_scope} were the full 500-word context
+            # blob, drowning the format instructions. Use just the follow-up instruction for both.
+            if is_followup and followup_instruction:
+                synthesis_question = followup_instruction
+                if source_prompt:
+                    synthesis_question += f"\n\n(Follow-up to: {source_prompt[:300]})"
+                synthesis_scope = followup_instruction
+            else:
+                synthesis_question = question_with_context
+                synthesis_scope = session.intent_scope
             final_prompt = FINAL_SYNTHESIS.format(
-                question=question_with_context, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=session.intent_scope
+                question=synthesis_question, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=synthesis_scope
             )
             await report("Synthesizing final answer")
             session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)

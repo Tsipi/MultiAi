@@ -3,7 +3,15 @@ import { cn } from "@/lib/utils";
 
 type Props = { content: string; className?: string };
 
+function cleanMarkdown(raw: string): string {
+  return raw
+    .replace(/^[ \t]*[-*+][ \t]*$/gm, "")   // remove genuinely empty unordered bullet lines
+    .replace(/\n{3,}/g, "\n\n")             // collapse excess blank lines
+    .trim();
+}
+
 export function MarkdownView({ content, className }: Props) {
+  const cleaned = cleanMarkdown(content);
   return (
     <div
       className={cn(
@@ -12,19 +20,28 @@ export function MarkdownView({ content, className }: Props) {
       )}
     >
       <ReactMarkdown
-        components={{
-          h1: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-1.5 text-foreground">{children}</h2>,
+        components={{          h1: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-1.5 text-foreground">{children}</h2>,
           h2: ({ children }) => <h3 className="text-[0.95rem] font-semibold mt-2.5 mb-1 text-foreground">{children}</h3>,
           h3: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-0.5 text-foreground">{children}</h4>,
           strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
           em: ({ children }) => <em className="italic text-foreground/90">{children}</em>,
-          ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 ml-1">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal list-inside space-y-0.5 ml-1">{children}</ol>,
-          li: ({ children }) => <li className="text-sm leading-relaxed">{children}</li>,
+          ul: ({ children }) => <ul className="list-disc list-outside pl-5 space-y-0.5">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-outside pl-5 space-y-2">{children}</ol>,
+          li: ({ children }) => <li className="text-sm leading-relaxed pl-1">{children}</li>,
           p: ({ children }) => <p className="mb-2 text-sm leading-relaxed">{children}</p>,
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline underline-offset-2 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              {children}
+            </a>
+          ),
         }}
       >
-        {content}
+        {cleaned}
       </ReactMarkdown>
     </div>
   );

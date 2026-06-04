@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils";
 import { readAttachments, supportedUploadTypes } from "@/services/attachments";
 import type { AttachmentInput } from "@/types";
 import type { TeamMember } from "@/data/experts";
+import type { TeamTemplate } from "@/data/templates";
 import { CommandContextFooter } from "./CommandContextFooter";
 import { CommandBarHeaderRow } from "./CommandBarHeaderRow";
+import { TemplateShortcutRow } from "./TemplateShortcutRow";
 
 type Props = {
   value: string;
@@ -21,6 +23,8 @@ type Props = {
   team: TeamMember[];
   onAddTeamMember: () => void;
   onOpenAdvanced: () => void;
+  activeTemplateId: string | null;
+  onSelectTemplate: (template: TeamTemplate) => void;
 };
 
 export function CommandBar({
@@ -35,6 +39,8 @@ export function CommandBar({
   team,
   onAddTeamMember,
   onOpenAdvanced,
+  activeTemplateId,
+  onSelectTemplate,
 }: Props) {
   const busy = Boolean(disabled || loading);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -51,6 +57,7 @@ export function CommandBar({
         greetingName={greetingName}
         team={team}
         busy={busy}
+        showRoles={Boolean(activeTemplateId)}
         onAddTeamMember={onAddTeamMember}
         onOpenAdvanced={onOpenAdvanced}
       />
@@ -113,6 +120,7 @@ export function CommandBar({
           </div>
         </div>
       </div>
+      <TemplateShortcutRow activeTemplateId={activeTemplateId} onSelect={onSelectTemplate} />
       <CommandContextFooter
         busy={busy}
         loading={Boolean(loading)}

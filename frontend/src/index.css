@@ -214,6 +214,21 @@ body {
   }
 }
 
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
 /* ===== NAMED GLASS UTILITIES (used 5+ times each) ===== */
 @layer utilities {
   .glass-panel {
@@ -243,13 +258,21 @@ body {
 }
 
 /* ===== ACTIVITY CHAT BUBBLE COLOURS ===== */
-.bubble-john    { background-color: color-mix(in srgb, #d8f5d4 86%, var(--card)); }
-.bubble-christy { background-color: color-mix(in srgb, #dbeafe 85%, var(--card)); }
-.bubble-mark    { background-color: color-mix(in srgb, #fde9d3 84%, var(--card)); }
+.bubble-writer  { background-color: color-mix(in srgb, #d8f5d4 86%, var(--card)); }
+.bubble-critic1 { background-color: color-mix(in srgb, #dbeafe 85%, var(--card)); }
+.bubble-critic2 { background-color: color-mix(in srgb, #fde9d3 84%, var(--card)); }
+.bubble-critic3 { background-color: color-mix(in srgb, #ccfbf1 84%, var(--card)); }
+.bubble-critic4 { background-color: color-mix(in srgb, #ffe4e6 84%, var(--card)); }
+.bubble-critic5 { background-color: color-mix(in srgb, #fef3c7 84%, var(--card)); }
+.bubble-critic6 { background-color: color-mix(in srgb, #ecfccb 84%, var(--card)); }
 .bubble-system  { background-color: color-mix(in srgb, #eef2ff 82%, var(--card)); }
-.dark .bubble-john    { background-color: color-mix(in srgb, #d8f5d4 38%, var(--card)); }
-.dark .bubble-christy { background-color: color-mix(in srgb, #dbeafe 36%, var(--card)); }
-.dark .bubble-mark    { background-color: color-mix(in srgb, #fde9d3 35%, var(--card)); }
+.dark .bubble-writer  { background-color: color-mix(in srgb, #d8f5d4 38%, var(--card)); }
+.dark .bubble-critic1 { background-color: color-mix(in srgb, #dbeafe 36%, var(--card)); }
+.dark .bubble-critic2 { background-color: color-mix(in srgb, #fde9d3 35%, var(--card)); }
+.dark .bubble-critic3 { background-color: color-mix(in srgb, #ccfbf1 35%, var(--card)); }
+.dark .bubble-critic4 { background-color: color-mix(in srgb, #ffe4e6 35%, var(--card)); }
+.dark .bubble-critic5 { background-color: color-mix(in srgb, #fef3c7 35%, var(--card)); }
+.dark .bubble-critic6 { background-color: color-mix(in srgb, #ecfccb 35%, var(--card)); }
 .dark .bubble-system  { background-color: color-mix(in srgb, #eef2ff 33%, var(--card)); }
 
 /* ===== MARKDOWN PROSE (applied to ReactMarkdown output) ===== */
@@ -257,6 +280,9 @@ body {
 .md-prose h1, .md-prose h2, .md-prose h3 { margin: 18px 0 10px; line-height: 1.25; font-weight: 640; }
 .md-prose ul, .md-prose ol { margin: 10px 0 12px 22px; padding: 0; }
 .md-prose li { line-height: 1.72; margin: 3px 0; }
+/* Keep list markers aligned with text: strip paragraph margins inside list items */
+.md-prose li > p:first-child { margin-top: 0; }
+.md-prose li > p:last-child { margin-bottom: 0; }
 
 /* ===== DISCUSSION PROSE (inside chat bubbles) ===== */
 .disc-prose p { margin: 0 0 8px; line-height: 1.55; font-size: 0.92rem; }

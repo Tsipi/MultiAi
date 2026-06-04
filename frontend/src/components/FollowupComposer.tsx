@@ -19,9 +19,18 @@ type Props = {
   onStartFresh: () => void;
 };
 
-/**
- * One panel: collapsed teaser or full follow-up form. Width matches other result panels (full).
- */
+function SourceAnchor({ prompt }: { prompt: string }) {
+  if (!prompt) return null;
+  return (
+    <p className="m-0 flex min-w-0 items-baseline gap-1 text-xs text-muted-foreground">
+      <span className="shrink-0">Building on:</span>
+      <span className="min-w-0 truncate font-medium italic text-foreground/70">
+        "{prompt}"
+      </span>
+    </p>
+  );
+}
+
 export function FollowupComposer(props: Props) {
   const canSubmit = Boolean(props.instruction.trim()) && !props.loading;
 
@@ -29,30 +38,40 @@ export function FollowupComposer(props: Props) {
     <CollapsiblePanel
       key={props.open ? "followup-editing" : "followup-idle"}
       title="Follow-up on this answer"
+      titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
       defaultOpen={props.open}
       className="w-full"
     >
       {!props.open ? (
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground m-0 mb-1">
               Continue this conversation in the same thread.
             </p>
             <p className="text-sm text-muted-foreground m-0 leading-relaxed">
-              The next run uses your original prompt and the final answer above as context—same as opening a
-              follow-up from the composer.
+              The next run uses your original prompt and the final answer above as context.
             </p>
+            <div className="mt-1.5">
+              <SourceAnchor prompt={props.sourcePrompt} />
+            </div>
           </div>
-          <Button type="button" className="shrink-0 w-full sm:w-auto min-w-[148px]" onClick={props.onOpen}>
+          <Button
+            type="button"
+            className="v2-primary-cta font-display h-10 shrink-0 w-full sm:w-auto min-w-[148px] rounded-xl border-0 font-semibold shadow-none"
+            onClick={props.onOpen}
+          >
             Write follow-up
           </Button>
         </div>
       ) : (
         <div className="grid gap-3">
-          <p className="text-sm text-muted-foreground m-0">
-            Describe what you want next. We send this together with the original prompt and the latest final
-            answer.
-          </p>
+          <div className="grid gap-1">
+            <p className="text-sm text-muted-foreground m-0">
+              Describe what you want next. We send this together with the original prompt and the latest
+              final answer.
+            </p>
+            <SourceAnchor prompt={props.sourcePrompt} />
+          </div>
 
           <Label>
             Follow-up task or question
@@ -63,6 +82,7 @@ export function FollowupComposer(props: Props) {
               onChange={(e) => props.onInstructionChange(e.target.value)}
             />
           </Label>
+
           <Label>
             Extra constraints (optional)
             <Textarea
@@ -93,20 +113,33 @@ export function FollowupComposer(props: Props) {
             </p>
           )}
 
-          <div className="flex items-center gap-2 flex-wrap pt-1">
-            <Button type="button" onClick={props.onSubmit} disabled={!canSubmit}>
-              {props.loading
-                ? "Sending..."
-                : props.changedSinceOpen
-                  ? "Send follow-up (with team changes)"
-                  : "Send follow-up"}
-            </Button>
-            <Button type="button" variant="outline" onClick={props.onAdjustTeam}>
-              Adjust team for this follow-up
-            </Button>
-            <Button type="button" variant="ghost" onClick={props.onStartFresh}>
-              Start fresh
-            </Button>
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button
+                type="button"
+                className="v2-primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
+                onClick={props.onSubmit}
+                disabled={!canSubmit}
+              >
+                {props.loading
+                  ? "Sending…"
+                  : props.changedSinceOpen
+                    ? "Send follow-up (with team changes)"
+                    : "Send follow-up"}
+              </Button>
+              <Button type="button" variant="outline" onClick={props.onAdjustTeam} disabled={props.loading}>
+                Adjust team
+              </Button>
+              <Button type="button" variant="ghost" onClick={props.onStartFresh} disabled={props.loading}>
+                Start fresh
+              </Button>
+            </div>
+
+            {props.loading && (
+              <p className="text-sm text-muted-foreground m-0 animate-pulse">
+                Your team is working on the follow-up…
+              </p>
+            )}
           </div>
         </div>
       )}
