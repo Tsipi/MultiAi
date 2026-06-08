@@ -5,11 +5,19 @@ import json
 import logging
 from dataclasses import asdict
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from backend.api.auth import (
+    UserCreate,
+    UserRead,
+    UserUpdate,
+    auth_backend,
+    fastapi_users_instance,
+    optional_current_user,
+)
 from backend.api.sessions import router as sessions_router
 from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
@@ -18,6 +26,9 @@ from backend.consensus.engine import ConsensusEngine
 from backend.consensus.costs import load_live_prices
 from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
 from backend.consensus.llm_clients import call_openrouter
+from backend.storage.database import _get_session_maker
+from backend.storage.db_models import User
+from backend.storage.db_session_store import save_session as save_session_db
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -32,11 +43,31 @@ app.add_middleware(
 
 CFG = AppConfig()
 ENGINE = ConsensusEngine(CFG)
+
+# ── Auth routers (register, login, logout, /users/me) ────────────────────────
+app.include_router(
+    fastapi_users_instance.get_auth_router(auth_backend),
+    prefix="/api/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users_instance.get_register_router(UserRead, UserCreate),
+    prefix="/api/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users_instance.get_users_router(UserRead, UserUpdate),
+    prefix="/api/users",
+    tags=["users"],
+)
+
 app.include_router(sessions_router)
+
 
 @app.on_event("startup")
 async def _startup() -> None:
     await load_live_prices(CFG.openrouter_api_key, CFG.openrouter_base_url)
+
 
 def _to_response(session: DebateSession) -> ConsultResponse:
     """Convert session object to API response schema."""
@@ -71,16 +102,21 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         attachment_files=session.attachment_files,
         clarification_response=session.clarification_response,
     )
+
+
 class TitleRequest(BaseModel):
     question: str
     role: str = ""
 
+
 @app.get("/api/health")
-async def health() -> dict: return {"status": "ok"}
+async def health() -> dict:
+    return {"status": "ok"}
+
 
 @app.post("/api/title")
 async def generate_title(payload: TitleRequest) -> dict:
-    """Generate a short (3-6 word) lowercase title from task + role (for exports and sidebar)."""
+    """Generate a short (3-6 word) lowercase title from task + role."""
     q = payload.question[:2000]
     r = (payload.role or "")[:600]
     prompt = build_export_title_prompt(q, r)
@@ -90,8 +126,13 @@ async def generate_title(payload: TitleRequest) -> dict:
         return {"title": title}
     except Exception:
         return {"title": normalize_export_title("", q)}
+
+
 @app.post("/api/consult", response_model=ConsultResponse)
-async def consult(payload: ConsultRequest) -> ConsultResponse:
+async def consult(
+    payload: ConsultRequest,
+    user: User | None = Depends(optional_current_user),
+) -> ConsultResponse:
     """Run consensus session and return final result plus rounds."""
     session = await ENGINE.consult(
         question=payload.question,
@@ -113,11 +154,19 @@ async def consult(payload: ConsultRequest) -> ConsultResponse:
         writer_names=payload.writer_names,
         critic_names=payload.critic_names,
     )
+    async with _get_session_maker()() as db:
+        await save_session_db(session, db, user_id=user.id if user else None)
     return _to_response(session)
+
+
 @app.post("/api/consult-stream")
-async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
+async def consult_stream(
+    payload: ConsultRequest,
+    user: User | None = Depends(optional_current_user),
+) -> StreamingResponse:
     """Stream activity events and final payload as NDJSON."""
     queue: asyncio.Queue[dict] = asyncio.Queue()
+    user_id = user.id if user else None
 
     async def activity(message: str) -> None:
         await queue.put({"type": "activity", "message": message})
@@ -145,15 +194,19 @@ async def consult_stream(payload: ConsultRequest) -> StreamingResponse:
                 critic_names=payload.critic_names,
                 progress_hook=activity,
             )
+            async with _get_session_maker()() as db:
+                await save_session_db(session, db, user_id=user_id)
             await queue.put({"type": "final", "data": _to_response(session).model_dump()})
         finally:
             await queue.put({"type": "done"})
 
     asyncio.create_task(worker())
+
     async def stream():
         while True:
             item = await queue.get()
             yield json.dumps(item) + "\n"
             if item["type"] == "done":
                 break
+
     return StreamingResponse(stream(), media_type="application/x-ndjson")

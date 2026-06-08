@@ -27,6 +27,7 @@ class AppConfig:
     scorer_model: str = "deepseek/deepseek-chat-v3.2"
     summarizer_model: str = "deepseek/deepseek-chat-v3.2"
     export_title_model: str = os.getenv("EXPORT_TITLE_MODEL", "openrouter/gpt-oss-120b")
+    jwt_secret: str = os.getenv("JWT_SECRET", "change-me-in-production")
     sessions_dir: Path = Path("sessions")
     max_rounds_default: int = 3
     consensus_default: int = 8

@@ -133,3 +133,52 @@ Stores metadata for uploaded context files.
 **4. Per-user sessions**
 - [ ] Session storage path / DB queries scoped by `user_id`
 - [ ] Sidebar only shows runs belonging to the logged-in user
+
+---
+
+## Implementation Summary (completed 2026-06-08)
+
+All of Phase 3 (Backend Persistence) and Phase 3b (Authentication) were implemented across 6 sessions.
+
+### What was built
+
+**Database layer**
+- `backend/storage/database.py` — lazy SQLAlchemy async engine; URL normalised automatically from `postgresql://` → `postgresql+asyncpg://`
+- `backend/storage/db_models.py` — 5 ORM tables: `users`, `runs`, `team_configs`, `outputs`, `files`
+- `backend/storage/db_session_store.py` — async `save_session`, `load_session`, `list_sessions`, `delete_session` backed by PostgreSQL
+- `alembic/` — Alembic configured for async SQLAlchemy; 2 migrations applied: initial schema + nullable `user_id`
+
+**Auth**
+- `backend/api/auth.py` — `fastapi-users` setup: register, login (JWT Bearer), `current_active_user`, `optional_current_user` dependencies
+- `backend/config.py` — `jwt_secret` added; `JWT_SECRET` env var required
+- `backend/requirements.txt` — added: `sqlalchemy[asyncio]`, `alembic`, `asyncpg`, `fastapi-users[sqlalchemy]`, `bcrypt`
+
+**API**
+- `backend/api/sessions.py` — swapped JSON file store for DB store; uses `Depends(get_async_session)`
+- `backend/api/app.py` — includes auth routers (`/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/users/me`); saves every completed run to DB with optional `user_id`
+- `backend/consensus/engine.py` — removed JSON `save_session` calls; engine now computes only, API layer persists
+
+**Seed & migration utility**
+- `backend/scripts/seed_admin.py` — creates `admin@localhost` / `admin1234` superuser and migrates all existing JSON sessions to the DB; idempotent (safe to re-run)
+- Ran once: 126 JSON sessions migrated successfully, 0 skipped
+
+**Frontend**
+- `frontend/src/hooks/useAuth.ts` — JWT token stored in `sessionStorage`; `login()`, `register()`, `logout()`
+- `frontend/src/pages/LoginPage.tsx` — login + register form, toggleable, matches app dark theme
+- `frontend/src/services/api.ts` — `apiFetch` helper injects `Authorization: Bearer <token>` on every request; fixed pre-existing missing `root_question` in `normalizeResult`
+- `frontend/src/components/TopNav.tsx` — shows logged-in email + Logout button
+- `frontend/src/App.tsx` — auth guard: unauthenticated users see `LoginPage` instead of the main app
+
+### Auth credentials (local dev)
+- Admin: `admin@localhost` / `admin1234` (changed from `admin@user.com` — bare domains like `admin@user` fail email validation; `admin@localhost` is the standard dev convention)
+- JWT token lifetime: 30 days
+- `JWT_SECRET` — permanent per environment; set in `.env` for local, Railway env vars for production
+
+### Post-ship fixes (2026-06-08)
+- **Login state not updating after re-login** — `LoginPage` and `App.tsx` were each calling `useAuth()` independently, creating two separate React states. Fixed by lifting auth state to `App.tsx` only; `LoginPage` now receives `onLogin`/`onRegister` as props. After login, `App.tsx` state flips, `LoginPage` unmounts, full app mounts fresh including `useSessionHistory` which re-fetches sessions with the token already in `sessionStorage`.
+- **Admin email changed** — DB record updated via SQL; `seed_admin.py` constant updated to match.
+
+### What remains for v4.2
+- Per-user session scoping (`user_id` is nullable now; will be enforced after auth is fully rolled out)
+- Public sharing / shareable slugs
+- Railway deployment

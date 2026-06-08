@@ -2,8 +2,20 @@ import { AttachmentFileRef, ConsultPayload, ConsultResult, StreamHandlers } from
 
 const BASE_URL = "http://localhost:8000";
 
+function authHeaders(): Record<string, string> {
+  const token = sessionStorage.getItem("auth_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function apiFetch(url: string, init?: RequestInit): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    headers: { ...authHeaders(), ...(init?.headers as Record<string, string>) },
+  });
+}
+
 export async function consult(payload: ConsultPayload): Promise<ConsultResult> {
-  const response = await fetch(`${BASE_URL}/api/consult`, {
+  const response = await apiFetch(`${BASE_URL}/api/consult`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -23,7 +35,7 @@ export async function listSessions(): Promise<Array<{
   is_followup?: boolean;
   run_title?: string;
 }>> {
-  const response = await fetch(`${BASE_URL}/api/sessions`);
+  const response = await apiFetch(`${BASE_URL}/api/sessions`);
   if (!response.ok) {
     throw new Error("Could not load sessions.");
   }
@@ -39,7 +51,7 @@ export async function listSessions(): Promise<Array<{
 }
 
 export async function getSession(sessionId: string): Promise<ConsultResult> {
-  const response = await fetch(`${BASE_URL}/api/sessions/${sessionId}`);
+  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}`);
   if (!response.ok) {
     throw new Error("Could not load session.");
   }
@@ -55,7 +67,7 @@ function titleFallback(question: string): string {
 
 export async function generateTitle(question: string, role = ""): Promise<string> {
   try {
-    const response = await fetch(`${BASE_URL}/api/title`, {
+    const response = await apiFetch(`${BASE_URL}/api/title`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, role })
@@ -69,14 +81,14 @@ export async function generateTitle(question: string, role = ""): Promise<string
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/api/sessions/${sessionId}`, { method: "DELETE" });
+  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}`, { method: "DELETE" });
   if (!response.ok) {
     throw new Error("Could not delete session.");
   }
 }
 
 export async function consultStream(payload: ConsultPayload, handlers: StreamHandlers): Promise<void> {
-  const response = await fetch(`${BASE_URL}/api/consult-stream`, {
+  const response = await apiFetch(`${BASE_URL}/api/consult-stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -152,6 +164,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     is_followup: toBoolean(raw.is_followup),
     thread_id: String(raw.thread_id ?? raw.session_id ?? ""),
     parent_session_id: String(raw.parent_session_id ?? ""),
+    root_question: String(raw.root_question ?? ""),
     source_prompt: String(raw.source_prompt ?? ""),
     source_final_answer: String(raw.source_final_answer ?? ""),
     followup_instruction: String(raw.followup_instruction ?? ""),

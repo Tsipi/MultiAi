@@ -21,8 +21,11 @@ import { useClarification } from "./hooks/useClarification";
 import { useFollowup } from "./hooks/useFollowup";
 import { useToast } from "./hooks/useToast";
 import { usePanelState } from "./hooks/usePanelState";
+import { useAuth } from "./hooks/useAuth";
+import { LoginPage } from "./pages/LoginPage";
 
 export default function App() {
+  const { isLoggedIn, email, logout, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [dark, toggleDark] = useDarkMode();
@@ -405,6 +408,10 @@ export default function App() {
 
   // --- Render ---
 
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={login} onRegister={register} />;
+  }
+
   if (location.pathname.startsWith("/shared/")) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
@@ -415,7 +422,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} onOpenTemplates={() => setTemplatesOpen(true)} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} onOpenTemplates={() => setTemplatesOpen(true)} userEmail={email} onLogout={logout} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
