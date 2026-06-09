@@ -73,14 +73,6 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates }: Props)
             Contact us
           </Button>
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="border-[#ffffff12] bg-transparent font-display text-xs font-semibold"
-          >
-            Login/Logout
-          </Button>
-          <Button
             variant="ghost"
             size="icon"
             onClick={onToggleDark}

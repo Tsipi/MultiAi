@@ -14,7 +14,6 @@ from backend.consensus.intent import assess_intent
 from backend.consensus.prompts import FINAL_SYNTHESIS, WRITER_REFINEMENT
 from backend.consensus.usage_tracker import start_usage_collection, stop_usage_collection
 from backend.consensus.validator import validate_relevance
-from backend.storage.session_store import save_session
 class ConsensusEngine:
     """Orchestrates writer/critics toward consensus."""
 
@@ -94,7 +93,6 @@ class ConsensusEngine:
             session.clarification_options = assessment.clarification_options or []
             await report(f"Clarification required: {assessment.reason}")
             _apply_usage(session, usage_token)
-            save_session(session, self.cfg.sessions_dir)
             return session
         try:
             await report("Your Writer and both Critics are in session — drafting, challenging, then converging.")
@@ -155,7 +153,6 @@ class ConsensusEngine:
             await report(f"Stopped due to LLM error: {exc}")
             session.final_answer = f"Stopped early due to LLM error: {exc}"
         _apply_usage(session, usage_token)
-        save_session(session, self.cfg.sessions_dir)
         return session
 
 

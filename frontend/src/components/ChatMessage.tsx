@@ -2,16 +2,7 @@ import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
 import { ModelProviderIcon } from "./ModelProviderIcon";
 
-type Props = {
-  speaker: AgentId;
-  name: string;
-  role: string;
-  avatar: string;
-  text: string;
-  modelId?: string;
-  isNew?: boolean;
-  align?: "left" | "right";
-};
+// ─── Name color per seat ──────────────────────────────────────────────────────
 
 const NAME_COLOR: Record<AgentId, string> = {
   writer:  "text-violet-600 dark:text-violet-400",
@@ -25,8 +16,26 @@ const NAME_COLOR: Record<AgentId, string> = {
   system:  "text-muted-foreground",
 };
 
-export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew, align = "left" }: Props) {
+// ─── ChatMessage ──────────────────────────────────────────────────────────────
+
+type Props = {
+  speaker: AgentId;
+  name: string;
+  /** e.g. "Writer · Investment Analyst" */
+  sublabel?: string;
+  avatar: string;
+  text: string;
+  modelId?: string;
+  isNew?: boolean;
+  align?: "left" | "right";
+};
+
+export function ChatMessage({
+  speaker, name, sublabel, avatar, text, modelId,
+  isNew, align = "left",
+}: Props) {
   const right = align === "right";
+
   return (
     <div
       className={cn(
@@ -35,6 +44,7 @@ export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew,
         isNew && "animate-in fade-in slide-in-from-bottom-1 duration-250"
       )}
     >
+      {/* Avatar + model badge */}
       <div className="relative h-9 w-9 shrink-0 mt-0.5">
         <img
           src={avatar}
@@ -51,29 +61,39 @@ export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew,
           </span>
         )}
       </div>
+
+      {/* Content */}
       <div className={cn("min-w-0 flex-1", right && "items-end")}>
-        <div className={cn("flex items-baseline gap-2 flex-wrap mb-0.5", right && "flex-row-reverse")}>
+        {/* Name row */}
+        <div className={cn("flex items-baseline gap-1.5 flex-wrap mb-0", right && "flex-row-reverse")}>
           <span className={cn("text-sm font-semibold leading-none", NAME_COLOR[speaker])}>
             {name}
           </span>
-          <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[0.62rem] font-medium uppercase tracking-wide text-muted-foreground/80">
-            {role}
-          </span>
         </div>
-        <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>{text}</p>
+
+        {/* Seat + role sublabel (like Directors Cut) */}
+        {sublabel && (
+          <p className="m-0 mb-1 text-[0.62rem] text-muted-foreground/55 leading-snug">
+            {sublabel}
+          </p>
+        )}
+
+        {/* Message body */}
+        <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>
+          {text}
+        </p>
       </div>
     </div>
   );
 }
 
+// ─── SkeletonMessage ──────────────────────────────────────────────────────────
+
 type SkeletonMessageProps = { lines?: [string, string?, string?]; delay?: string };
 
 export function SkeletonMessage({ lines = ["w-4/5", "w-3/5"], delay = "0ms" }: SkeletonMessageProps) {
   return (
-    <div
-      className="flex gap-3 px-1 py-1"
-      style={{ animationDelay: delay }}
-    >
+    <div className="flex gap-3 px-1 py-1" style={{ animationDelay: delay }}>
       <div className="h-9 w-9 shrink-0 rounded-full bg-muted/60 animate-pulse mt-0.5" />
       <div className="min-w-0 flex-1 grid gap-1.5 pt-0.5">
         <div className="flex items-baseline gap-2 mb-0.5">
@@ -91,6 +111,8 @@ export function SkeletonMessage({ lines = ["w-4/5", "w-3/5"], delay = "0ms" }: S
     </div>
   );
 }
+
+// ─── SystemMessage ────────────────────────────────────────────────────────────
 
 export function SystemMessage({ text, isNew }: { text: string; isNew?: boolean }) {
   return (

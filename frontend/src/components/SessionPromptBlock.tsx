@@ -10,11 +10,13 @@ import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
 import { SessionViewActions } from "./SessionViewActions";
 import { MarkdownView } from "./MarkdownView";
+import { TemplateNameChip } from "./TemplateNameChip";
 
 type Props = {
   result: ConsultResult;
   team: TeamMember[];
   loading?: boolean;
+  teamTemplateName?: string;
   onResendQuestion: (question: string) => void | Promise<void>;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -35,6 +37,7 @@ export function SessionPromptBlock({
   result,
   team,
   loading,
+  teamTemplateName,
   onResendQuestion,
   onAskFollowup,
   onStartNewSession,
@@ -321,21 +324,26 @@ export function SessionPromptBlock({
       {isSavedAnswer ? (
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
-              Viewing saved answer
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
+                Viewing saved answer
+              </h2>
+              {teamTemplateName && <TemplateNameChip name={teamTemplateName} />}
+            </div>
             <p className="text-sm text-muted-foreground">
               This answer is from a previous run{result.session_id ? <> (session <span className="font-mono">{result.session_id}</span>)</> : ""}.
             </p>
           </div>
-          {onStartNewSession && (
-            <SessionViewActions
-              hasResult={true}
-              onNewQuestion={onStartNewSession}
-              onOpenInsights={onOpenInsights ?? (() => {})}
-              onOpenAdvanced={onOpenAdvanced ?? (() => {})}
-            />
-          )}
+          <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
+            {onStartNewSession && (
+              <SessionViewActions
+                hasResult={true}
+                onNewQuestion={onStartNewSession}
+                onOpenInsights={onOpenInsights ?? (() => {})}
+                onOpenAdvanced={onOpenAdvanced ?? (() => {})}
+              />
+            )}
+          </div>
         </div>
       ) : null}
 

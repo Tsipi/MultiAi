@@ -1,3 +1,5 @@
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,10 +13,13 @@ type Props = {
 export function ModelProviderIcon({ modelId, className, title }: Props) {
   const id = modelId.toLowerCase();
   const cfg = resolveProvider(id);
-  if (cfg.kind === "letter") {
-    return (
+  const tooltip = title ?? modelId;
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+
+  const badge =
+    cfg.kind === "letter" ? (
       <span
-        title={title ?? modelId}
         className={cn(
           "inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] text-[9px] font-bold text-white shadow-sm",
           cfg.bg,
@@ -24,11 +29,41 @@ export function ModelProviderIcon({ modelId, className, title }: Props) {
       >
         {cfg.letter}
       </span>
+    ) : (
+      <span className={cn("inline-flex text-muted-foreground", className)} aria-hidden>
+        <Cpu className="h-[18px] w-[18px]" strokeWidth={2} />
+      </span>
     );
-  }
+
   return (
-    <span title={title ?? modelId} className={cn("inline-flex text-muted-foreground", className)} aria-hidden>
-      <Cpu className="h-[18px] w-[18px]" strokeWidth={2} />
+    <span
+      ref={ref}
+      className="relative inline-flex"
+      aria-hidden
+      onMouseEnter={() => {
+        if (ref.current) {
+          const r = ref.current.getBoundingClientRect();
+          setPos({ x: r.left + r.width / 2, y: r.top });
+        }
+      }}
+      onMouseLeave={() => setPos(null)}
+    >
+      {badge}
+      {pos &&
+        createPortal(
+          <span
+            style={{
+              position: "fixed",
+              left: pos.x,
+              top: pos.y,
+              transform: "translate(-50%, calc(-100% - 6px))",
+            }}
+            className="pointer-events-none z-[9999] whitespace-nowrap rounded px-1.5 py-0.5 text-[0.6rem] leading-tight bg-gray-900 text-gray-50 shadow-lg"
+          >
+            {tooltip}
+          </span>,
+          document.body
+        )}
     </span>
   );
 }

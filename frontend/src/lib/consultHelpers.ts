@@ -1,4 +1,4 @@
-import { TeamMember } from "@/data/experts";
+import { mkMember, TeamMember } from "@/data/experts";
 import { AttachmentInput, ConsultPayload, SessionPreview } from "@/types";
 
 export type CastPerson = { name: string; avatar: string; model: string };
@@ -64,6 +64,13 @@ export function toPreview(row: {
     is_followup: Boolean(row.is_followup),
     run_title: row.run_title || row.question,
   };
+}
+
+/** Rebuild a TeamMember[] from a CastSelection so the form/drawer shows the right people. */
+export function castToTeam(cast: CastSelection, baseRole: string): TeamMember[] {
+  const writer = mkMember(cast.writer.name.toLowerCase(), cast.writer.name, cast.writer.avatar, cast.writer.model, "writer", baseRole);
+  const critics = cast.critics.map((c) => mkMember(c.name.toLowerCase(), c.name, c.avatar, c.model, "critic", baseRole));
+  return [writer, ...critics];
 }
 
 export function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
