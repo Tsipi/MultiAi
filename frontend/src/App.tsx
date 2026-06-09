@@ -26,6 +26,7 @@ import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature
 import { deleteSession, getSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
+import { createDefaultTeam } from "./data/experts";
 import type { ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
@@ -300,6 +301,12 @@ export default function App() {
     startNewQuestion();
   }
 
+  function startFreshNewRun() {
+    setTeam(createDefaultTeam(form.role));
+    setActiveTemplateId(null);
+    startNewQuestion();
+  }
+
   function openAdvancedWithSessionTeam() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
@@ -380,7 +387,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestionWithSessionTeam} onOpenTemplates={() => setTemplatesOpen(true)} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startFreshNewRun} onOpenTemplates={() => setTemplatesOpen(true)} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
