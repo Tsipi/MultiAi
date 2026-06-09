@@ -1,29 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
 import { ModelProviderIcon } from "./ModelProviderIcon";
-
-// ─── Typing animation ─────────────────────────────────────────────────────────
-
-function useTypedText(text: string, enabled: boolean) {
-  const [len, setLen] = useState(enabled ? 0 : text.length);
-  const textRef = useRef(text);
-  textRef.current = text;
-
-  useEffect(() => {
-    if (!enabled) { setLen(text.length); return; }
-    setLen(0);
-    let i = 0;
-    const interval = setInterval(() => {
-      i = Math.min(i + 3, textRef.current.length);
-      setLen(i);
-      if (i >= textRef.current.length) clearInterval(interval);
-    }, 16); // 3 chars per frame ≈ 180 chars/sec
-    return () => clearInterval(interval);
-  }, [text, enabled]);
-
-  return { displayed: text.slice(0, len), done: len >= text.length };
-}
 
 // ─── Name color per seat ──────────────────────────────────────────────────────
 
@@ -46,30 +23,25 @@ type Props = {
   name: string;
   /** e.g. "Writer · Investment Analyst" */
   sublabel?: string;
-  /** e.g. "Claude Sonnet 4.6" */
-  modelLabel?: string;
   avatar: string;
   text: string;
   modelId?: string;
   isNew?: boolean;
-  /** When true the text reveals character-by-character. Only set for the latest live message. */
-  typing?: boolean;
   align?: "left" | "right";
 };
 
 export function ChatMessage({
-  speaker, name, sublabel, modelLabel, avatar, text, modelId,
-  isNew, typing = false, align = "left",
+  speaker, name, sublabel, avatar, text, modelId,
+  isNew, align = "left",
 }: Props) {
   const right = align === "right";
-  const { displayed, done } = useTypedText(text, typing);
 
   return (
     <div
       className={cn(
         "flex gap-3 px-1 py-1 rounded-lg hover:bg-muted/30 transition-colors",
         right && "flex-row-reverse",
-        isNew && !typing && "animate-in fade-in slide-in-from-bottom-1 duration-250"
+        isNew && "animate-in fade-in slide-in-from-bottom-1 duration-250"
       )}
     >
       {/* Avatar + model badge */}
@@ -97,11 +69,6 @@ export function ChatMessage({
           <span className={cn("text-sm font-semibold leading-none", NAME_COLOR[speaker])}>
             {name}
           </span>
-          {modelLabel && (
-            <span className="text-[0.6rem] text-muted-foreground/45 leading-none tabular-nums">
-              {modelLabel}
-            </span>
-          )}
         </div>
 
         {/* Seat + role sublabel (like Directors Cut) */}
@@ -113,10 +80,7 @@ export function ChatMessage({
 
         {/* Message body */}
         <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>
-          {displayed}
-          {typing && !done && (
-            <span className="ml-0.5 inline-block h-[0.8em] w-[2px] translate-y-[0.05em] animate-pulse rounded-sm bg-current opacity-70" />
-          )}
+          {text}
         </p>
       </div>
     </div>

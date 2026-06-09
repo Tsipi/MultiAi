@@ -88,6 +88,22 @@ export default function App() {
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
+
+  // When viewing a saved session with no explicit template, infer it from the cast names
+  const inferredTemplateId = useMemo(() => {
+    if (activeTemplateId) return null; // explicit selection wins
+    const wName = displayResult?.writer_names?.[0];
+    if (!wName) return null;
+    const cNames = displayResult?.critic_names ?? [];
+    return TEAM_TEMPLATES.find((t) => {
+      const w = t.members.find((m) => m.duty === "writer");
+      const cs = t.members.filter((m) => m.duty === "critic");
+      return w?.name === wName && cs.length === cNames.length && cs.every((c, i) => c.name === cNames[i]);
+    })?.id ?? null;
+  }, [activeTemplateId, displayResult]);
+
+  const resolvedTemplateId = activeTemplateId ?? inferredTemplateId;
+
   const runSignature = useMemo(() => buildRunSignature(team, form), [team, form]);
   const followupChangedSinceOpen = Boolean(followupOpen && followupSeed && followupSeed !== runSignature);
 
@@ -279,6 +295,7 @@ export default function App() {
       const baseRole = displayResult?.role || form.role;
       setTeam(castToTeam(panelCast, baseRole));
       if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+      if (resolvedTemplateId) setActiveTemplateId(resolvedTemplateId);
     }
     startNewQuestion();
   }
@@ -306,7 +323,7 @@ export default function App() {
 
   // ─── Panel props ───────────────────────────────────────────────────────────
 
-  const teamTemplateName = TEAM_TEMPLATES.find((t) => t.id === activeTemplateId)?.name;
+  const teamTemplateName = TEAM_TEMPLATES.find((t) => t.id === resolvedTemplateId)?.name;
 
   const panelProps = {
     teamTemplateName,
@@ -363,7 +380,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestion} onOpenTemplates={() => setTemplatesOpen(true)} />
+      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startNewQuestionWithSessionTeam} onOpenTemplates={() => setTemplatesOpen(true)} />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar

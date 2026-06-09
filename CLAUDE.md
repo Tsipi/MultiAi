@@ -211,38 +211,34 @@ Claude updates `### Current Session State` automatically after:
 
 ### Files changed this session
 
-**Director's Cut styling (plan 4.1.1) — previous session**
-- `frontend/src/components/DebateActivityPrimitives.tsx` — added `sublabel` prop; avatar enlarged h-6→h-9; LLM badge enlarged 11→14px; header layout switched to `items-start` + flex-col for name+sublabel
-- `frontend/src/components/ChatPanel.tsx` — round label replaced with violet pill divider showing "Round X of Y"; writer/critic sublabels wired via `FACE_OPTIONS` lookup (expertiseTag); `TeamTemplateChip` helper; `teamTemplateName` prop threaded to PinnedAnswer + SessionPromptBlock + Director's Cut panel; `teamTemplateName` now also threaded to `ChatroomDebateView`
-- `frontend/src/components/PinnedAnswer.tsx` — `teamTemplateName` prop added; chip rendered in header row
-- `frontend/src/components/SessionPromptBlock.tsx` — `teamTemplateName` prop added; chip rendered via `titleEnd` in Question CollapsiblePanel
-- `frontend/src/components/ModelProviderIcon.tsx` — replaced CSS group-hover tooltip with React portal tooltip
-- `frontend/src/components/CommandBarTeamAvatars.tsx` — removed max-width constraint; removed broken gradient overlays; added `scrollbar-hide`
-- `frontend/src/index.css` — added `.scrollbar-hide` utility
+**ChatroomDebateView 7-point polish**
+- `frontend/src/components/RoundDivider.tsx` — rewritten: violet pill "Round X of Y" matching Directors Cut; `maxRounds` prop
+- `frontend/src/components/ScoreBadge.tsx` — rewritten: coloured card (green ▲ improved / amber = flat / red ▼ dropped) with score chip
+- `frontend/src/components/ChatMessage.tsx` — rewritten: `sublabel` prop (seat · professional title), `modelLabel` removed (icon badge tooltip only); typing animation removed; `isNew` fade-in kept
+- `frontend/src/components/ChatroomDebateView.tsx` — rewritten: `resolvePerson()` uses active template for professional role titles (not expertiseTag); `teamTemplateName` threaded to `ChannelHeader`; `maxRounds` to `RoundDivider`
+- `frontend/src/components/ChannelHeader.tsx` — rewritten: `Users` icon (violet); shows `teamTemplateName` directly (e.g. "Tourist Planner Team") + correct Lucide icon per template; fallback "Team Debate"
+- `frontend/src/components/ChatPanel.tsx` — sublabels in Directors Cut now use template professional titles from role string (before " — "); removed `TemplateNameChip` from Director's Cut `titleEnd`; removed `FACE_OPTIONS`/`TemplateNameChip` imports; added `TEAM_TEMPLATES`
 
-**User / auth UX — previous session**
-- `frontend/src/components/ConsensusRunsSidebar.tsx` — user footer (avatar + email + logout + settings placeholder) in sidebar
-- `frontend/src/components/TopNav.tsx` — userEmail/logout removed (moved to sidebar)
-- `frontend/src/App.tsx` — rewritten with section banners; 509→290 lines; `useConsultRun` hook; `castToTeam`/`applyRunResult` helpers
-- `frontend/src/hooks/useConsultRun.ts` — **new file**: owns loading/activity/isResuming state + consultStream execution
-- `frontend/src/lib/consultHelpers.ts` — added `castToTeam()`
+**Template chip — placement decisions**
+- `frontend/src/components/TemplateNameChip.tsx` — **new file**: shared chip with icon + name; portal tooltip matching New Run page (template description + member list with Writer/Critic badges + professional titles)
+- **Chip appears ONLY** in the "Viewing Saved Answer" banner (right side, next to action buttons) — removed from Question `titleEnd`, Final Answer header, Director's Cut `titleEnd`
+- `frontend/src/components/SessionPromptBlock.tsx` — chip moved to right of banner; removed from Question `titleEnd`
+- `frontend/src/components/PinnedAnswer.tsx` — chip removed; `TemplateNameChip` import removed
 
-**Component barrel index files (new) — previous session**
-- `frontend/src/components/layout/index.ts`, `compose/index.ts`, `debate/index.ts`, `session/index.ts`, `team/index.ts`, `drawers/index.ts`, `primitives/index.ts`
+**Template context restoration (saved sessions)**
+- `frontend/src/App.tsx` — added `inferredTemplateId`: matches saved session's `writer_names`/`critic_names` against `TEAM_TEMPLATES` to recover template when `activeTemplateId` is null. `resolvedTemplateId = activeTemplateId ?? inferredTemplateId` used everywhere
+- `startNewQuestionWithSessionTeam` — now also calls `setActiveTemplateId(resolvedTemplateId)` so the template badge and team carry over to "+ New Question" and follow-up runs
+- TopNav `onNewRun` changed from `startNewQuestion` → `startNewQuestionWithSessionTeam` so "+ New Run" preserves the current session's team instead of defaulting to John/Christy/Mark
 
-**ChatroomDebateView 7-point polish — this session**
-- `frontend/src/components/RoundDivider.tsx` — rewritten: violet pill "Round X of Y" (matches Directors Cut); accepts `maxRounds` prop
-- `frontend/src/components/ScoreBadge.tsx` — rewritten: coloured card (green ▲ / amber = / red ▼) with score chip and quoted summary
-- `frontend/src/components/ChatMessage.tsx` — rewritten: added `sublabel` prop (seat · expertise, matching Directors Cut), `modelLabel` (e.g. "Claude Sonnet 4.6") shown next to name, `typing` prop with `useTypedText` hook (reveals 3 chars/16ms + blinking cursor)
-- `frontend/src/components/ChatroomDebateView.tsx` — rewritten: `resolvePerson()` looks up `FACE_OPTIONS` for expertiseTag and `MODEL_OPTIONS` for label; `lastAgentMsgId` computed to target typing animation at newest live message; `teamTemplateName` prop added and threaded to `ChannelHeader`; `maxRounds` threaded to `RoundDivider`
-- `frontend/src/components/ChannelHeader.tsx` — rewritten: `#` → `Users` icon (violet); channel name slugified from `teamTemplateName` or "team-debate"; title uses `font-display font-bold text-violet-700`; `teamTemplateName` prop added
-
-### Completed this session
-- All 7 ChatroomDebateView improvements: violet round pills, coloured score cards, seat sublabels, expertise tags, model labels, typewriter animation, renamed + restyled channel header
-- All previous session work: Director's Cut styling, auth UX, App.tsx refactor, barrel index files
+### Key decisions made this session
+- **`expertiseTag` on `FACE_OPTIONS` is deprecated for sublabels**: professional titles are now extracted from the template `role` string (split on `" — "`) rather than using the fun-fact tags ("Dawn Wave Chaser", "Midnight Hoops Hero" etc.). `FACE_OPTIONS.expertiseTag` still exists in the data but is no longer read by any component.
+- **Single chip location**: template chip appears only once per view (top-right of "Viewing Saved Answer" banner). Showing it in 3–4 panel headers simultaneously was visually noisy.
+- **Template inference from cast**: when loading a saved session, template is inferred by exact writer+critic name match against TEAM_TEMPLATES. If a member was customised (non-template team), no chip/title shows — correct behaviour.
+- **`+ New Run` preserves team**: always carries over the current session's team/template. No "reset to default team" on nav — users change team intentionally via the CommandBar editor.
 
 ### Next steps / open items
 - **v4.2**: Public shared run page (`/shared/:slug`) — stub exists, needs backend `GET /api/sessions/{id}/share` and share link UI
 - **v4.3**: Settings drawer — account (change password), app defaults (models, rounds, threshold), appearance. Gear icon placeholder already in sidebar footer
 - **Component file moves**: Barrel index files created but physical files still flat in `components/`. A follow-up session can move files into subdirectories (update ~50 import paths) — TypeScript will catch any misses
 - **Mobile logout**: Logout is in sidebar footer; on mobile the sidebar collapses — confirm reachability or add logout to mobile-specific nav
+- **`expertiseTag` cleanup**: `FACE_OPTIONS.expertiseTag` is now unused. Can either repurpose (e.g. a fun one-liner shown on hover in member cards) or remove the field entirely in a future pass.

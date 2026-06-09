@@ -14,8 +14,9 @@ import { ChatroomDebateView } from "./ChatroomDebateView";
 import { PinnedAnswer } from "./PinnedAnswer";
 import { SessionPromptBlock } from "./SessionPromptBlock";
 import { SessionPromptDownloads } from "./SessionPromptDownloads";
-import { FACE_OPTIONS, type TeamMember } from "@/data/experts";
+import { type TeamMember } from "@/data/experts";
 import { MODEL_OPTIONS } from "@/data/models";
+import { TEAM_TEMPLATES } from "@/data/templates";
 
 type Person = { name: string; avatar: string; model: string };
 
@@ -271,12 +272,9 @@ export function ChatPanel(props: Props) {
         {/* 5. Director's Cut: full answer/critique text per round */}
         {showFullDiscussion && result.full_discussion.length > 0 && (
           <CollapsiblePanel
-            title="Director's Cut: Full Debate"
+            title="Full Debate"
             defaultOpen
             titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
-            titleEnd={props.teamTemplateName ? (
-              <TeamTemplateChip name={props.teamTemplateName} />
-            ) : undefined}
           >
             <div className="grid gap-0">
               {result.full_discussion.map((r, idx) => {
@@ -287,10 +285,13 @@ export function ChatPanel(props: Props) {
                 );
                 const critiques = splitCritiques(String(r.critique ?? ""), criticCount);
                 const writerName = result.writer_names?.[0] || cast.writer.name;
-                const writerFace = FACE_OPTIONS.find(f => f.name === cast.writer.name);
-                const writerSublabel = writerFace?.expertiseTag
-                  ? `Writer · ${writerFace.expertiseTag}`
-                  : "Writer";
+                // Use professional title from the active template; fall back gracefully
+                const activeTemplate = props.teamTemplateName
+                  ? TEAM_TEMPLATES.find((t) => t.name === props.teamTemplateName)
+                  : null;
+                const writerTemplMember = activeTemplate?.members.find((m) => m.name === writerName);
+                const writerTitle = writerTemplMember ? writerTemplMember.role.split(" — ")[0].split(" - ")[0].trim() : "";
+                const writerSublabel = writerTitle ? `Writer · ${writerTitle}` : "Writer";
                 return (
                   <article
                     key={idx}
@@ -327,10 +328,10 @@ export function ChatPanel(props: Props) {
                           ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
                         const label = storedName || castMember?.name || modelLabel || crit.label;
                         const avatar = castMember?.avatar ?? DEBATE_SYSTEM_AVATAR;
-                        const criticFace = FACE_OPTIONS.find(f => f.name === (castMember?.name ?? storedName ?? ""));
-                        const criticSublabel = criticFace?.expertiseTag
-                          ? `Critic ${ci + 1} · ${criticFace.expertiseTag}`
-                          : `Critic ${ci + 1}`;
+                        const criticMemberName = castMember?.name ?? storedName ?? "";
+                        const criticTemplMember = activeTemplate?.members.find((m) => m.name === criticMemberName);
+                        const criticTitle = criticTemplMember ? criticTemplMember.role.split(" — ")[0].split(" - ")[0].trim() : "";
+                        const criticSublabel = criticTitle ? `Critic ${ci + 1} · ${criticTitle}` : `Critic ${ci + 1}`;
                         // Director's Cut: writer right, critics alternate left / right
                         const criticAlign: "left" | "right" = ci % 2 === 0 ? "left" : "right";
                         return (
@@ -411,10 +412,3 @@ function splitCritiques(
   }));
 }
 
-function TeamTemplateChip({ name }: { name: string }) {
-  return (
-    <span className="rounded-full bg-violet-100/70 dark:bg-violet-900/30 border border-violet-300/40 dark:border-violet-700/40 px-2 py-0.5 text-[0.6rem] font-medium text-violet-600 dark:text-violet-400 whitespace-nowrap">
-      {name}
-    </span>
-  );
-}

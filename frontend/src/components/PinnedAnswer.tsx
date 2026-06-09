@@ -1,8 +1,22 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChevronDown, BookOpen, Briefcase, Code2, Layers, Megaphone, Network, Plane, Rocket, TrendingUp, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkdownView } from "./MarkdownView";
 import { FinalAnswerHeaderRoster, type RosterFace } from "./FinalAnswerAvatarStrip";
+import { TEAM_TEMPLATES } from "@/data/templates";
+
+const TEMPLATE_ICONS: Record<string, LucideIcon> = {
+  "programmer":         Code2,
+  "research-writing":   BookOpen,
+  "tourist-planner":    Plane,
+  "ux-product":         Layers,
+  "startup-gtm":        Rocket,
+  "marketing-campaign": Megaphone,
+  "investment-debate":  TrendingUp,
+  "resume-career":      Briefcase,
+  "tech-architecture":  Network,
+};
 
 type Props = {
   finalAnswer: string;
@@ -18,7 +32,12 @@ export function PinnedAnswer({
   teamTemplateName,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const rosterRef = useRef<HTMLDivElement>(null);
   const faces = cast ? [cast.writer, ...cast.critics] : [];
+
+  const template = teamTemplateName ? TEAM_TEMPLATES.find((t) => t.name === teamTemplateName) : null;
+  const TemplateIcon: LucideIcon = template ? (TEMPLATE_ICONS[template.id] ?? Users) : Users;
 
   return (
     <div
@@ -40,15 +59,20 @@ export function PinnedAnswer({
             <span className="rounded-full px-2 py-0.5 text-[0.65rem] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               Score {score.toFixed(1)} / 10
             </span>
-            {teamTemplateName && (
-              <span className="rounded-full bg-violet-100/70 dark:bg-violet-900/30 border border-violet-300/40 dark:border-violet-700/40 px-2 py-0.5 text-[0.6rem] font-medium text-violet-600 dark:text-violet-400 whitespace-nowrap">
-                {teamTemplateName}
-              </span>
-            )}
           </div>
 
           {faces.length > 0 && (
-            <div className="absolute right-11 top-1/2 z-10 -translate-y-1/2">
+            <div
+              ref={rosterRef}
+              className="absolute right-11 top-1/2 z-10 -translate-y-1/2"
+              onMouseEnter={() => {
+                if (rosterRef.current && template) {
+                  const r = rosterRef.current.getBoundingClientRect();
+                  setTooltipPos({ x: r.left + r.width / 2, y: r.top });
+                }
+              }}
+              onMouseLeave={() => setTooltipPos(null)}
+            >
               <FinalAnswerHeaderRoster faces={faces} className="pointer-events-auto" />
             </div>
           )}
@@ -86,6 +110,31 @@ export function PinnedAnswer({
         </div>
       )}
       </div>
+
+      {tooltipPos && template &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              left: tooltipPos.x,
+              top: tooltipPos.y,
+              transform: "translate(-50%, calc(-100% - 10px))",
+            }}
+            className={cn(
+              "pointer-events-none z-[9999] rounded-xl px-3 py-2 shadow-xl",
+              "border border-gray-200 bg-white",
+              "dark:border-white/10 dark:bg-gray-900 dark:shadow-2xl"
+            )}
+          >
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <TemplateIcon className="h-3 w-3 shrink-0 text-violet-500 dark:text-violet-400" strokeWidth={2} />
+              <span className="text-[0.7rem] font-semibold text-gray-800 dark:text-white">
+                {template.name}
+              </span>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

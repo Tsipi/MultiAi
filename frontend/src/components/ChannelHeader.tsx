@@ -1,7 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { Users } from "lucide-react";
+import {
+  BookOpen, Briefcase, Code2, Layers, Megaphone,
+  Network, Plane, Rocket, TrendingUp, Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TeamMember } from "@/data/experts";
+import { TEAM_TEMPLATES } from "@/data/templates";
+
+const TEMPLATE_ICONS: Record<string, LucideIcon> = {
+  "programmer":         Code2,
+  "research-writing":   BookOpen,
+  "tourist-planner":    Plane,
+  "ux-product":         Layers,
+  "startup-gtm":        Rocket,
+  "marketing-campaign": Megaphone,
+  "investment-debate":  TrendingUp,
+  "resume-career":      Briefcase,
+  "tech-architecture":  Network,
+};
 
 type Props = {
   currentRound: number;
@@ -44,19 +61,21 @@ export function ChannelHeader({
   const improved = score !== null && previousScore !== null && score > previousScore;
   const dropped  = score !== null && previousScore !== null && score < previousScore;
 
-  // Channel name: use template name (slugified) or fallback
-  const channelSlug = teamTemplateName
-    ? teamTemplateName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
-    : "team-debate";
+  // Resolve icon and display name from template
+  const template = teamTemplateName
+    ? TEAM_TEMPLATES.find((t) => t.name === teamTemplateName)
+    : null;
+  const Icon: LucideIcon = template ? (TEMPLATE_ICONS[template.id] ?? Users) : Users;
+  const displayName = teamTemplateName ?? "Team Debate";
 
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10 rounded-t-xl">
 
       {/* Channel name */}
       <div className="flex items-center gap-2 min-w-0">
-        <Users className="h-3.5 w-3.5 shrink-0 text-violet-500 dark:text-violet-400" strokeWidth={2} />
+        <Icon className="h-3.5 w-3.5 shrink-0 text-violet-500 dark:text-violet-400" strokeWidth={2} />
         <span className="font-display text-sm font-bold text-violet-700 dark:text-violet-400 truncate tracking-tight">
-          {channelSlug}
+          {displayName}
         </span>
         {loading && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-600 dark:text-emerald-400">

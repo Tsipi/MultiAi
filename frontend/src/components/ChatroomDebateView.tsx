@@ -3,8 +3,7 @@ import { cn } from "@/lib/utils";
 import { parseActivityMessages, extractScoreFromMessage } from "@/lib/parseActivityMessages";
 import type { AgentId } from "@/lib/parseActivityMessages";
 import type { TeamMember } from "@/data/experts";
-import { FACE_OPTIONS } from "@/data/experts";
-import { MODEL_OPTIONS } from "@/data/models";
+import { TEAM_TEMPLATES } from "@/data/templates";
 import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChannelHeader } from "./ChannelHeader";
 import { RoundDivider } from "./RoundDivider";
@@ -32,19 +31,13 @@ function speakerAlign(_speaker: AgentId): "left" | "right" {
   return "left";
 }
 
-function resolvedLabel(model: string | undefined): string {
-  if (!model) return "";
-  const opt = MODEL_OPTIONS.find((o) => o.id === model);
-  if (opt) return opt.label;
-  return model.includes("/") ? model.split("/").pop()! : model;
-}
-
 function resolvePerson(
   speaker: AgentId,
-  cast: Cast
-): { name: string; avatar: string; role: string; model?: string; sublabel: string; modelLabel: string } {
+  cast: Cast,
+  activeTemplate: ReturnType<typeof TEAM_TEMPLATES.find> | null
+): { name: string; avatar: string; role: string; model?: string; sublabel: string } {
   if (speaker === "scorer") {
-    return { name: "Scorer", avatar: DEBATE_SYSTEM_AVATAR, role: "Bench", sublabel: "Scorer", modelLabel: "" };
+    return { name: "Scorer", avatar: DEBATE_SYSTEM_AVATAR, role: "Bench", sublabel: "Scorer" };
   }
 
   let base: { name: string; avatar: string; role: string; model?: string };
@@ -64,12 +57,11 @@ function resolvePerson(
     }
   }
 
-  const face = FACE_OPTIONS.find((f) => f.name === base.name);
-  const expertiseTag = face?.expertiseTag;
-  const sublabel = expertiseTag ? `${base.role} · ${expertiseTag}` : base.role;
-  const modelLabel = resolvedLabel(base.model);
+  const templateMember = activeTemplate?.members.find((m) => m.name === base.name);
+  const roleTitle = templateMember ? templateMember.role.split(" — ")[0].split(" - ")[0].trim() : "";
+  const sublabel = roleTitle ? `${base.role} · ${roleTitle}` : base.role;
 
-  return { ...base, sublabel, modelLabel };
+  return { ...base, sublabel };
 }
 
 function resolveTypingPerson(speaker: AgentId | null, cast: Cast): Person | null {
@@ -128,14 +120,10 @@ export function ChatroomDebateView({
     [byRound]
   );
 
-  // ID of the last real agent message — gets the typing animation when loading
-  const lastAgentMsgId = useMemo(() => {
-    for (let i = state.messages.length - 1; i >= 0; i--) {
-      const msg = state.messages[i];
-      if (msg.type !== "score_announcement" && msg.type !== "system") return msg.id;
-    }
-    return -1;
-  }, [state.messages]);
+  const activeTemplate = useMemo(
+    () => teamTemplateName ? TEAM_TEMPLATES.find((t) => t.name === teamTemplateName) ?? null : null,
+    [teamTemplateName]
+  );
 
   const typingPerson = loading ? resolveTypingPerson(state.activeSpeaker, cast) : null;
   const newThreshold = Math.max(0, state.messages.length - 3);
@@ -211,20 +199,17 @@ export function ChatroomDebateView({
                     if (msg.type === "system") {
                       return <SystemMessage key={msg.id} text={msg.text} isNew={isNew} />;
                     }
-                    const person = resolvePerson(msg.speaker, cast);
-                    const isTyping = loading && msg.id === lastAgentMsgId;
+                    const person = resolvePerson(msg.speaker, cast, activeTemplate);
                     return (
                       <ChatMessage
                         key={msg.id}
                         speaker={msg.speaker}
                         name={person.name}
                         sublabel={person.sublabel}
-                        modelLabel={person.modelLabel}
                         avatar={person.avatar}
                         text={msg.text}
                         modelId={person.model}
                         isNew={isNew}
-                        typing={isTyping}
                         align={speakerAlign(msg.speaker)}
                       />
                     );
