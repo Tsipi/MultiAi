@@ -1,1 +1,13 @@
--r backend/requirements.txt
+fastapi
+uvicorn
+python-dotenv
+httpx
+pydantic
+pytest
+pytest-mock
+pypdf
+sqlalchemy[asyncio]
+alembic
+asyncpg
+fastapi-users[sqlalchemy]
+bcrypt
