@@ -33,15 +33,17 @@ from backend.storage.db_session_store import save_session as save_session_db
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 app = FastAPI(title="Multi-LLM Consensus API")
+
+CFG = AppConfig()
+_origins = [o.strip() for o in CFG.allowed_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials=_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-CFG = AppConfig()
 ENGINE = ConsensusEngine(CFG)
 
 # ── Auth routers (register, login, logout, /users/me) ────────────────────────

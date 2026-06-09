@@ -207,38 +207,40 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v4.1` — last session 2026-06-09
+### Branch: `PLAN_v4.1` — last updated 2026-06-09 — v4.1.1 COMPLETE
 
-### Files changed this session
+### Files changed this session (not yet committed)
 
-**ChatroomDebateView 7-point polish**
-- `frontend/src/components/RoundDivider.tsx` — rewritten: violet pill "Round X of Y" matching Directors Cut; `maxRounds` prop
-- `frontend/src/components/ScoreBadge.tsx` — rewritten: coloured card (green ▲ improved / amber = flat / red ▼ dropped) with score chip
-- `frontend/src/components/ChatMessage.tsx` — rewritten: `sublabel` prop (seat · professional title), `modelLabel` removed (icon badge tooltip only); typing animation removed; `isNew` fade-in kept
-- `frontend/src/components/ChatroomDebateView.tsx` — rewritten: `resolvePerson()` uses active template for professional role titles (not expertiseTag); `teamTemplateName` threaded to `ChannelHeader`; `maxRounds` to `RoundDivider`
-- `frontend/src/components/ChannelHeader.tsx` — rewritten: `Users` icon (violet); shows `teamTemplateName` directly (e.g. "Tourist Planner Team") + correct Lucide icon per template; fallback "Team Debate"
-- `frontend/src/components/ChatPanel.tsx` — sublabels in Directors Cut now use template professional titles from role string (before " — "); removed `TemplateNameChip` from Director's Cut `titleEnd`; removed `FACE_OPTIONS`/`TemplateNameChip` imports; added `TEAM_TEMPLATES`
+**Task 2 — CORS hardening**
+- `backend/config.py` — added `allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")`
+- `backend/api/app.py` — replaced hardcoded `["*"]` with `_origins`; `allow_credentials=_origins != ["*"]`
 
-**Template chip — placement decisions**
-- `frontend/src/components/TemplateNameChip.tsx` — **new file**: shared chip with icon + name; portal tooltip matching New Run page (template description + member list with Writer/Critic badges + professional titles)
-- **Chip appears ONLY** in the "Viewing Saved Answer" banner (right side, next to action buttons) — removed from Question `titleEnd`, Final Answer header, Director's Cut `titleEnd`
-- `frontend/src/components/SessionPromptBlock.tsx` — chip moved to right of banner; removed from Question `titleEnd`
-- `frontend/src/components/PinnedAnswer.tsx` — chip removed; `TemplateNameChip` import removed
+**Task 3 — Component folder reorganisation (`tsc --noEmit` + `npm run build` pass)**
+- All 57 `.tsx` files moved into 7 subdirs via `git mv`: `layout/`, `compose/`, `debate/`, `session/`, `drawers/`, `primitives/`, `team/`
+- All 7 barrel `index.ts` files updated to `./ComponentName` paths
+- `drawers/index.ts` — added `TemplateDrawer`; `team/index.ts` — added `TemplateNameChip`, removed `TemplateDrawer`
+- `frontend/src/App.tsx` and `frontend/src/hooks/usePanelState.ts` — import paths updated
 
-**Template context restoration (saved sessions)**
-- `frontend/src/App.tsx` — added `inferredTemplateId`: matches saved session's `writer_names`/`critic_names` against `TEAM_TEMPLATES` to recover template when `activeTemplateId` is null. `resolvedTemplateId = activeTemplateId ?? inferredTemplateId` used everywhere
-- `startNewQuestionWithSessionTeam` — now also calls `setActiveTemplateId(resolvedTemplateId)` so the template badge and team carry over to "+ New Question" and follow-up runs
-- TopNav `onNewRun` changed from `startNewQuestion` → `startNewQuestionWithSessionTeam` so "+ New Run" preserves the current session's team instead of defaulting to John/Christy/Mark
+**Task 5 — `expertiseTag` removed**
+- `frontend/src/data/experts.ts` — removed from `TeamMember` type, `FaceOption` type, all 16 `FACE_OPTIONS` entries, `mkMember` function
+- `frontend/src/lib/consultHelpers.ts` — removed from `buildRunSignature`
+- `frontend/src/components/team/AgentStripCards.tsx` — removed subtitle line
+- `frontend/src/components/team/TeamMemberCard.tsx` — removed from face-change spread
+- `frontend/src/components/team/TeamMemberEditForm.tsx` — removed from face-change spread
 
-### Key decisions made this session
-- **`expertiseTag` on `FACE_OPTIONS` is deprecated for sublabels**: professional titles are now extracted from the template `role` string (split on `" — "`) rather than using the fun-fact tags ("Dawn Wave Chaser", "Midnight Hoops Hero" etc.). `FACE_OPTIONS.expertiseTag` still exists in the data but is no longer read by any component.
-- **Single chip location**: template chip appears only once per view (top-right of "Viewing Saved Answer" banner). Showing it in 3–4 panel headers simultaneously was visually noisy.
-- **Template inference from cast**: when loading a saved session, template is inferred by exact writer+critic name match against TEAM_TEMPLATES. If a member was customised (non-template team), no chip/title shows — correct behaviour.
-- **`+ New Run` preserves team**: always carries over the current session's team/template. No "reset to default team" on nav — users change team intentionally via the CommandBar editor.
+**Task 4 — Mobile logout verified accessible**
+- Sidebar panel (with `admin@localhost` + logout →) is visible on mobile; no TopNav change needed
+- Mobile layout restyling noted as v4.3 in `PLAN.md`
 
-### Next steps / open items
-- **v4.2**: Public shared run page (`/shared/:slug`) — stub exists, needs backend `GET /api/sessions/{id}/share` and share link UI
-- **v4.3**: Settings drawer — account (change password), app defaults (models, rounds, threshold), appearance. Gear icon placeholder already in sidebar footer
-- **Component file moves**: Barrel index files created but physical files still flat in `components/`. A follow-up session can move files into subdirectories (update ~50 import paths) — TypeScript will catch any misses
-- **Mobile logout**: Logout is in sidebar footer; on mobile the sidebar collapses — confirm reachability or add logout to mobile-specific nav
-- **`expertiseTag` cleanup**: `FACE_OPTIONS.expertiseTag` is now unused. Can either repurpose (e.g. a fun one-liner shown on hover in member cards) or remove the field entirely in a future pass.
+**PLAN.md updated**
+- v4.1.1 marked Complete; v4.2 set as Active; v4.3 (Mobile UX) added
+
+### Key decisions
+- Task 1 already done: `sessions.py` uses `current_active_user` — stricter than plan asked for, no change needed.
+- `allow_credentials=_origins != ["*"]` auto-resolves: credentials disabled in local dev, enabled in prod when `ALLOWED_ORIGINS` is set in Railway.
+- `expertiseTag` was shown in `AgentStripCards` but the field added no value over `funFact` — removed entirely.
+
+### Next steps
+- Commit all v4.1.1 changes
+- Set `ALLOWED_ORIGINS=https://your-frontend.up.railway.app` in Railway backend Variables once frontend URL is known
+- Start v4.2 (Public sharing)

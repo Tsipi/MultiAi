@@ -67,4 +67,8 @@ Planned future deployment improvements include:
 
 The intended deployment target is Railway.
 
-Frontend and backend services are expected to run as separate deployments communicating through HTTP APIs.
+Frontend and backend services run as separate deployments communicating through HTTP APIs. PostgreSQL is provided as a Railway managed plugin — `DATABASE_URL` is injected automatically.
+
+For the full step-by-step deployment guide see [railway-deployment.md](railway-deployment.md).
+
+For an explanation of the backend libraries (SQLAlchemy, Alembic, FastAPI-Users, bcrypt) see [backend-stack.md](backend-stack.md).

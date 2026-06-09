@@ -74,6 +74,6 @@ export function castToTeam(cast: CastSelection, baseRole: string): TeamMember[] 
 }
 
 export function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
-  const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}:${m.expertiseTag}`).join("|");
+  const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}`).join("|");
   return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}`;
 }
