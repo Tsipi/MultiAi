@@ -87,6 +87,8 @@ By default Railway thinks the whole repo is the Python app. We need to tell it t
 2. Click the **"Settings"** tab
 3. Find **"Root Directory"** — leave it as `/` (empty = root, which is correct)
 
+**Why this works:** The repo root contains a `requirements.txt` file (one line: `-r backend/requirements.txt`) so that Railpack's auto-detector can find Python dependencies. The actual packages live in `backend/requirements.txt`; the root file just points to it. You never need to move files.
+
 ### 3c — Set the build command
 
 The build command runs once when Railway installs your app. It installs all Python dependencies.
@@ -94,10 +96,12 @@ The build command runs once when Railway installs your app. It installs all Pyth
 1. Still in **Settings**, find **"Build Command"**
 2. Enter exactly:
    ```
-   pip install uv && uv pip install -r backend/requirements.txt
+   pip install uv && uv pip install --system -r backend/requirements.txt
    ```
    - `pip install uv` installs the `uv` package manager (it is faster than plain pip)
-   - `uv pip install -r backend/requirements.txt` installs all your Python libraries (FastAPI, SQLAlchemy, etc.)
+   - `uv pip install --system -r backend/requirements.txt` installs all your Python libraries into the system Python (Railway requires `--system` since there is no virtualenv in the build container)
+
+   > **Tip:** If Railway auto-detected the build and already filled in a build command, replace it with the line above.
 
 ### 3d — Set the start command
 
@@ -296,6 +300,10 @@ From now on: `git push origin main` → Railway rebuilds and redeploys automatic
 ---
 
 ## Common problems and fixes
+
+### Railpack says "no requirements.txt found" / detects the wrong language
+**What it means:** Railpack (Railway's build detector) scanned the repo root and did not find a Python project.  
+**Fix:** Make sure `requirements.txt` exists at the repo root (one line: `-r backend/requirements.txt`). Commit and push it — it is already present in this repo. Then trigger a new deploy. The root file is just a pointer; all actual packages stay in `backend/requirements.txt`.
 
 ### "asyncpg.exceptions.InvalidCatalogNameError"
 **What it means:** The backend cannot connect to the database.  
