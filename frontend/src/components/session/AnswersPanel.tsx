@@ -1,10 +1,10 @@
 import { forwardRef, useEffect, useState } from "react";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { ChatPanel } from "./ChatPanel";
-import { ChatroomDebateView } from "./ChatroomDebateView";
+import { ChatPanel } from "../debate/ChatPanel";
+import { ChatroomDebateView } from "../debate/ChatroomDebateView";
 import { cn } from "@/lib/utils";
 import { panelHeadingClass } from "@/lib/panelStyles";
-import { ConsultResult, SessionPreview } from "../types";
+import { ConsultResult, SessionPreview } from "../../types";
 import { type CastSelection } from "@/lib/consultHelpers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

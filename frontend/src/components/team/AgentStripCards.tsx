@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import { TeamMember } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import type { AgentSlot } from "@/lib/detectActiveAgent";
-import { ModelProviderIcon } from "./ModelProviderIcon";
+import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
 import { Button } from "@/components/ui/button";
 
 export const BENCH_META = {

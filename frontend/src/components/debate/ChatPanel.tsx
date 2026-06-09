@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { ConsultResult } from "../types";
+import { ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
-import { ClarificationBox } from "./ClarificationBox";
-import { downloadMarkdown, downloadPdf, exportDateLocal } from "../services/exporter";
-import { generateTitle } from "../services/api";
-import { CollapsiblePanel } from "./CollapsiblePanel";
+import { ClarificationBox } from "../session/ClarificationBox";
+import { downloadMarkdown, downloadPdf, exportDateLocal } from "../../services/exporter";
+import { generateTitle } from "../../services/api";
+import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 import { promptTextForExport } from "@/lib/promptDisplay";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DebateChatBubble, DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChatroomDebateView } from "./ChatroomDebateView";
-import { PinnedAnswer } from "./PinnedAnswer";
-import { SessionPromptBlock } from "./SessionPromptBlock";
-import { SessionPromptDownloads } from "./SessionPromptDownloads";
+import { PinnedAnswer } from "../session/PinnedAnswer";
+import { SessionPromptBlock } from "../session/SessionPromptBlock";
+import { SessionPromptDownloads } from "../session/SessionPromptDownloads";
 import { type TeamMember } from "@/data/experts";
 import { MODEL_OPTIONS } from "@/data/models";
 import { TEAM_TEMPLATES } from "@/data/templates";

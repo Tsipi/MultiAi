@@ -1,5 +1,5 @@
-import { ConsultPayload } from "../types";
-import { TeamMember } from "../data/experts";
+import { ConsultPayload } from "../../types";
+import { TeamMember } from "../../data/experts";
 import { CollapsiblePanel } from "./CollapsiblePanel";
 import { DebateSettings } from "./DebateSettings";
 import { InfoTip } from "./InfoTip";

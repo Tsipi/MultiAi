@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { ModelProviderIcon } from "./ModelProviderIcon";
+import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
 
 export type RosterFace = { name: string; avatar: string; model: string };
 

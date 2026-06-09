@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
-import { ModelProviderIcon } from "./ModelProviderIcon";
+import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
 
 // ─── Name color per seat ──────────────────────────────────────────────────────
 

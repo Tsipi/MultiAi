@@ -36,3 +36,4 @@ class AppConfig:
     attachment_text_chars: int = 8000
     attachment_image_limit: int = 3
     attachment_pdf_page_limit: int = 12
+    allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")

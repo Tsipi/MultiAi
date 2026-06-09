@@ -1,4 +1,4 @@
-import AgentStudioAssistant from "../../avatars/AgentStudioAssistant.png";
+import AgentStudioAssistant from "../../../avatars/AgentStudioAssistant.png";
 import { Button } from "@/components/ui/button";
 
 type Props = {

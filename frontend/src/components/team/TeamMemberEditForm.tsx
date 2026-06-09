@@ -3,7 +3,7 @@ import { FACE_OPTIONS, TeamMember } from "@/data/experts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { FieldLabelWithTip } from "./FieldLabelWithTip";
+import { FieldLabelWithTip } from "../primitives/FieldLabelWithTip";
 import { TeamMemberDutyModelRow } from "./TeamMemberDutyModelRow";
 
 type Props = {

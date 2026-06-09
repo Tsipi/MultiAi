@@ -1,8 +1,8 @@
-import { MODEL_OPTIONS } from "../data/models";
-import { TeamMember } from "../data/experts";
+import { MODEL_OPTIONS } from "../../data/models";
+import { TeamMember } from "../../data/experts";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { FieldLabelWithTip } from "./FieldLabelWithTip";
-import { ModelProviderIcon } from "./ModelProviderIcon";
+import { FieldLabelWithTip } from "../primitives/FieldLabelWithTip";
+import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
 
 type Props = { member: TeamMember; onUpdate: (next: TeamMember) => void; compact?: boolean };
 

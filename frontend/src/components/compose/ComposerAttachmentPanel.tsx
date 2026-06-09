@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import { ClipboardPaste, Paperclip } from "lucide-react";
-import { AttachmentInput } from "../types";
-import { readAttachments, readClipboardFromBrowser, readClipboardItems, supportedUploadTypes } from "../services/attachments";
-import { InfoTip } from "./InfoTip";
-import { AttachmentChipList } from "./AttachmentChipList";
+import { AttachmentInput } from "../../types";
+import { readAttachments, readClipboardFromBrowser, readClipboardItems, supportedUploadTypes } from "../../services/attachments";
+import { InfoTip } from "../primitives/InfoTip";
+import { AttachmentChipList } from "../primitives/AttachmentChipList";
 import { QuickPasteZone } from "./QuickPasteZone";
-import { ActionGhostButton } from "./ActionGhostButton";
+import { ActionGhostButton } from "../primitives/ActionGhostButton";
 
 type Props = {
   attachments: AttachmentInput[];

@@ -1,4 +1,4 @@
-import { AttachmentChipList } from "./AttachmentChipList";
+import { AttachmentChipList } from "../primitives/AttachmentChipList";
 import type { AttachmentInput } from "@/types";
 
 type Props = {

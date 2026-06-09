@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, BookOpen, Briefcase, Code2, Layers, Megaphone, Network, Plane, Rocket, TrendingUp, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MarkdownView } from "./MarkdownView";
+import { MarkdownView } from "../primitives/MarkdownView";
 import { FinalAnswerHeaderRoster, type RosterFace } from "./FinalAnswerAvatarStrip";
 import { TEAM_TEMPLATES } from "@/data/templates";
 

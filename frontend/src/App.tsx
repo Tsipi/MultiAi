@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // ─── Components ───────────────────────────────────────────────────────────────
-import { ConsensusRunsSidebar } from "./components/ConsensusRunsSidebar";
-import { AdvancedDrawer } from "./components/AdvancedDrawer";
-import { InsightsDrawer } from "./components/InsightsDrawer";
-import { CommandBar } from "./components/CommandBar";
-import { TopNav } from "./components/TopNav";
-import { ChatPanel } from "./components/ChatPanel";
-import { TemplateDrawer } from "./components/TemplateDrawer";
+import { ConsensusRunsSidebar } from "./components/layout/ConsensusRunsSidebar";
+import { AdvancedDrawer } from "./components/drawers/AdvancedDrawer";
+import { InsightsDrawer } from "./components/drawers/InsightsDrawer";
+import { CommandBar } from "./components/compose/CommandBar";
+import { TopNav } from "./components/layout/TopNav";
+import { ChatPanel } from "./components/debate/ChatPanel";
+import { TemplateDrawer } from "./components/drawers/TemplateDrawer";
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 import { useDarkMode } from "./hooks/useDarkMode";

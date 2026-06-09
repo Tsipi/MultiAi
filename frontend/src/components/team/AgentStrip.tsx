@@ -4,7 +4,7 @@ import { TeamMember } from "@/data/experts";
 import { cn } from "@/lib/utils";
 import { detectActiveAgent, type AgentSlot } from "@/lib/detectActiveAgent";
 import { appendDefaultTeamMember } from "@/lib/teamRoster";
-import { V2SectionHeader } from "./V2SectionHeader";
+import { V2SectionHeader } from "../primitives/V2SectionHeader";
 import { BenchCard, StripCard } from "./AgentStripCards";
 import { TeamMemberEditModal } from "./TeamMemberEditModal";
 

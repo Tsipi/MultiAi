@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import type { ConsultResult } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { SessionInsightsTableView } from "./SessionInsightsTableView";
+import { SessionInsightsTableView } from "../session/SessionInsightsTableView";
 
 type Props = {
   open: boolean;

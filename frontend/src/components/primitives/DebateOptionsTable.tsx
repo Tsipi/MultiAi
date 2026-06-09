@@ -1,4 +1,4 @@
-import { ROUND_OPTIONS, SCORE_OPTIONS } from "../data/models";
+import { ROUND_OPTIONS, SCORE_OPTIONS } from "../../data/models";
 import {
   Select,
   SelectContent,

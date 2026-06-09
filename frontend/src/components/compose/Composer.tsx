@@ -1,9 +1,9 @@
-import { AttachmentInput, ConsultPayload } from "../types";
+import { AttachmentInput, ConsultPayload } from "../../types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CollapsiblePanel } from "./CollapsiblePanel";
-import { FieldLabelWithTip } from "./FieldLabelWithTip";
-import { InfoTip } from "./InfoTip";
+import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
+import { FieldLabelWithTip } from "../primitives/FieldLabelWithTip";
+import { InfoTip } from "../primitives/InfoTip";
 import { ComposerAttachmentPanel } from "./ComposerAttachmentPanel";
 
 type Props = {

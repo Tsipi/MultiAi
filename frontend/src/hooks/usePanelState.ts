@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RUNS_SIDEBAR_STORAGE_KEY } from "@/components/ConsensusRunsSidebar";
+import { RUNS_SIDEBAR_STORAGE_KEY } from "@/components/layout/ConsensusRunsSidebar";
 
 export function usePanelState() {
   const [advancedOpen, setAdvancedOpen] = useState(false);

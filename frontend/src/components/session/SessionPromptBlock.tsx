@@ -5,12 +5,12 @@ import { attachmentListForDisplay, promptTextForDisplay, stripAttachmentBlock } 
 import { sharedLeadExpertRole } from "@/lib/teamSharedRole";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
-import { CollapsiblePanel } from "./CollapsiblePanel";
+import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
 import { SessionViewActions } from "./SessionViewActions";
-import { MarkdownView } from "./MarkdownView";
-import { TemplateNameChip } from "./TemplateNameChip";
+import { MarkdownView } from "../primitives/MarkdownView";
+import { TemplateNameChip } from "../team/TemplateNameChip";
 
 type Props = {
   result: ConsultResult;

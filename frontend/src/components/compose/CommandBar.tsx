@@ -8,7 +8,7 @@ import type { TeamMember } from "@/data/experts";
 import type { TeamTemplate } from "@/data/templates";
 import { CommandContextFooter } from "./CommandContextFooter";
 import { CommandBarHeaderRow } from "./CommandBarHeaderRow";
-import { TemplateShortcutRow } from "./TemplateShortcutRow";
+import { TemplateShortcutRow } from "../team/TemplateShortcutRow";
 
 type Props = {
   value: string;

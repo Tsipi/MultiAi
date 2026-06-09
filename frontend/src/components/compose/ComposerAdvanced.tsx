@@ -1,9 +1,9 @@
 import type { AttachmentInput, ConsultPayload } from "@/types";
 import { Input } from "@/components/ui/input";
-import { FieldLabelWithTip } from "./FieldLabelWithTip";
+import { FieldLabelWithTip } from "../primitives/FieldLabelWithTip";
 import { ComposerAttachmentPanel } from "./ComposerAttachmentPanel";
-import { InfoTip } from "./InfoTip";
-import { V2SectionHeader } from "./V2SectionHeader";
+import { InfoTip } from "../primitives/InfoTip";
+import { V2SectionHeader } from "../primitives/V2SectionHeader";
 
 type Props = {
   value: ConsultPayload;

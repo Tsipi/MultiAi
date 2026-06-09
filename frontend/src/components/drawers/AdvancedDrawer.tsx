@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import type { AttachmentInput, ConsultPayload } from "@/types";
 import { TeamMember } from "@/data/experts";
 import { cn } from "@/lib/utils";
-import { ComposerAdvanced } from "./ComposerAdvanced";
-import { DebateSettings } from "./DebateSettings";
+import { ComposerAdvanced } from "../compose/ComposerAdvanced";
+import { DebateSettings } from "../primitives/DebateSettings";
 import { Button } from "@/components/ui/button";
 
 type Props = {

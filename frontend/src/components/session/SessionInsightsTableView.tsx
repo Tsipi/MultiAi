@@ -1,6 +1,6 @@
 import type { ConsultResult } from "@/types";
 import { fmtTokens } from "@/lib/sessionInsightsFormatters";
-import { ModelUsageTable } from "./ModelUsageTable";
+import { ModelUsageTable } from "../primitives/ModelUsageTable";
 
 type ModelRow = {
   model: string;

@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SessionPreview } from "../types";
+import { SessionPreview } from "../../types";
 
 type Props = {
   sessions: SessionPreview[];

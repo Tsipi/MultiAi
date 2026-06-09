@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CollapsiblePanel } from "./CollapsiblePanel";
+import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 
 type Props = {
   open: boolean;

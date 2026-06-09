@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { LogOut, PanelLeftClose, PanelRight, Settings } from "lucide-react";
-import { AnswersPanel, type AnswersPanelProps } from "./AnswersPanel";
+import { AnswersPanel, type AnswersPanelProps } from "../session/AnswersPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

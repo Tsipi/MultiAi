@@ -7,7 +7,7 @@ import { TEAM_TEMPLATES } from "@/data/templates";
 import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChannelHeader } from "./ChannelHeader";
 import { RoundDivider } from "./RoundDivider";
-import { ScoreBadge } from "./ScoreBadge";
+import { ScoreBadge } from "../primitives/ScoreBadge";
 import { ChatMessage, SystemMessage, SkeletonMessage } from "./ChatMessage";
 import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";

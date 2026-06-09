@@ -1,4 +1,4 @@
-import type { AttachmentFileRef } from "../types";
+import type { AttachmentFileRef } from "../../types";
 
 type Props = {
   files: AttachmentFileRef[];

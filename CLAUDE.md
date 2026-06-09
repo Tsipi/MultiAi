@@ -207,39 +207,35 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v4.1` — last session 2026-06-09
+### Branch: `PLAN_v4.1` — last updated 2026-06-09
 
-### Files changed this session
+### Files changed this session (v4.1.1 tasks — not yet committed)
 
-**Previous session — ChatroomDebateView 7-point polish (committed: `4f5c45e`)**
-- `frontend/src/components/RoundDivider.tsx` — violet pill "Round X of Y"; `maxRounds` prop
-- `frontend/src/components/ScoreBadge.tsx` — coloured card (green ▲ / amber = / red ▼) with score chip
-- `frontend/src/components/ChatMessage.tsx` — `sublabel` prop (seat · professional title); typing animation removed
-- `frontend/src/components/ChatroomDebateView.tsx` — `resolvePerson()` uses template role titles; `teamTemplateName` threaded to `ChannelHeader`
-- `frontend/src/components/ChannelHeader.tsx` — `Users` icon (violet); shows `teamTemplateName` + Lucide icon per template
-- `frontend/src/components/ChatPanel.tsx` — sublabels use template professional titles; removed `TemplateNameChip` from Director's Cut
-- `frontend/src/components/TemplateNameChip.tsx` — **new file**: chip appears only in "Viewing Saved Answer" banner
-- `frontend/src/components/SessionPromptBlock.tsx` — chip moved to right of banner
-- `frontend/src/components/PinnedAnswer.tsx` — chip removed
-- `frontend/src/App.tsx` — `inferredTemplateId` + `resolvedTemplateId`; `+ New Run` preserves current session team
+**Task 2 — CORS hardening (done)**
+- `backend/config.py` — added `allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")`
+- `backend/api/app.py` — replaced hardcoded `["*"]` with `_origins` list; `allow_credentials=_origins != ["*"]` (auto-resolves local vs prod)
 
-**This session — docs + planning (committed `8811177`, not yet implemented)**
-- `docs/engineering/railway-deployment.md` — **new file**: beginner-friendly step-by-step Railway deploy guide (services, PostgreSQL plugin, env vars, Alembic on start, common fixes, update workflow)
-- `docs/engineering/backend-stack.md` — **new file**: plain-language explainer of SQLAlchemy, Alembic, FastAPI-Users, bcrypt and their role in this app
-- `docs/plan_archive/PLAN_v4.1.1.md` — **new file**: 6-task cleanup plan (session scoping, CORS hardening with full explanation, component folder reorganisation, mobile logout, expertiseTag cleanup, PLAN sync)
-- `PLAN.md` — updated: v4.0 and v4.1 marked Complete; v4.1.1 set as Active version
-- `docs/engineering/index.md` — added rows for `railway-deployment.md` and `backend-stack.md`
-- `docs/engineering/deployment.md` — added links to both new guides
+**Task 1 — Session scoping (verified already done)**
+- `backend/api/sessions.py` already uses `current_active_user` and passes `user_id` to all store functions — no changes needed
+
+**Task 3 — Component folder reorganisation (done — `tsc --noEmit` + `npm run build` pass)**
+- All 57 `.tsx` files moved from flat `components/` into 7 subdirs: `layout/`, `compose/`, `debate/`, `session/`, `drawers/`, `primitives/`, `team/`
+- All 7 barrel `index.ts` files updated: `../ComponentName` → `./ComponentName`
+- `drawers/index.ts` — added `TemplateDrawer` (moved from `team/index.ts`)
+- `team/index.ts` — added `TemplateNameChip`; removed `TemplateDrawer`
+- `debate/index.ts` — added `ScoreBadge` re-export from `../primitives/ScoreBadge`
+- `frontend/src/App.tsx` — 7 import paths updated to new subdir paths
+- `frontend/src/hooks/usePanelState.ts` — updated `RUNS_SIDEBAR_STORAGE_KEY` import path
+- All cross-subdir `./ComponentName` imports updated to `../subdir/ComponentName`
+- All `../types`, `../data/*`, `../services/*` relative imports updated to `../../*`
 
 ### Key decisions made this session
-- **CORS bug identified**: `allow_origins=["*"]` + `allow_credentials=True` is invalid per the CORS spec — browsers reject credentialed requests with wildcard origin. Fix: `allow_credentials=_origins != ["*"]` so it auto-resolves in both local and production without extra config.
-- **`ALLOWED_ORIGINS` is not a secret**: it is the frontend URL, not a key. Set in Railway dashboard only — no `.env` entry needed. `.gitignore` already excludes `.env` and `.env.*`.
-- **Task 6 (PLAN.md sync) already complete**: done in-session, not a future task.
-- **Component folder structure gap**: barrel indexes were created in v4.1 but all ~55 `.tsx` files are still flat. Full file mapping documented in PLAN_v4.1.1.md Task 3.
+- **CORS bug fixed**: `allow_origins=["*"]` + `allow_credentials=True` is invalid per the CORS spec. `allow_credentials=_origins != ["*"]` auto-resolves in both local and prod.
+- **Task 1 already done**: `sessions.py` uses `current_active_user` (stricter and safer than `optional_current_user`).
+- **`expertiseTag` IS used**: `AgentStripCards.tsx:96` renders it as a fun subtitle. Plan description was wrong. Awaiting user decision: remove (Option A) or keep (Option B / skip Task 5).
+- **Task 6 complete**: done in prior session.
 
-### Next steps — v4.1.1 tasks (priority order)
-1. **Task 2 — CORS hardening** (`backend/config.py` + `backend/api/app.py`) — fixes a live bug
-2. **Task 1 — Session scoping** (`backend/api/sessions.py`) — `Depends(optional_current_user)` on GET/DELETE routes
-3. **Task 3 — Component folder move** — `git mv` ~55 files into 7 subdirs; update barrel indexes; `tsc --noEmit` to verify
-4. **Task 4 — Mobile logout** — verify sidebar drawer reachability on narrow viewport
-5. **Task 5 — Remove `expertiseTag`** — delete from `FaceOption` type and all `FACE_OPTIONS` entries
+### Next steps — v4.1.1 remaining
+1. **Task 5 — `expertiseTag`**: awaiting user decision (keep or remove)
+2. **Task 4 — Mobile logout**: verify sidebar drawer opens on narrow viewport; add TopNav logout if unreachable
+3. **Commit all changes** once Tasks 4 and 5 are resolved

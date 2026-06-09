@@ -1,7 +1,7 @@
-import { ConsultPayload } from "../types";
-import { TeamMember } from "../data/experts";
+import { ConsultPayload } from "../../types";
+import { TeamMember } from "../../data/experts";
 import { appendDefaultTeamMember } from "@/lib/teamRoster";
-import { TeamMemberCard } from "./TeamMemberCard";
+import { TeamMemberCard } from "../team/TeamMemberCard";
 import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
 import { SlidersHorizontal, UserPlus } from "lucide-react";

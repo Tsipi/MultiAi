@@ -1,11 +1,11 @@
-import { FACE_OPTIONS, TeamMember } from "../data/experts";
+import { FACE_OPTIONS, TeamMember } from "../../data/experts";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FieldLabelWithTip } from "./FieldLabelWithTip";
+import { FieldLabelWithTip } from "../primitives/FieldLabelWithTip";
 import { TeamMemberDutyModelRow } from "./TeamMemberDutyModelRow";
-import { ActionGhostButton } from "./ActionGhostButton";
+import { ActionGhostButton } from "../primitives/ActionGhostButton";
 
 type Props = {
   member: TeamMember;

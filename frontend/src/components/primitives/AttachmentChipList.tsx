@@ -1,4 +1,4 @@
-import { AttachmentInput } from "../types";
+import { AttachmentInput } from "../../types";
 
 type Props = { attachments: AttachmentInput[]; onRemove: (idx: number) => void };
 

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Copy, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ModelProviderIcon } from "./ModelProviderIcon";
+import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
 
 export type DebatePerson = { name: string; avatar: string };
 
