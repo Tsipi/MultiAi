@@ -92,9 +92,6 @@ export function StripCard({
             {member.duty === "writer" ? "Writer" : "Critic"} · {shortModel}
           </p>
         </div>
-        <p className="text-[11px] text-muted-foreground/90 truncate m-0 mt-0.5">
-          {member.expertiseTag || "What they are great at"}
-        </p>
         {showRoleOverride && (
           <p className="text-[10px] text-violet-700 dark:text-violet-300 truncate m-0 mt-0.5">
             Focus override: {trimmedRole}

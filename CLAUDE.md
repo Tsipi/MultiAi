@@ -207,35 +207,40 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v4.1` — last updated 2026-06-09
+### Branch: `PLAN_v4.1` — last updated 2026-06-09 — v4.1.1 COMPLETE
 
-### Files changed this session (v4.1.1 tasks — not yet committed)
+### Files changed this session (not yet committed)
 
-**Task 2 — CORS hardening (done)**
+**Task 2 — CORS hardening**
 - `backend/config.py` — added `allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")`
-- `backend/api/app.py` — replaced hardcoded `["*"]` with `_origins` list; `allow_credentials=_origins != ["*"]` (auto-resolves local vs prod)
+- `backend/api/app.py` — replaced hardcoded `["*"]` with `_origins`; `allow_credentials=_origins != ["*"]`
 
-**Task 1 — Session scoping (verified already done)**
-- `backend/api/sessions.py` already uses `current_active_user` and passes `user_id` to all store functions — no changes needed
+**Task 3 — Component folder reorganisation (`tsc --noEmit` + `npm run build` pass)**
+- All 57 `.tsx` files moved into 7 subdirs via `git mv`: `layout/`, `compose/`, `debate/`, `session/`, `drawers/`, `primitives/`, `team/`
+- All 7 barrel `index.ts` files updated to `./ComponentName` paths
+- `drawers/index.ts` — added `TemplateDrawer`; `team/index.ts` — added `TemplateNameChip`, removed `TemplateDrawer`
+- `frontend/src/App.tsx` and `frontend/src/hooks/usePanelState.ts` — import paths updated
 
-**Task 3 — Component folder reorganisation (done — `tsc --noEmit` + `npm run build` pass)**
-- All 57 `.tsx` files moved from flat `components/` into 7 subdirs: `layout/`, `compose/`, `debate/`, `session/`, `drawers/`, `primitives/`, `team/`
-- All 7 barrel `index.ts` files updated: `../ComponentName` → `./ComponentName`
-- `drawers/index.ts` — added `TemplateDrawer` (moved from `team/index.ts`)
-- `team/index.ts` — added `TemplateNameChip`; removed `TemplateDrawer`
-- `debate/index.ts` — added `ScoreBadge` re-export from `../primitives/ScoreBadge`
-- `frontend/src/App.tsx` — 7 import paths updated to new subdir paths
-- `frontend/src/hooks/usePanelState.ts` — updated `RUNS_SIDEBAR_STORAGE_KEY` import path
-- All cross-subdir `./ComponentName` imports updated to `../subdir/ComponentName`
-- All `../types`, `../data/*`, `../services/*` relative imports updated to `../../*`
+**Task 5 — `expertiseTag` removed**
+- `frontend/src/data/experts.ts` — removed from `TeamMember` type, `FaceOption` type, all 16 `FACE_OPTIONS` entries, `mkMember` function
+- `frontend/src/lib/consultHelpers.ts` — removed from `buildRunSignature`
+- `frontend/src/components/team/AgentStripCards.tsx` — removed subtitle line
+- `frontend/src/components/team/TeamMemberCard.tsx` — removed from face-change spread
+- `frontend/src/components/team/TeamMemberEditForm.tsx` — removed from face-change spread
 
-### Key decisions made this session
-- **CORS bug fixed**: `allow_origins=["*"]` + `allow_credentials=True` is invalid per the CORS spec. `allow_credentials=_origins != ["*"]` auto-resolves in both local and prod.
-- **Task 1 already done**: `sessions.py` uses `current_active_user` (stricter and safer than `optional_current_user`).
-- **`expertiseTag` IS used**: `AgentStripCards.tsx:96` renders it as a fun subtitle. Plan description was wrong. Awaiting user decision: remove (Option A) or keep (Option B / skip Task 5).
-- **Task 6 complete**: done in prior session.
+**Task 4 — Mobile logout verified accessible**
+- Sidebar panel (with `admin@localhost` + logout →) is visible on mobile; no TopNav change needed
+- Mobile layout restyling noted as v4.3 in `PLAN.md`
 
-### Next steps — v4.1.1 remaining
-1. **Task 5 — `expertiseTag`**: awaiting user decision (keep or remove)
-2. **Task 4 — Mobile logout**: verify sidebar drawer opens on narrow viewport; add TopNav logout if unreachable
-3. **Commit all changes** once Tasks 4 and 5 are resolved
+**PLAN.md updated**
+- v4.1.1 marked Complete; v4.2 set as Active; v4.3 (Mobile UX) added
+
+### Key decisions
+- Task 1 already done: `sessions.py` uses `current_active_user` — stricter than plan asked for, no change needed.
+- `allow_credentials=_origins != ["*"]` auto-resolves: credentials disabled in local dev, enabled in prod when `ALLOWED_ORIGINS` is set in Railway.
+- `expertiseTag` was shown in `AgentStripCards` but the field added no value over `funFact` — removed entirely.
+
+### Next steps
+- Commit all v4.1.1 changes
+- Set `ALLOWED_ORIGINS=https://your-frontend.up.railway.app` in Railway backend Variables once frontend URL is known
+- Start v4.2 (Public sharing)

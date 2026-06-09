@@ -11,8 +11,9 @@
 |---------|-------|-------|--------|
 | v4.0 | UI Foundation | React Router v6 + Team Templates (frontend only) | **Complete** |
 | v4.1 | Persistence & Auth | PostgreSQL, Alembic, fastapi-users, login UI | **Complete** |
-| **v4.1.1** | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | **Active** |
-| v4.2 | Sharing & Export | Public run pages, full debate export | Not started |
+| v4.1.1 | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | **Complete** |
+| **v4.2** | Sharing & Export | Public run pages, full debate export | **Active** |
+| v4.3 | Mobile UX | Responsive layout overhaul — TopNav, sidebar, compose bar on narrow viewports | Not started |
 | v5.0 | Next.js + SEO | Migration, template pages, SSR/SSG | Not started |
 
 ---

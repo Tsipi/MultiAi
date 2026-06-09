@@ -19,7 +19,7 @@ export function TeamMemberEditForm({ draft, setDraft, leadRole, onCancel, onSave
   const chooseMember = (name: string) => {
     const face = FACE_OPTIONS.find((f) => f.name === name);
     if (!face) return;
-    setDraft((d) => (d ? { ...d, name: face.name, avatar: face.avatar, expertiseTag: face.expertiseTag } : d));
+    setDraft((d) => (d ? { ...d, name: face.name, avatar: face.avatar } : d));
   };
 
   return (

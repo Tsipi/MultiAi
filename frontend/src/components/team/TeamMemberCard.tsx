@@ -19,7 +19,7 @@ export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove
   const chooseMember = (name: string) => {
     const face = FACE_OPTIONS.find((f) => f.name === name);
     if (!face) return;
-    onUpdate({ ...member, name: face.name, avatar: face.avatar, expertiseTag: face.expertiseTag });
+    onUpdate({ ...member, name: face.name, avatar: face.avatar });
   };
 
   return (
