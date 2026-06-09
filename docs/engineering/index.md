@@ -9,7 +9,9 @@ This folder contains internal engineering and implementation documentation for M
 | architecture.md | High-Level Architecture and system flow |
 | project-structure.md | High-level folders and component structure |
 | dev-setup.md | Local development setup instructions |
-| deployment.md | Deployment notes and infrastructure direction |
+| deployment.md | Deployment overview and infrastructure direction |
+| railway-deployment.md | Step-by-step guide to deploying on Railway with PostgreSQL |
+| backend-stack.md | What SQLAlchemy, Alembic, FastAPI-Users, and bcrypt are and why they're used |
 | conventions.md | Coding and project conventions |
 | intent-assessment.md | Intent clarification and ambiguity handling |
 | ux-notes.md | UX and interface implementation notes |
