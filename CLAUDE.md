@@ -196,3 +196,63 @@ SUMMARIZER_MODEL=deepseek/deepseek-chat-v3.2
 
 v3 (Slack-style chatroom debate view) — **complete**. All deliverables shipped.  
 Active plan: see `PLAN.md` at the repo root.
+
+---
+## Session discipline
+
+Claude updates `### Current Session State` automatically after:
+- finishing any file edit
+- being asked "what have you done?"
+- any /compact is about to run
+
+## Current Session State
+
+### Branch: `PLAN_v4.1` — last session 2026-06-08
+
+### Files changed this session
+
+**Director's Cut styling (plan 4.1.1)**
+- `frontend/src/components/DebateActivityPrimitives.tsx` — added `sublabel` prop; avatar enlarged h-6→h-9; LLM badge enlarged 11→14px; header layout switched to `items-start` + flex-col for name+sublabel
+- `frontend/src/components/ChatPanel.tsx` — round label replaced with violet pill divider showing "Round X of Y"; writer/critic sublabels wired via `FACE_OPTIONS` lookup (expertiseTag); `TeamTemplateChip` helper; `teamTemplateName` prop threaded to PinnedAnswer + SessionPromptBlock + Director's Cut panel
+- `frontend/src/components/PinnedAnswer.tsx` — `teamTemplateName` prop added; chip rendered in header row
+- `frontend/src/components/SessionPromptBlock.tsx` — `teamTemplateName` prop added; chip rendered via `titleEnd` in Question CollapsiblePanel
+- `frontend/src/components/ModelProviderIcon.tsx` — replaced CSS group-hover tooltip with React portal tooltip (`createPortal` → `document.body`, `getBoundingClientRect` for position); tooltip uses `bg-gray-900 text-gray-50`
+- `frontend/src/components/CommandBarTeamAvatars.tsx` — removed `max-w-[220px]` constraint; removed broken gradient fade overlays; added `scrollbar-hide` class
+- `frontend/src/index.css` — added `.scrollbar-hide` utility (cross-browser hidden scrollbar)
+
+**User / auth UX**
+- `frontend/src/components/ConsensusRunsSidebar.tsx` — added `userEmail` + `onLogout` props; user footer (initial avatar + email + settings placeholder + logout) at bottom of expanded panel; logout icon in collapsed strip
+- `frontend/src/components/TopNav.tsx` — removed `userEmail` display and logout button (moved to sidebar); removed unused `LogOut` import and props
+- `frontend/src/App.tsx` — TopNav no longer receives userEmail/onLogout; ConsensusRunsSidebar now receives both; `TEAM_TEMPLATES` import added; `teamTemplateName` resolved and added to panelProps
+
+**Settings placeholder**
+- `frontend/src/components/ConsensusRunsSidebar.tsx` — disabled gear icon added in sidebar footer with tooltip "Settings — coming in v4.3"
+
+**App.tsx refactor**
+- `frontend/src/App.tsx` — rewritten with `// ─── Section ───` banners; 509 → 290 lines; uses `useConsultRun` hook and `castToTeam`/`applyRunResult` helpers; `adjustFollowupTeam` inline removed (replaced by lambda)
+- `frontend/src/hooks/useConsultRun.ts` — **new file**: owns `loading / activity / isResuming` state + `consultStream` execution; exports `useConsultRun(callbacks)` and `applyRunResult()`
+- `frontend/src/lib/consultHelpers.ts` — added `castToTeam()` and imported `mkMember`
+
+**Component barrel index files (new)**
+- `frontend/src/components/layout/index.ts`
+- `frontend/src/components/compose/index.ts`
+- `frontend/src/components/debate/index.ts`
+- `frontend/src/components/session/index.ts`
+- `frontend/src/components/team/index.ts`
+- `frontend/src/components/drawers/index.ts`
+- `frontend/src/components/primitives/index.ts`
+
+### Completed this session
+- Director's Cut styling: larger avatars, bigger LLM badges, role/seat sublabels, round pill dividers
+- LLM badge tooltip (portal-based, works inside overflow containers)
+- Scrollbar hidden on avatar strip; removed broken gradient overlays
+- Team template name chip shown in Question / Final Answer / Director's Cut panels
+- Username + logout moved from TopNav to sidebar footer
+- Settings gear icon placeholder in sidebar footer (disabled, tooltip "coming in v4.3")
+- App.tsx cleaned and sectioned; `useConsultRun` hook extracted
+
+### Next steps / open items
+- **v4.2**: Public shared run page (`/shared/:slug`) — stub exists, needs backend `GET /api/sessions/{id}/share` and share link UI
+- **v4.3**: Settings drawer — account (change password), app defaults (models, rounds, threshold), appearance. Gear icon placeholder already in sidebar footer
+- **Component file moves**: Barrel index files created but physical files still flat in `components/`. A follow-up session can move files into subdirectories (update ~50 import paths) — TypeScript will catch any misses
+- **Mobile logout**: Logout is in sidebar footer; on mobile the sidebar collapses — confirm reachability or add logout to mobile-specific nav

@@ -11,6 +11,7 @@ export type DebateSpeakerId = string;
 export function DebateChatBubble({
   id,
   label,
+  sublabel,
   avatar,
   modelId,
   tag,
@@ -20,6 +21,7 @@ export function DebateChatBubble({
 }: {
   id: DebateSpeakerId;
   label: string;
+  sublabel?: string;
   avatar: string;
   modelId?: string;
   tag?: string;
@@ -52,20 +54,23 @@ export function DebateChatBubble({
           `bubble-${id}`
         )}
       >
-        <div className="mb-1 flex items-center gap-1.5">
-          <div className="relative h-6 w-6 shrink-0">
+        <div className="mb-1 flex items-start gap-2">
+          <div className="relative h-9 w-9 shrink-0">
             <img
-              className="h-6 w-6 rounded-full border border-border object-cover"
+              className="h-9 w-9 rounded-full border border-border object-cover"
               src={avatar}
               alt={label}
             />
             {modelId && modelId !== "system" ? (
               <span className="absolute -bottom-0.5 -right-0.5 leading-none" aria-hidden>
-                <ModelProviderIcon modelId={modelId} title={modelId} className="!h-[11px] !w-[11px] !rounded-[3px] !text-[6px]" />
+                <ModelProviderIcon modelId={modelId} title={modelId} className="!h-[14px] !w-[14px] !rounded-[3px] !text-[7px]" />
               </span>
             ) : null}
           </div>
-          <span className="text-[0.75rem] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
+          <div className="flex flex-col justify-center gap-0 pt-1">
+            <span className="text-[0.75rem] font-bold uppercase tracking-wide text-muted-foreground leading-tight">{label}</span>
+            {sublabel && <span className="text-[0.64rem] text-muted-foreground/60 leading-snug">{sublabel}</span>}
+          </div>
         </div>
         <div className="disc-prose text-sm leading-snug">{children}</div>
         {rawText ? (

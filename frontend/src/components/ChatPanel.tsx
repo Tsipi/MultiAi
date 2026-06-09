@@ -14,7 +14,7 @@ import { ChatroomDebateView } from "./ChatroomDebateView";
 import { PinnedAnswer } from "./PinnedAnswer";
 import { SessionPromptBlock } from "./SessionPromptBlock";
 import { SessionPromptDownloads } from "./SessionPromptDownloads";
-import type { TeamMember } from "@/data/experts";
+import { FACE_OPTIONS, type TeamMember } from "@/data/experts";
 import { MODEL_OPTIONS } from "@/data/models";
 
 type Person = { name: string; avatar: string; model: string };
@@ -51,6 +51,7 @@ type Props = {
   onStartFresh: () => void;
   followupError: string;
   onResendQuestion: (question: string) => void | Promise<void>;
+  teamTemplateName?: string;
   isSavedAnswer?: boolean;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -181,6 +182,7 @@ export function ChatPanel(props: Props) {
           team={team}
           loading={loading}
           onResendQuestion={props.onResendQuestion}
+          teamTemplateName={props.teamTemplateName}
           isSavedAnswer={props.isSavedAnswer}
           onAskFollowup={props.onAskFollowup}
           onStartNewSession={props.onStartNewSession}
@@ -210,6 +212,7 @@ export function ChatPanel(props: Props) {
               finalAnswer={result.final_answer}
               score={result.final_score}
               cast={cast}
+              teamTemplateName={props.teamTemplateName}
             />
           </div>
         </div>
@@ -276,6 +279,9 @@ export function ChatPanel(props: Props) {
             title="Director's Cut: Full Debate"
             defaultOpen
             titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
+            titleEnd={props.teamTemplateName ? (
+              <TeamTemplateChip name={props.teamTemplateName} />
+            ) : undefined}
           >
             <div className="grid gap-0">
               {result.full_discussion.map((r, idx) => {
@@ -286,19 +292,32 @@ export function ChatPanel(props: Props) {
                 );
                 const critiques = splitCritiques(String(r.critique ?? ""), criticCount);
                 const writerName = result.writer_names?.[0] || cast.writer.name;
+                const writerFace = FACE_OPTIONS.find(f => f.name === cast.writer.name);
+                const writerSublabel = writerFace?.expertiseTag
+                  ? `Writer · ${writerFace.expertiseTag}`
+                  : "Writer";
                 return (
                   <article
                     key={idx}
-                    className={cn(
-                      "grid gap-2",
-                      idx > 0 && "mt-2.5 pt-2.5 border-t border-border/25"
-                    )}
+                    className={cn("grid gap-2", idx > 0 && "mt-3")}
                   >
-                    <strong className="text-sm">Round {roundLabel}</strong>
+                    <div className="flex items-center gap-3 select-none">
+                      <div className="flex-1 border-t border-border/25" />
+                      <div className="inline-flex items-baseline gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-50/70 dark:bg-violet-950/40 border border-violet-200/50 dark:border-violet-700/40">
+                        <span className="text-[0.68rem] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 whitespace-nowrap">
+                          Round {roundLabel}
+                        </span>
+                        <span className="text-[0.62rem] text-muted-foreground/55 whitespace-nowrap">
+                          of {result.full_discussion.length}
+                        </span>
+                      </div>
+                      <div className="flex-1 border-t border-border/25" />
+                    </div>
                     <ol className="list-none m-0 grid gap-2 p-0">
                       <DebateChatBubble
                         id="writer"
                         label={writerName}
+                        sublabel={writerSublabel}
                         avatar={cast.writer.avatar}
                         modelId={cast.writer.model}
                         rawText={String(r.answer ?? "")}
@@ -313,6 +332,10 @@ export function ChatPanel(props: Props) {
                           ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
                         const label = storedName || castMember?.name || modelLabel || crit.label;
                         const avatar = castMember?.avatar ?? DEBATE_SYSTEM_AVATAR;
+                        const criticFace = FACE_OPTIONS.find(f => f.name === (castMember?.name ?? storedName ?? ""));
+                        const criticSublabel = criticFace?.expertiseTag
+                          ? `Critic ${ci + 1} · ${criticFace.expertiseTag}`
+                          : `Critic ${ci + 1}`;
                         // Director's Cut: writer right, critics alternate left / right
                         const criticAlign: "left" | "right" = ci % 2 === 0 ? "left" : "right";
                         return (
@@ -320,6 +343,7 @@ export function ChatPanel(props: Props) {
                             key={ci}
                             id={`critic${ci + 1}`}
                             label={label}
+                            sublabel={criticSublabel}
                             avatar={avatar}
                             modelId={castMember?.model}
                             rawText={crit.text}
@@ -390,4 +414,12 @@ function splitCritiques(
     label: `Critic ${i + 1}`,
     text: "",
   }));
+}
+
+function TeamTemplateChip({ name }: { name: string }) {
+  return (
+    <span className="rounded-full bg-violet-100/70 dark:bg-violet-900/30 border border-violet-300/40 dark:border-violet-700/40 px-2 py-0.5 text-[0.6rem] font-medium text-violet-600 dark:text-violet-400 whitespace-nowrap">
+      {name}
+    </span>
+  );
 }

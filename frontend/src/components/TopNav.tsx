@@ -1,4 +1,4 @@
-import { LogOut, Moon, Plus, Sun, Users } from "lucide-react";
+import { Moon, Plus, Sun, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -6,8 +6,6 @@ type Props = {
   onToggleDark: () => void;
   onNewRun: () => void;
   onOpenTemplates: () => void;
-  userEmail?: string | null;
-  onLogout?: () => void;
 };
 
 function BrandMark() {
@@ -21,7 +19,7 @@ function BrandMark() {
   );
 }
 
-export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userEmail, onLogout }: Props) {
+export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates }: Props) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--v2-surface)]/92 backdrop-blur-xl">
       <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between gap-3 px-3 sm:px-5">
@@ -74,23 +72,6 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userEmai
           >
             Contact us
           </Button>
-          {userEmail && (
-            <span className="hidden sm:block text-xs text-muted-foreground truncate max-w-[140px]">
-              {userEmail}
-            </span>
-          )}
-          {onLogout && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onLogout}
-              className="border-[#ffffff12] bg-transparent font-display text-xs font-semibold gap-1.5"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-          )}
           <Button
             variant="ghost"
             size="icon"

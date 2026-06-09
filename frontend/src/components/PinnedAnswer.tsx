@@ -8,12 +8,14 @@ type Props = {
   finalAnswer: string;
   score: number;
   cast?: { writer: RosterFace; critics: RosterFace[] };
+  teamTemplateName?: string;
 };
 
 export function PinnedAnswer({
   finalAnswer,
   score,
   cast,
+  teamTemplateName,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const faces = cast ? [cast.writer, ...cast.critics] : [];
@@ -38,6 +40,11 @@ export function PinnedAnswer({
             <span className="rounded-full px-2 py-0.5 text-[0.65rem] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               Score {score.toFixed(1)} / 10
             </span>
+            {teamTemplateName && (
+              <span className="rounded-full bg-violet-100/70 dark:bg-violet-900/30 border border-violet-300/40 dark:border-violet-700/40 px-2 py-0.5 text-[0.6rem] font-medium text-violet-600 dark:text-violet-400 whitespace-nowrap">
+                {teamTemplateName}
+              </span>
+            )}
           </div>
 
           {faces.length > 0 && (

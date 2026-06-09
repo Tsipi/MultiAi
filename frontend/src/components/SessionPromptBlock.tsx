@@ -15,6 +15,7 @@ type Props = {
   result: ConsultResult;
   team: TeamMember[];
   loading?: boolean;
+  teamTemplateName?: string;
   onResendQuestion: (question: string) => void | Promise<void>;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -35,6 +36,7 @@ export function SessionPromptBlock({
   result,
   team,
   loading,
+  teamTemplateName,
   onResendQuestion,
   onAskFollowup,
   onStartNewSession,
@@ -345,6 +347,11 @@ export function SessionPromptBlock({
             title="Question"
             defaultOpen
             titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
+            titleEnd={teamTemplateName ? (
+              <span className="rounded-full bg-violet-100/70 dark:bg-violet-900/30 border border-violet-300/40 dark:border-violet-700/40 px-2 py-0.5 text-[0.6rem] font-medium text-violet-600 dark:text-violet-400 whitespace-nowrap">
+                {teamTemplateName}
+              </span>
+            ) : undefined}
           >
             {result.is_followup ? followupContextContent : standardContent}
           </CollapsiblePanel>

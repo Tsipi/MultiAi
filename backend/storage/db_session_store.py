@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import fields
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.consensus.models import DebateRound, DebateSession
@@ -87,11 +87,21 @@ async def save_session(
     await db.commit()
 
 
-async def load_session(session_id: str, db: AsyncSession) -> DebateSession:
-    """Reconstruct a DebateSession from the database."""
+async def load_session(
+    session_id: str,
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+) -> DebateSession:
+    """Reconstruct a DebateSession from the database.
+
+    Pass user_id to enforce ownership — raises FileNotFoundError (same as
+    missing) so callers cannot probe for other users' session IDs.
+    """
     result = await db.execute(select(Run).where(Run.session_id == session_id))
     run = result.scalar_one_or_none()
     if run is None:
+        raise FileNotFoundError(f"Session {session_id!r} not found")
+    if user_id is not None and run.user_id != user_id:
         raise FileNotFoundError(f"Session {session_id!r} not found")
 
     result = await db.execute(select(Output).where(Output.run_id == run.id))
@@ -158,12 +168,23 @@ async def list_sessions(
     return rows
 
 
-async def delete_session(session_id: str, db: AsyncSession) -> bool:
-    """Delete a session and all its related records."""
+async def delete_session(
+    session_id: str,
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+) -> bool:
+    """Delete a session and all its related records.
+
+    Pass user_id to enforce ownership — returns False (not 404) when the
+    session exists but belongs to a different user, so callers cannot probe
+    for other users' session IDs.
+    """
     result = await db.execute(select(Run).where(Run.session_id == session_id))
     run = result.scalar_one_or_none()
     if run is None:
         return False
-    await db.execute(delete(Run).where(Run.id == run.id))
+    if user_id is not None and run.user_id != user_id:
+        return False
+    await db.delete(run)  # ORM delete — fires cascade on TeamConfig, Output, File
     await db.commit()
     return True

@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { PanelLeftClose, PanelRight } from "lucide-react";
+import { LogOut, PanelLeftClose, PanelRight, Settings } from "lucide-react";
 import { AnswersPanel, type AnswersPanelProps } from "./AnswersPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,12 +9,15 @@ export const RUNS_SIDEBAR_STORAGE_KEY = "multiai_runs_sidebar_open";
 type Props = AnswersPanelProps & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userEmail?: string | null;
+  onLogout?: () => void;
 };
 
 export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function ConsensusRunsSidebar(
-  { open, onOpenChange, ...answersProps },
+  { open, onOpenChange, userEmail, onLogout, ...answersProps },
   ref
 ) {
+  const initial = userEmail ? userEmail[0].toUpperCase() : null;
   return (
     <aside
       className={cn(
@@ -56,6 +59,46 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
           <div className="sidebar-scroll min-h-0 flex-1 overflow-y-auto">
             <AnswersPanel ref={ref} compact {...answersProps} />
           </div>
+
+          {/* User footer */}
+          {(userEmail || onLogout) && (
+            <div className="shrink-0 border-t border-[#ffffff08] px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                {initial && (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-600/20 text-[0.62rem] font-bold text-violet-500">
+                    {initial}
+                  </div>
+                )}
+                <span className="min-w-0 flex-1 truncate text-[0.65rem] text-muted-foreground">
+                  {userEmail}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled
+                  className="h-6 w-6 shrink-0 text-muted-foreground/40 cursor-not-allowed"
+                  aria-label="Settings (coming soon)"
+                  title="Settings — coming in v4.3"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </Button>
+                {onLogout && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onLogout}
+                    className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label="Logout"
+                    title="Logout"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -80,6 +123,20 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
         >
           {open ? <PanelLeftClose className="h-4 w-4" /> : <PanelRight className="h-4 w-4" />}
         </Button>
+        {/* Logout at bottom of collapsed strip */}
+        {onLogout && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onLogout}
+            className="mt-auto h-9 w-9 text-muted-foreground hover:text-foreground max-md:hidden"
+            aria-label="Logout"
+            title="Logout"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        )}
       </nav>
     </aside>
   );
