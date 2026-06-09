@@ -207,49 +207,39 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v4.1` — last session 2026-06-08
+### Branch: `PLAN_v4.1` — last session 2026-06-09
 
 ### Files changed this session
 
-**Director's Cut styling (plan 4.1.1)**
+**Director's Cut styling (plan 4.1.1) — previous session**
 - `frontend/src/components/DebateActivityPrimitives.tsx` — added `sublabel` prop; avatar enlarged h-6→h-9; LLM badge enlarged 11→14px; header layout switched to `items-start` + flex-col for name+sublabel
-- `frontend/src/components/ChatPanel.tsx` — round label replaced with violet pill divider showing "Round X of Y"; writer/critic sublabels wired via `FACE_OPTIONS` lookup (expertiseTag); `TeamTemplateChip` helper; `teamTemplateName` prop threaded to PinnedAnswer + SessionPromptBlock + Director's Cut panel
+- `frontend/src/components/ChatPanel.tsx` — round label replaced with violet pill divider showing "Round X of Y"; writer/critic sublabels wired via `FACE_OPTIONS` lookup (expertiseTag); `TeamTemplateChip` helper; `teamTemplateName` prop threaded to PinnedAnswer + SessionPromptBlock + Director's Cut panel; `teamTemplateName` now also threaded to `ChatroomDebateView`
 - `frontend/src/components/PinnedAnswer.tsx` — `teamTemplateName` prop added; chip rendered in header row
 - `frontend/src/components/SessionPromptBlock.tsx` — `teamTemplateName` prop added; chip rendered via `titleEnd` in Question CollapsiblePanel
-- `frontend/src/components/ModelProviderIcon.tsx` — replaced CSS group-hover tooltip with React portal tooltip (`createPortal` → `document.body`, `getBoundingClientRect` for position); tooltip uses `bg-gray-900 text-gray-50`
-- `frontend/src/components/CommandBarTeamAvatars.tsx` — removed `max-w-[220px]` constraint; removed broken gradient fade overlays; added `scrollbar-hide` class
-- `frontend/src/index.css` — added `.scrollbar-hide` utility (cross-browser hidden scrollbar)
+- `frontend/src/components/ModelProviderIcon.tsx` — replaced CSS group-hover tooltip with React portal tooltip
+- `frontend/src/components/CommandBarTeamAvatars.tsx` — removed max-width constraint; removed broken gradient overlays; added `scrollbar-hide`
+- `frontend/src/index.css` — added `.scrollbar-hide` utility
 
-**User / auth UX**
-- `frontend/src/components/ConsensusRunsSidebar.tsx` — added `userEmail` + `onLogout` props; user footer (initial avatar + email + settings placeholder + logout) at bottom of expanded panel; logout icon in collapsed strip
-- `frontend/src/components/TopNav.tsx` — removed `userEmail` display and logout button (moved to sidebar); removed unused `LogOut` import and props
-- `frontend/src/App.tsx` — TopNav no longer receives userEmail/onLogout; ConsensusRunsSidebar now receives both; `TEAM_TEMPLATES` import added; `teamTemplateName` resolved and added to panelProps
+**User / auth UX — previous session**
+- `frontend/src/components/ConsensusRunsSidebar.tsx` — user footer (avatar + email + logout + settings placeholder) in sidebar
+- `frontend/src/components/TopNav.tsx` — userEmail/logout removed (moved to sidebar)
+- `frontend/src/App.tsx` — rewritten with section banners; 509→290 lines; `useConsultRun` hook; `castToTeam`/`applyRunResult` helpers
+- `frontend/src/hooks/useConsultRun.ts` — **new file**: owns loading/activity/isResuming state + consultStream execution
+- `frontend/src/lib/consultHelpers.ts` — added `castToTeam()`
 
-**Settings placeholder**
-- `frontend/src/components/ConsensusRunsSidebar.tsx` — disabled gear icon added in sidebar footer with tooltip "Settings — coming in v4.3"
+**Component barrel index files (new) — previous session**
+- `frontend/src/components/layout/index.ts`, `compose/index.ts`, `debate/index.ts`, `session/index.ts`, `team/index.ts`, `drawers/index.ts`, `primitives/index.ts`
 
-**App.tsx refactor**
-- `frontend/src/App.tsx` — rewritten with `// ─── Section ───` banners; 509 → 290 lines; uses `useConsultRun` hook and `castToTeam`/`applyRunResult` helpers; `adjustFollowupTeam` inline removed (replaced by lambda)
-- `frontend/src/hooks/useConsultRun.ts` — **new file**: owns `loading / activity / isResuming` state + `consultStream` execution; exports `useConsultRun(callbacks)` and `applyRunResult()`
-- `frontend/src/lib/consultHelpers.ts` — added `castToTeam()` and imported `mkMember`
-
-**Component barrel index files (new)**
-- `frontend/src/components/layout/index.ts`
-- `frontend/src/components/compose/index.ts`
-- `frontend/src/components/debate/index.ts`
-- `frontend/src/components/session/index.ts`
-- `frontend/src/components/team/index.ts`
-- `frontend/src/components/drawers/index.ts`
-- `frontend/src/components/primitives/index.ts`
+**ChatroomDebateView 7-point polish — this session**
+- `frontend/src/components/RoundDivider.tsx` — rewritten: violet pill "Round X of Y" (matches Directors Cut); accepts `maxRounds` prop
+- `frontend/src/components/ScoreBadge.tsx` — rewritten: coloured card (green ▲ / amber = / red ▼) with score chip and quoted summary
+- `frontend/src/components/ChatMessage.tsx` — rewritten: added `sublabel` prop (seat · expertise, matching Directors Cut), `modelLabel` (e.g. "Claude Sonnet 4.6") shown next to name, `typing` prop with `useTypedText` hook (reveals 3 chars/16ms + blinking cursor)
+- `frontend/src/components/ChatroomDebateView.tsx` — rewritten: `resolvePerson()` looks up `FACE_OPTIONS` for expertiseTag and `MODEL_OPTIONS` for label; `lastAgentMsgId` computed to target typing animation at newest live message; `teamTemplateName` prop added and threaded to `ChannelHeader`; `maxRounds` threaded to `RoundDivider`
+- `frontend/src/components/ChannelHeader.tsx` — rewritten: `#` → `Users` icon (violet); channel name slugified from `teamTemplateName` or "team-debate"; title uses `font-display font-bold text-violet-700`; `teamTemplateName` prop added
 
 ### Completed this session
-- Director's Cut styling: larger avatars, bigger LLM badges, role/seat sublabels, round pill dividers
-- LLM badge tooltip (portal-based, works inside overflow containers)
-- Scrollbar hidden on avatar strip; removed broken gradient overlays
-- Team template name chip shown in Question / Final Answer / Director's Cut panels
-- Username + logout moved from TopNav to sidebar footer
-- Settings gear icon placeholder in sidebar footer (disabled, tooltip "coming in v4.3")
-- App.tsx cleaned and sectioned; `useConsultRun` hook extracted
+- All 7 ChatroomDebateView improvements: violet round pills, coloured score cards, seat sublabels, expertise tags, model labels, typewriter animation, renamed + restyled channel header
+- All previous session work: Director's Cut styling, auth UX, App.tsx refactor, barrel index files
 
 ### Next steps / open items
 - **v4.2**: Public shared run page (`/shared/:slug`) — stub exists, needs backend `GET /api/sessions/{id}/share` and share link UI

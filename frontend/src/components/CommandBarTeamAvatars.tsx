@@ -71,18 +71,17 @@ export function CommandBarTeamAvatars({ team, disabled, showRoles, onAddTeamMemb
       <Button
         type="button"
         variant="outline"
-        size="icon"
         disabled={disabled}
-        className="h-8 w-8 shrink-0 rounded-full border-dashed border-violet-400/55 bg-violet-50/60 text-violet-700 shadow-none hover:bg-violet-100/80 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 sm:h-9 sm:w-9"
+        className="h-8 shrink-0 gap-1 rounded-full border-dashed border-violet-400/55 bg-violet-50/60 px-2.5 text-xs font-medium text-violet-700 shadow-none hover:bg-violet-100/80 dark:bg-violet-950/40 dark:text-violet-400 dark:hover:bg-violet-900/50 sm:h-9 sm:px-3"
         aria-label="Add team member"
-        title="Add team member"
         onClick={(e) => {
           e.stopPropagation();
           onAddTeamMember();
         }}
         onDoubleClick={(e) => e.stopPropagation()}
       >
-        <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
+        <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+        <span>Add member</span>
       </Button>
     </div>
   );

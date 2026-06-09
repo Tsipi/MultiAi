@@ -1,17 +1,31 @@
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
 import { ModelProviderIcon } from "./ModelProviderIcon";
 
-type Props = {
-  speaker: AgentId;
-  name: string;
-  role: string;
-  avatar: string;
-  text: string;
-  modelId?: string;
-  isNew?: boolean;
-  align?: "left" | "right";
-};
+// ─── Typing animation ─────────────────────────────────────────────────────────
+
+function useTypedText(text: string, enabled: boolean) {
+  const [len, setLen] = useState(enabled ? 0 : text.length);
+  const textRef = useRef(text);
+  textRef.current = text;
+
+  useEffect(() => {
+    if (!enabled) { setLen(text.length); return; }
+    setLen(0);
+    let i = 0;
+    const interval = setInterval(() => {
+      i = Math.min(i + 3, textRef.current.length);
+      setLen(i);
+      if (i >= textRef.current.length) clearInterval(interval);
+    }, 16); // 3 chars per frame ≈ 180 chars/sec
+    return () => clearInterval(interval);
+  }, [text, enabled]);
+
+  return { displayed: text.slice(0, len), done: len >= text.length };
+}
+
+// ─── Name color per seat ──────────────────────────────────────────────────────
 
 const NAME_COLOR: Record<AgentId, string> = {
   writer:  "text-violet-600 dark:text-violet-400",
@@ -25,16 +39,40 @@ const NAME_COLOR: Record<AgentId, string> = {
   system:  "text-muted-foreground",
 };
 
-export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew, align = "left" }: Props) {
+// ─── ChatMessage ──────────────────────────────────────────────────────────────
+
+type Props = {
+  speaker: AgentId;
+  name: string;
+  /** e.g. "Writer · Investment Analyst" */
+  sublabel?: string;
+  /** e.g. "Claude Sonnet 4.6" */
+  modelLabel?: string;
+  avatar: string;
+  text: string;
+  modelId?: string;
+  isNew?: boolean;
+  /** When true the text reveals character-by-character. Only set for the latest live message. */
+  typing?: boolean;
+  align?: "left" | "right";
+};
+
+export function ChatMessage({
+  speaker, name, sublabel, modelLabel, avatar, text, modelId,
+  isNew, typing = false, align = "left",
+}: Props) {
   const right = align === "right";
+  const { displayed, done } = useTypedText(text, typing);
+
   return (
     <div
       className={cn(
         "flex gap-3 px-1 py-1 rounded-lg hover:bg-muted/30 transition-colors",
         right && "flex-row-reverse",
-        isNew && "animate-in fade-in slide-in-from-bottom-1 duration-250"
+        isNew && !typing && "animate-in fade-in slide-in-from-bottom-1 duration-250"
       )}
     >
+      {/* Avatar + model badge */}
       <div className="relative h-9 w-9 shrink-0 mt-0.5">
         <img
           src={avatar}
@@ -51,29 +89,47 @@ export function ChatMessage({ speaker, name, role, avatar, text, modelId, isNew,
           </span>
         )}
       </div>
+
+      {/* Content */}
       <div className={cn("min-w-0 flex-1", right && "items-end")}>
-        <div className={cn("flex items-baseline gap-2 flex-wrap mb-0.5", right && "flex-row-reverse")}>
+        {/* Name row */}
+        <div className={cn("flex items-baseline gap-1.5 flex-wrap mb-0", right && "flex-row-reverse")}>
           <span className={cn("text-sm font-semibold leading-none", NAME_COLOR[speaker])}>
             {name}
           </span>
-          <span className="rounded-full bg-muted/60 px-1.5 py-0.5 text-[0.62rem] font-medium uppercase tracking-wide text-muted-foreground/80">
-            {role}
-          </span>
+          {modelLabel && (
+            <span className="text-[0.6rem] text-muted-foreground/45 leading-none tabular-nums">
+              {modelLabel}
+            </span>
+          )}
         </div>
-        <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>{text}</p>
+
+        {/* Seat + role sublabel (like Directors Cut) */}
+        {sublabel && (
+          <p className="m-0 mb-1 text-[0.62rem] text-muted-foreground/55 leading-snug">
+            {sublabel}
+          </p>
+        )}
+
+        {/* Message body */}
+        <p className={cn("m-0 text-sm leading-relaxed text-foreground/85", right && "text-right")}>
+          {displayed}
+          {typing && !done && (
+            <span className="ml-0.5 inline-block h-[0.8em] w-[2px] translate-y-[0.05em] animate-pulse rounded-sm bg-current opacity-70" />
+          )}
+        </p>
       </div>
     </div>
   );
 }
 
+// ─── SkeletonMessage ──────────────────────────────────────────────────────────
+
 type SkeletonMessageProps = { lines?: [string, string?, string?]; delay?: string };
 
 export function SkeletonMessage({ lines = ["w-4/5", "w-3/5"], delay = "0ms" }: SkeletonMessageProps) {
   return (
-    <div
-      className="flex gap-3 px-1 py-1"
-      style={{ animationDelay: delay }}
-    >
+    <div className="flex gap-3 px-1 py-1" style={{ animationDelay: delay }}>
       <div className="h-9 w-9 shrink-0 rounded-full bg-muted/60 animate-pulse mt-0.5" />
       <div className="min-w-0 flex-1 grid gap-1.5 pt-0.5">
         <div className="flex items-baseline gap-2 mb-0.5">
@@ -91,6 +147,8 @@ export function SkeletonMessage({ lines = ["w-4/5", "w-3/5"], delay = "0ms" }: S
     </div>
   );
 }
+
+// ─── SystemMessage ────────────────────────────────────────────────────────────
 
 export function SystemMessage({ text, isNew }: { text: string; isNew?: boolean }) {
   return (

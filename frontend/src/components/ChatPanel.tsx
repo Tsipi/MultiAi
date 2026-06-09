@@ -113,6 +113,7 @@ export function ChatPanel(props: Props) {
       loading={loading}
       maxRounds={maxRounds}
       consensusThreshold={consensusThreshold}
+      teamTemplateName={props.teamTemplateName}
     />
   );
 
@@ -127,13 +128,7 @@ export function ChatPanel(props: Props) {
         )}
         {showActivity ? (
           chatroomView
-        ) : (
-          !showClarify && (
-            <p className="text-sm text-muted-foreground m-0">
-              Drop a mission and your squad will brainstorm, roast weak ideas, then ship a cleaner answer.
-            </p>
-          )
-        )}
+        ) : null}
       </section>
     );
   }

@@ -37,6 +37,11 @@ export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   const { isLoggedIn, email, logout, login, register } = useAuth();
 
+  // Derive a display name from the email local-part (e.g. "tsipi@..." → "Tsipi")
+  const greetingName = email
+    ? (() => { const local = email.split("@")[0]; return local.charAt(0).toUpperCase() + local.slice(1); })()
+    : "there";
+
   // ─── Routing ───────────────────────────────────────────────────────────────
   const navigate = useNavigate();
   const location = useLocation();
@@ -388,7 +393,7 @@ export default function App() {
             {!displayResult && !isResuming && (
               <CommandBar
                 value={form.question}
-                greetingName="Tsipi"
+                greetingName={greetingName}
                 team={team}
                 loading={loading}
                 disabled={loading}
