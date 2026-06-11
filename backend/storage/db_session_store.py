@@ -20,7 +20,15 @@ async def save_session(
     db: AsyncSession,
     user_id: uuid.UUID | None = None,
 ) -> None:
-    """Persist a DebateSession to the database (insert or update)."""
+    """Persist a DebateSession to the database (insert or update).
+
+    Clarification stubs (needs_clarification=True with no final_answer) are not
+    persisted — the frontend resolves them client-side and re-submits, and the
+    resolved run already records clarification_question/clarification_response.
+    """
+    if session.needs_clarification and not session.final_answer.strip():
+        return
+
     result = await db.execute(select(Run).where(Run.session_id == session.session_id))
     run = result.scalar_one_or_none()
 
