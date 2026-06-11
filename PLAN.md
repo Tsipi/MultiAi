@@ -1,7 +1,7 @@
 # PLAN.md
 
-**Active version:** v4.1.1 — Cleanup & Component Reorganisation  
-**Previous:** `docs/plan_archive/PLAN_v4.1.md` (completed 2026-06-08)
+**Active version:** v4.2 — Sharing & Export  
+**Previous:** `docs/plan_archive/PLAN_v4.1.1.md` (completed 2026-06-09)
 
 ---
 
