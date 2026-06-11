@@ -58,7 +58,7 @@ export default function App() {
   const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
 
   // ─── Session history ───────────────────────────────────────────────────────
-  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory();
+  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory(isLoggedIn);
 
   // ─── Clarification ─────────────────────────────────────────────────────────
   const { clarificationPrompt, setClarificationPrompt, clarificationReason, setClarificationReason, clarificationOptions, setClarificationOptions, clarificationChoice, clarificationOtherText, setClarificationOtherText, chooseClarification, clearClarification } = useClarification();

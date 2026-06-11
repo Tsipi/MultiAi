@@ -14,7 +14,7 @@ function loadCastFromStorage(): Record<string, CastSelection> {
   }
 }
 
-export function useSessionHistory() {
+export function useSessionHistory(isLoggedIn: boolean) {
   const [history, setHistory] = useState<SessionPreview[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
@@ -28,10 +28,14 @@ export function useSessionHistory() {
   }, [castBySession]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      setHistory([]);
+      return;
+    }
     listSessions()
       .then((rows) => setHistory(rows.map(toPreview)))
       .catch(() => setHistory([]));
-  }, []);
+  }, [isLoggedIn]);
 
   return {
     history,
