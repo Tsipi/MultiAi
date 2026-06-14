@@ -153,7 +153,7 @@ function writeLineWithLinks(
   size: number,
   style: FontStyle,
   lineHeight: number,
-  x = PDF.marginX,
+  x: number = PDF.marginX,
   headerFn?: PageHeaderFn
 ): number {
   LINK_RE.lastIndex = 0;
@@ -241,7 +241,7 @@ function writeLineWithInlineBold(
   width: number,
   size: number,
   lineHeight: number,
-  x = PDF.marginX,
+  x: number = PDF.marginX,
   headerFn?: PageHeaderFn
 ): number {
   LINK_RE.lastIndex = 0;
@@ -315,7 +315,7 @@ function writeLines(
   size: number,
   style: FontStyle,
   lineHeight: number,
-  x = PDF.marginX,
+  x: number = PDF.marginX,
   headerFn?: PageHeaderFn
 ): number {
   font(doc, style, size);

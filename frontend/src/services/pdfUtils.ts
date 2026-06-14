@@ -8,11 +8,11 @@ export function font(doc: jsPDF, style: FontStyle, size: number): void {
   doc.setFontSize(size);
 }
 
-export function textColor(doc: jsPDF, color = PDF.colors.text): void {
+export function textColor(doc: jsPDF, color: string = PDF.colors.text): void {
   doc.setTextColor(color);
 }
 
-export function drawColor(doc: jsPDF, color = PDF.colors.text): void {
+export function drawColor(doc: jsPDF, color: string = PDF.colors.text): void {
   doc.setDrawColor(color);
 }
 
@@ -36,7 +36,7 @@ export function pageBottom(doc: jsPDF): number {
 export function divider(
   doc: jsPDF,
   y: number,
-  color = PDF.colors.divider,
+  color: string = PDF.colors.divider,
   width = 0.4
 ): void {
   const pageW = doc.internal.pageSize.getWidth();
