@@ -8,6 +8,13 @@ import AgentStudioLogo from "../../avatars/AgentStudioAssistant.png";
 
 export type { ExportParticipant };
 
+export type ExportDebateRound = {
+  round_num: number;
+  answer: string;
+  critique: string;
+  summary: string;
+};
+
 export type ExportData = {
   title: string;
   role: string;
@@ -19,6 +26,7 @@ export type ExportData = {
   consensusScore?: number;
   roundCount?: number;
   totalCostUsd?: number;
+  debateRounds?: ExportDebateRound[];
 };
 
 export function exportDateLocal(): string {
@@ -92,6 +100,35 @@ export async function downloadPdf(data: ExportData): Promise<void> {
   y = renderMarkdown(doc, `## Prompt\n${prompt || "Not provided"}`, y + 8, headerFn);
   y = renderMarkdown(doc, `## Answer\n${answer || "Not provided"}`, y + 8, headerFn);
 
+  if (data.debateRounds?.length) {
+    y = renderMarkdown(doc, "## Full Debate", y + 12, headerFn);
+
+    for (const round of data.debateRounds) {
+      y = renderMarkdown(doc, `### Round ${round.round_num}`, y + 8, headerFn);
+
+      y = renderMarkdown(
+        doc,
+        `**Writer's Answer**\n\n${round.answer || "Not provided"}`,
+        y + 4,
+        headerFn
+      );
+
+      y = renderMarkdown(
+        doc,
+        `**Critique**\n\n${round.critique || "Not provided"}`,
+        y + 4,
+        headerFn
+      );
+
+      y = renderMarkdown(
+        doc,
+        `**Round Summary**\n\n${round.summary || "Not provided"}`,
+        y + 4,
+        headerFn
+      );
+    }
+  }
+
   const totalPages = getPageCount(doc);
 
   drawWatermarks(doc, watermarkDataUrl, totalPages);
@@ -142,6 +179,18 @@ function buildMarkdownBody(data: ExportData): string {
     `## Role\n${data.role || "Not provided"}\n\n` +
     `## Prompt\n${data.prompt || "Not provided"}\n\n` +
     `## Answer\n${data.answer || "Not provided"}\n`;
+
+  if (data.debateRounds?.length) {
+    body += "\n## Full Debate\n";
+
+    for (const round of data.debateRounds) {
+      body +=
+        `\n### Round ${round.round_num}\n\n` +
+        `**Writer's Answer**\n\n${round.answer || "Not provided"}\n\n` +
+        `**Critique**\n\n${round.critique || "Not provided"}\n\n` +
+        `**Round Summary**\n\n${round.summary || "Not provided"}\n`;
+    }
+  }
 
   return body;
 }

@@ -207,40 +207,38 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v4.1` — last updated 2026-06-09 — v4.1.1 COMPLETE
+### Branch: `PLAN_v4.2` — last updated 2026-06-11 — v4.2 (Phases 4.2.1–4.2.3) COMPLETE
 
 ### Files changed this session (not yet committed)
 
-**Task 2 — CORS hardening**
-- `backend/config.py` — added `allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")`
-- `backend/api/app.py` — replaced hardcoded `["*"]` with `_origins`; `allow_credentials=_origins != ["*"]`
+**Phase 4.2.1 — PDF Export Polish**
+- `frontend/src/services/pdfMarkdown.ts` — added `PageHeaderFn` type; `---`/`***`/`___` → horizontal rule; new `writeLineWithInlineBold()` for inline `**bold**` word-wrapping; `headerFn?` threaded through `writeLines`/`writeLineWithLinks`/`ensurePageSpace` (calls `headerFn(doc)` on page break)
+- `frontend/src/services/exporter.ts` — watermark opacity 0.055→0.03, size 0.55→0.40; new `drawPageHeader(doc, logoDataUrl, title, compact)` (full header p1, compact header p2+); page-number footer `${p} / ${totalPages}`; `ExportData` extended with `consensusScore?`, `roundCount?`, `totalCostUsd?`; compact metadata line rendered
+- `frontend/src/components/debate/ChatPanel.tsx` — `downloadPdf()` call now passes `consensusScore`, `roundCount`, `totalCostUsd`
 
-**Task 3 — Component folder reorganisation (`tsc --noEmit` + `npm run build` pass)**
-- All 57 `.tsx` files moved into 7 subdirs via `git mv`: `layout/`, `compose/`, `debate/`, `session/`, `drawers/`, `primitives/`, `team/`
-- All 7 barrel `index.ts` files updated to `./ComponentName` paths
-- `drawers/index.ts` — added `TemplateDrawer`; `team/index.ts` — added `TemplateNameChip`, removed `TemplateDrawer`
-- `frontend/src/App.tsx` and `frontend/src/hooks/usePanelState.ts` — import paths updated
+**Phase 4.2.2 — Public Sharing**
+- `backend/storage/db_session_store.py` — added `_slugify`, `share_session`, `unshare_session`, `get_share_info`, `load_shared_session` (uses existing `Run.visibility`/`public_slug` columns, no migration needed)
+- `backend/api/sessions.py` — added `POST /{session_id}/share`, `POST /{session_id}/unshare`; `sessions_get` now merges `visibility`/`public_slug`
+- `backend/api/shared.py` (new) — public `GET /api/shared/{slug}`, registered in `backend/api/app.py`
+- `frontend/src/services/api.ts` + `types.ts` — added `shareSession`/`unshareSession`/`getSharedRun`; `ConsultResult.visibility`/`public_slug`
+- `frontend/src/components/session/SessionPromptDownloads.tsx` — Share/Unshare button (Globe/Share2 icons)
+- `frontend/src/components/debate/ChatPanel.tsx` + `App.tsx` — `handleShareToggle` (share → copy link + toast, unshare → toast), `applyShareState` updates `result`/`resultsById`
+- `frontend/src/pages/SharedRunPage.tsx` (new) — read-only public view; `App.tsx` `/shared/:slug` route moved before the `!isLoggedIn` check
+- `tests/test_sharing.py` (new) — 7 tests for share/unshare/shared endpoints, all passing
 
-**Task 5 — `expertiseTag` removed**
-- `frontend/src/data/experts.ts` — removed from `TeamMember` type, `FaceOption` type, all 16 `FACE_OPTIONS` entries, `mkMember` function
-- `frontend/src/lib/consultHelpers.ts` — removed from `buildRunSignature`
-- `frontend/src/components/team/AgentStripCards.tsx` — removed subtitle line
-- `frontend/src/components/team/TeamMemberCard.tsx` — removed from face-change spread
-- `frontend/src/components/team/TeamMemberEditForm.tsx` — removed from face-change spread
-
-**Task 4 — Mobile logout verified accessible**
-- Sidebar panel (with `admin@localhost` + logout →) is visible on mobile; no TopNav change needed
-- Mobile layout restyling noted as v4.3 in `PLAN.md`
-
-**PLAN.md updated**
-- v4.1.1 marked Complete; v4.2 set as Active; v4.3 (Mobile UX) added
+**Phase 4.2.3 — Full Debate Export**
+- `frontend/src/services/exporter.ts` — new `ExportDebateRound` type; `ExportData.debateRounds?`; `downloadMarkdown`/`downloadPdf` append a "Full Debate" section (per round: Writer's Answer / Critique / Round Summary)
+- `frontend/src/components/session/SessionPromptDownloads.tsx` — "Include full debate" checkbox
+- `frontend/src/components/debate/ChatPanel.tsx` — `includeFullDebate` state; `runExport` builds `debateRounds` from `result.full_discussion` when checked
 
 ### Key decisions
-- Task 1 already done: `sessions.py` uses `current_active_user` — stricter than plan asked for, no change needed.
-- `allow_credentials=_origins != ["*"]` auto-resolves: credentials disabled in local dev, enabled in prod when `ALLOWED_ORIGINS` is set in Railway.
-- `expertiseTag` was shown in `AgentStripCards` but the field added no value over `funFact` — removed entirely.
+- Route naming: kept `/api/sessions/{id}/share` / `/unshare` (consistent with existing `/api/sessions/{id}` convention) instead of the plan's literal `/api/runs/:id/...`; `GET /api/shared/{slug}` matches the plan exactly.
+- DB schema already had `visibility`/`public_slug` on `Run` — no Alembic migration required.
+
+### Verification
+- `uv run pytest tests/` — 32 passed, 1 pre-existing unrelated failure (`test_session_store.py::test_load_legacy_session_without_list_fields`, fails on clean tree too)
+- `npx tsc --noEmit`, `npm run build`, `npx vitest run` — all clean (only pre-existing chunk-size warning)
 
 ### Next steps
-- Commit all v4.1.1 changes
-- Set `ALLOWED_ORIGINS=https://your-frontend.up.railway.app` in Railway backend Variables once frontend URL is known
-- Start v4.2 (Public sharing)
+- Commit Phase 4.2.1, 4.2.2, 4.2.3 (user requested separate commits per phase)
+- v4.2 complete after commits — next: v5.0 (Next.js migration + SEO) per `PLAN.md`

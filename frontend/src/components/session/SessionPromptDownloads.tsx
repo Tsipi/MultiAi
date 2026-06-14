@@ -10,10 +10,12 @@ type Props = {
   isPublic?: boolean;
   shareBusy?: boolean;
   onShareToggle?: () => void | Promise<void>;
+  includeFullDebate?: boolean;
+  onIncludeFullDebateChange?: (value: boolean) => void;
 };
 
 /** Export actions for the question bubble. */
-export function SessionPromptDownloads({ exportBusy, onCopy, onDownloadMd, onDownloadPdf, isPublic, shareBusy, onShareToggle }: Props) {
+export function SessionPromptDownloads({ exportBusy, onCopy, onDownloadMd, onDownloadPdf, isPublic, shareBusy, onShareToggle, includeFullDebate, onIncludeFullDebateChange }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="flex justify-start gap-2">
@@ -67,6 +69,17 @@ export function SessionPromptDownloads({ exportBusy, onCopy, onDownloadMd, onDow
           </Button>
         )}
       </div>
+      {onIncludeFullDebateChange && (
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={Boolean(includeFullDebate)}
+            onChange={(e) => onIncludeFullDebateChange(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-border accent-violet-600"
+          />
+          Include full debate
+        </label>
+      )}
     </div>
   );
 }

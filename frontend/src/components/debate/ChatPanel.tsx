@@ -64,6 +64,7 @@ type Props = {
 export function ChatPanel(props: Props) {
   const [exportBusy, setExportBusy] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
+  const [includeFullDebate, setIncludeFullDebate] = useState(false);
   const followupRef = useRef<HTMLDivElement>(null);
   const clarificationRef = useRef<HTMLDivElement>(null);
   const {
@@ -151,8 +152,16 @@ export function ChatPanel(props: Props) {
         { name: cast.writer.name, role: "Writer" as const, model: cast.writer.model, avatar: cast.writer.avatar },
         ...cast.critics.map((c) => ({ name: c.name, role: "Critic" as const, model: c.model, avatar: c.avatar })),
       ];
+      const debateRounds = includeFullDebate
+        ? result.full_discussion.map((r, idx) => ({
+            round_num: Number(r.round_num ?? idx + 1),
+            answer: String(r.answer ?? ""),
+            critique: String(r.critique ?? ""),
+            summary: String(r.summary ?? ""),
+          }))
+        : undefined;
       if (kind === "md") {
-        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate });
+        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds });
       } else {
         await downloadPdf({
           title: pdfTitle,
@@ -164,6 +173,7 @@ export function ChatPanel(props: Props) {
           consensusScore: result.final_score,
           roundCount: result.full_discussion.length,
           totalCostUsd: result.total_cost_usd,
+          debateRounds,
         });
       }
     } finally {
@@ -245,6 +255,8 @@ export function ChatPanel(props: Props) {
                   setShareBusy(false);
                 }
               })}
+              includeFullDebate={includeFullDebate}
+              onIncludeFullDebateChange={setIncludeFullDebate}
             />
             <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
               {result.full_discussion.length > 0 && (
