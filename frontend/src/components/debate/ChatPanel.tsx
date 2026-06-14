@@ -58,10 +58,12 @@ type Props = {
   onStartNewSession?: () => void;
   onOpenInsights?: () => void;
   onOpenAdvanced?: () => void;
+  onShareToggle?: () => void | Promise<void>;
 };
 
 export function ChatPanel(props: Props) {
   const [exportBusy, setExportBusy] = useState(false);
+  const [shareBusy, setShareBusy] = useState(false);
   const followupRef = useRef<HTMLDivElement>(null);
   const clarificationRef = useRef<HTMLDivElement>(null);
   const {
@@ -233,6 +235,16 @@ export function ChatPanel(props: Props) {
               }}
               onDownloadMd={() => void runExport("md")}
               onDownloadPdf={() => void runExport("pdf")}
+              isPublic={result.visibility === "public"}
+              shareBusy={shareBusy}
+              onShareToggle={props.onShareToggle && (async () => {
+                setShareBusy(true);
+                try {
+                  await props.onShareToggle!();
+                } finally {
+                  setShareBusy(false);
+                }
+              })}
             />
             <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
               {result.full_discussion.length > 0 && (

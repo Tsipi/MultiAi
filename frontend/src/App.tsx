@@ -23,7 +23,7 @@ import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 
 // ─── Lib / data ───────────────────────────────────────────────────────────────
 import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
-import { deleteSession, getSession } from "./services/api";
+import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
 import { createDefaultTeam } from "./data/experts";
@@ -31,6 +31,7 @@ import type { ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
+import { SharedRunPage } from "./pages/SharedRunPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -260,6 +261,33 @@ export default function App() {
     }
   };
 
+  const handleShareToggle = async () => {
+    if (!displayResult) return;
+    const id = displayResult.session_id;
+    try {
+      if (displayResult.visibility === "public") {
+        await unshareSession(id);
+        applyShareState(id, "private", null);
+        setToast("Run is now private.");
+      } else {
+        const slug = await shareSession(id);
+        applyShareState(id, "public", slug);
+        const url = `${window.location.origin}/shared/${slug}`;
+        await navigator.clipboard.writeText(url);
+        setToast("Share link copied to clipboard.");
+      }
+    } catch {
+      setToast("Could not update sharing for this run.");
+    }
+  };
+
+  function applyShareState(id: string, visibility: "private" | "public", slug: string | null) {
+    setResultsById((prev) =>
+      prev[id] ? { ...prev, [id]: { ...prev[id], visibility, public_slug: slug } } : prev
+    );
+    setResult((prev) => (prev?.session_id === id ? { ...prev, visibility, public_slug: slug } : prev));
+  }
+
   const removeSession = async (id: string) => {
     try {
       await deleteSession(id);
@@ -371,19 +399,17 @@ export default function App() {
     onOpenInsights: () => setInsightsOpen(true),
     onOpenAdvanced: openAdvancedWithSessionTeam,
     followupError,
+    onShareToggle: handleShareToggle,
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
-  if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
-
-  if (location.pathname.startsWith("/shared/")) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
-        Public shared runs are coming in v4.2.
-      </div>
-    );
+  const sharedSlugMatch = location.pathname.match(/^\/shared\/(.+)$/);
+  if (sharedSlugMatch) {
+    return <SharedRunPage slug={sharedSlugMatch[1]} />;
   }
+
+  if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -99,6 +99,10 @@ export type ConsultResult = {
   model_costs: Array<Record<string, unknown>>;
   total_cost_usd: number;
   total_tokens: number;
+
+  // ── Sharing ───────────────────────────────────────────────────────────
+  visibility?: "private" | "public";
+  public_slug?: string | null;
 };
 
 export type StreamHandlers = {

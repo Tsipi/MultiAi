@@ -19,6 +19,7 @@ from backend.api.auth import (
     optional_current_user,
 )
 from backend.api.sessions import router as sessions_router
+from backend.api.shared import router as shared_router
 from backend.api.schemas import ConsultRequest, ConsultResponse
 from backend.config import AppConfig
 from backend.consensus.models import DebateSession
@@ -64,6 +65,7 @@ app.include_router(
 )
 
 app.include_router(sessions_router)
+app.include_router(shared_router)
 
 
 @app.on_event("startup")
