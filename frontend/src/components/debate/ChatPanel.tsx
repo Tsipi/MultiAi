@@ -152,7 +152,17 @@ export function ChatPanel(props: Props) {
       if (kind === "md") {
         downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate });
       } else {
-        await downloadPdf({ title: pdfTitle, role: result.role, prompt, answer: result.final_answer, exportDate, participants });
+        await downloadPdf({
+          title: pdfTitle,
+          role: result.role,
+          prompt,
+          answer: result.final_answer,
+          exportDate,
+          participants,
+          consensusScore: result.final_score,
+          roundCount: result.full_discussion.length,
+          totalCostUsd: result.total_cost_usd,
+        });
       }
     } finally {
       setExportBusy(false);
