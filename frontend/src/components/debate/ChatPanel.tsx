@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "../session/ClarificationBox";
-import { downloadMarkdown, downloadPdf, exportDateLocal } from "../../services/exporter";
+import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/exporter";
 import { generateTitle } from "../../services/api";
 import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 import { promptTextForExport } from "@/lib/promptDisplay";
@@ -16,7 +16,7 @@ import { SessionPromptBlock } from "../session/SessionPromptBlock";
 import { SessionPromptDownloads } from "../session/SessionPromptDownloads";
 import { type TeamMember } from "@/data/experts";
 import { MODEL_OPTIONS } from "@/data/models";
-import { TEAM_TEMPLATES } from "@/data/templates";
+import { TEAM_TEMPLATES, roleSummaryFromText } from "@/data/templates";
 
 type Person = { name: string; avatar: string; model: string };
 
@@ -148,17 +148,58 @@ export function ChatPanel(props: Props) {
       const sidebarTitle = await generateTitle(prompt, role);
       const pdfTitle = pdfTitleFromResult(result);
       const exportDate = exportDateLocal();
+      const activeTemplate = props.teamTemplateName
+        ? TEAM_TEMPLATES.find((t) => t.name === props.teamTemplateName)
+        : undefined;
+      const roleSummaryFor = (name: string) => {
+        const teamMember = team.find((m) => m.name === name);
+        const templateMember = activeTemplate?.members.find((m) => m.name === name);
+        return roleSummaryFromText(teamMember?.role || templateMember?.role || "");
+      };
       const participants = [
         { name: cast.writer.name, role: "Writer" as const, model: cast.writer.model, avatar: cast.writer.avatar },
         ...cast.critics.map((c) => ({ name: c.name, role: "Critic" as const, model: c.model, avatar: c.avatar })),
-      ];
+      ].map((p) => ({ ...p, roleSummary: roleSummaryFor(p.name) }));
       const debateRounds = includeFullDebate
-        ? result.full_discussion.map((r, idx) => ({
-            round_num: Number(r.round_num ?? idx + 1),
-            answer: String(r.answer ?? ""),
-            critique: String(r.critique ?? ""),
-            summary: String(r.summary ?? ""),
-          }))
+        ? result.full_discussion.map((r, idx) => {
+            const criticCount = Math.max(
+              result.critic_names?.length ?? 0,
+              cast.critics.length,
+            );
+            const critiques = splitCritiques(String(r.critique ?? ""), criticCount);
+            const writerName = result.writer_names?.[0] || cast.writer.name;
+
+            const writerMessage: ExportDebateMessage = {
+              name: writerName,
+              role: "Writer",
+              model: cast.writer.model,
+              avatar: cast.writer.avatar,
+              text: String(r.answer ?? ""),
+            };
+
+            const criticMessages: ExportDebateMessage[] = critiques.map((crit, ci) => {
+              const storedName = result.critic_names?.[ci];
+              const castMember = cast.critics[ci];
+              const modelId = result.model_critics?.[ci] ?? castMember?.model ?? "";
+              const modelLabel = MODEL_OPTIONS.find((o) => o.id === modelId)?.label
+                ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
+
+              return {
+                name: storedName || castMember?.name || modelLabel || crit.label,
+                role: "Critic",
+                model: modelId,
+                avatar: castMember?.avatar ?? DEBATE_SYSTEM_AVATAR,
+                text: crit.text,
+              };
+            });
+
+            return {
+              round_num: Number(r.round_num ?? idx + 1),
+              writerMessage,
+              criticMessages,
+              summary: String(r.summary ?? ""),
+            };
+          })
         : undefined;
       if (kind === "md") {
         downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds });
@@ -170,6 +211,7 @@ export function ChatPanel(props: Props) {
           answer: result.final_answer,
           exportDate,
           participants,
+          teamName: activeTemplate?.name,
           consensusScore: result.final_score,
           roundCount: result.full_discussion.length,
           totalCostUsd: result.total_cost_usd,

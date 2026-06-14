@@ -25,6 +25,16 @@ export function resetColor(doc: jsPDF): void {
   doc.setDrawColor(PDF.colors.text);
 }
 
+/** Draws a small bold brand-violet section label (e.g. "Team Members", "Role", "Prompt"). */
+export function drawSectionLabel(doc: jsPDF, text: string, y: number, xOffset = 0): number {
+  font(doc, "bold", PDF.fontSize.h2);
+  textColor(doc, PDF.colors.brand);
+  doc.text(text, PDF.marginX + xOffset, y);
+  resetColor(doc);
+
+  return y + 14;
+}
+
 export function contentWidth(doc: jsPDF): number {
   return doc.internal.pageSize.getWidth() - PDF.marginX * 2;
 }

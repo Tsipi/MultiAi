@@ -95,7 +95,8 @@ export function renderMarkdown(
       continue;
     }
 
-    const bullet = line.match(/^[-*]\s+(.*)$/);
+    // Models sometimes emit a literal bullet instead of Markdown `-` or `*`.
+    const bullet = line.match(/^[-*\u2022]\s+(.*)$/);
     if (bullet) {
       y = writeLineWithLinks(
         doc,
@@ -165,9 +166,7 @@ function writeLineWithLinks(
 
   LINK_RE.lastIndex = 0;
 
-  type Segment =
-    | { kind: "text"; content: string }
-    | { kind: "link"; label: string; url: string };
+  type Segment = { content: string; url?: string };
 
   const segments: Segment[] = [];
   let last = 0;
@@ -175,12 +174,11 @@ function writeLineWithLinks(
 
   while ((match = LINK_RE.exec(text)) !== null) {
     if (match.index > last) {
-      segments.push({ kind: "text", content: text.slice(last, match.index) });
+      segments.push({ content: cleanInline(text.slice(last, match.index)) });
     }
 
     segments.push({
-      kind: "link",
-      label: match[1],
+      content: cleanInline(match[1]),
       url: match[2],
     });
 
@@ -188,39 +186,46 @@ function writeLineWithLinks(
   }
 
   if (last < text.length) {
-    segments.push({ kind: "text", content: text.slice(last) });
+    segments.push({ content: cleanInline(text.slice(last)) });
   }
 
-  y = ensurePageSpace(doc, y, lineHeight, headerFn);
   font(doc, style, size);
 
   let curX = x;
 
   for (const seg of segments) {
-    if (seg.kind === "text") {
-      const cleaned = cleanInline(seg.content);
-      if (!cleaned) continue;
+    for (const token of seg.content.split(/(\s+)/)) {
+      if (!token) continue;
 
-      textColor(doc, PDF.colors.text);
-      doc.text(cleaned, curX, y);
-      curX += doc.getTextWidth(cleaned);
-      continue;
+      const tokenWidth = doc.getTextWidth(token);
+
+      if (/^\s+$/.test(token)) {
+        if (curX + tokenWidth <= x + width) {
+          curX += tokenWidth;
+        }
+        continue;
+      }
+
+      const fragments = splitTokenToFit(doc, token, width);
+
+      fragments.forEach((fragment, fragmentIndex) => {
+        const fragmentWidth = doc.getTextWidth(fragment);
+
+        if (curX + fragmentWidth > x + width && curX > x) {
+          y += lineHeight;
+          curX = x;
+        }
+
+        y = ensurePageSpace(doc, y, lineHeight, headerFn);
+        drawTextFragment(doc, fragment, curX, y, fragmentWidth, lineHeight, seg.url);
+        curX += fragmentWidth;
+
+        if (fragmentIndex < fragments.length - 1) {
+          y += lineHeight;
+          curX = x;
+        }
+      });
     }
-
-    textColor(doc, PDF.colors.link);
-    doc.text(seg.label, curX, y);
-
-    const linkWidth = doc.getTextWidth(seg.label);
-
-    drawColor(doc, PDF.colors.link);
-    doc.setLineWidth(0.4);
-    doc.line(curX, y + 1.2, curX + linkWidth, y + 1.2);
-
-    doc.link(curX, y - lineHeight * 0.75, linkWidth, lineHeight, {
-      url: seg.url,
-    });
-
-    curX += linkWidth;
   }
 
   resetColor(doc);
@@ -292,15 +297,26 @@ function writeLineWithInlineBold(
       continue;
     }
 
-    if (curX + wordWidth > x + width && curX > x) {
-      y += lineHeight;
-      y = ensurePageSpace(doc, y, lineHeight, headerFn);
-      curX = x;
-    }
+    const fragments = splitTokenToFit(doc, word.text, width);
 
-    textColor(doc, PDF.colors.text);
-    doc.text(word.text, curX, y);
-    curX += wordWidth;
+    fragments.forEach((fragment, fragmentIndex) => {
+      const fragmentWidth = doc.getTextWidth(fragment);
+
+      if (curX + fragmentWidth > x + width && curX > x) {
+        y += lineHeight;
+        curX = x;
+      }
+
+      y = ensurePageSpace(doc, y, lineHeight, headerFn);
+      textColor(doc, PDF.colors.text);
+      doc.text(fragment, curX, y);
+      curX += fragmentWidth;
+
+      if (fragmentIndex < fragments.length - 1) {
+        y += lineHeight;
+        curX = x;
+      }
+    });
   }
 
   resetColor(doc);
@@ -333,7 +349,37 @@ function writeLines(
   return y;
 }
 
-function ensurePageSpace(
+function splitTokenToFit(doc: jsPDF, token: string, width: number): string[] {
+  if (doc.getTextWidth(token) <= width) {
+    return [token];
+  }
+
+  return doc.splitTextToSize(token, width) as string[];
+}
+
+function drawTextFragment(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  lineHeight: number,
+  url?: string
+): void {
+  textColor(doc, url ? PDF.colors.link : PDF.colors.text);
+  doc.text(text, x, y);
+
+  if (!url) {
+    return;
+  }
+
+  drawColor(doc, PDF.colors.link);
+  doc.setLineWidth(0.4);
+  doc.line(x, y + 1.2, x + width, y + 1.2);
+  doc.link(x, y - lineHeight * 0.75, width, lineHeight, { url });
+}
+
+export function ensurePageSpace(
   doc: jsPDF,
   y: number,
   needed: number,
@@ -351,5 +397,10 @@ function cleanInline(value: string): string {
   return value
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/`([^`]+)`/g, "$1");
+    .replace(/`([^`]+)`/g, "$1")
+    // jsPDF's built-in Helvetica cannot reliably measure/render these glyphs.
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u2192\u21d2\u2794\u279c\u27a1]/g, "->")
+    .replace(/[\u2190\u21d0]/g, "<-")
+    .replace(/[\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/g, "");
 }

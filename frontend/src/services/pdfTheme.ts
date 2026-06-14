@@ -11,23 +11,21 @@ export const PDF = {
     brand: "#6D28D9",
     link: "#2563EB",
 
-    muted: "#6E5AA0",
-    soft: "#A08CC8",
+    divider: "#EDE9FE", // violet-100
+    dividerStrong: "#DDD6FE", // violet-200
 
-    divider: "#DCD2F0",
-    dividerStrong: "#E1D7F5",
-
-    participantTitle: "#8264BE",
     participantName: "#1E143C",
 
     writer: "#7C3AED",
-    critic: "#3B82F6",
-    providerFallback: "#645A82",
+    criticAccent: "#0284C7",
+
+    score: "#047857",
+    gray: "#616B7B",
   },
 
   fontSize: {
     body: 11,
-    h1: 20,
+    h1: 16,
     h2: 14,
     h3: 12,
     meta: 8.5,
@@ -36,7 +34,7 @@ export const PDF = {
 
   lineHeight: {
     body: 16,
-    h1: 27,
+    h1: 22,
     heading: 18,
   },
 

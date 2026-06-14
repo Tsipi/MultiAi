@@ -25,8 +25,8 @@ import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
 import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
-import { TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
-import { createDefaultTeam } from "./data/experts";
+import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
+import { createDefaultTeam, findFaceByName } from "./data/experts";
 import type { ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
@@ -94,14 +94,12 @@ export default function App() {
   // When viewing a saved session with no explicit template, infer it from the cast names
   const inferredTemplateId = useMemo(() => {
     if (activeTemplateId) return null; // explicit selection wins
-    const wName = displayResult?.writer_names?.[0];
-    if (!wName) return null;
-    const cNames = displayResult?.critic_names ?? [];
-    return TEAM_TEMPLATES.find((t) => {
-      const w = t.members.find((m) => m.duty === "writer");
-      const cs = t.members.filter((m) => m.duty === "critic");
-      return w?.name === wName && cs.length === cNames.length && cs.every((c, i) => c.name === cNames[i]);
-    })?.id ?? null;
+    return inferTeamTemplateId({
+      writerName: displayResult?.writer_names?.[0],
+      criticNames: displayResult?.critic_names,
+      writerModel: displayResult?.model_writers?.[0],
+      criticModels: displayResult?.model_critics,
+    });
   }, [activeTemplateId, displayResult]);
 
   const resolvedTemplateId = activeTemplateId ?? inferredTemplateId;
@@ -115,21 +113,20 @@ export default function App() {
     const res = resultsById[selectedId];
     if (res?.model_critics?.length) {
       const writerModel = res.model_writers?.[0] ?? "";
-      const writerMember =
-        team.find((m) => m.duty === "writer" && m.model === writerModel) ??
-        team.find((m) => m.duty === "writer") ??
-        team[0];
-      const usedIds = new Set<string>();
+      const writerName = res.writer_names?.[0] || team.find((m) => m.duty === "writer")?.name || team[0]?.name || "Writer";
+      const writer = {
+        name: writerName,
+        avatar: findFaceByName(writerName).avatar,
+        model: writerModel || team.find((m) => m.duty === "writer")?.model || team[0]?.model || "",
+      };
       const critics = res.model_critics.map((model, i) => {
-        const member = team.find((m) => m.model === model && !usedIds.has(m.id));
-        if (member) usedIds.add(member.id);
         const modelLabel =
           MODEL_OPTIONS.find((o) => o.id === model)?.label ??
           (model.includes("/") ? model.split("/").pop()! : model);
-        const fallbackName = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
-        return { name: member?.name ?? fallbackName, avatar: member?.avatar ?? writerMember.avatar, model };
+        const name = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
+        return { name, avatar: findFaceByName(name).avatar, model };
       });
-      return { writer: { name: writerMember.name, avatar: writerMember.avatar, model: writerMember.model }, critics };
+      return { writer, critics };
     }
     return activeCast;
   }, [selectedId, castBySession, activeCast, resultsById, team]);

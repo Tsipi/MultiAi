@@ -1,17 +1,19 @@
 import { jsPDF } from "jspdf";
+import { TEAM_TEMPLATES, TEMPLATE_ICONS, roleDescriptionFromText } from "@/data/templates";
 import { renderMarkdown, type PageHeaderFn } from "./pdfMarkdown";
 import { drawPageHeader, drawPageNumbers, drawWatermarks } from "./pdfHeader";
-import { drawParticipants, type ExportParticipant } from "./pdfParticipants";
+import { drawParticipants, drawMessageHeader, type ExportParticipant, type ExportDebateMessage } from "./pdfParticipants";
+import { loadIconDataUrl } from "./pdfIcons";
 import { PDF } from "./pdfTheme";
-import { font, resetColor, textColor } from "./pdfUtils";
+import { drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
 import AgentStudioLogo from "../../avatars/AgentStudioAssistant.png";
 
-export type { ExportParticipant };
+export type { ExportParticipant, ExportDebateMessage };
 
 export type ExportDebateRound = {
   round_num: number;
-  answer: string;
-  critique: string;
+  writerMessage: ExportDebateMessage;
+  criticMessages: ExportDebateMessage[];
   summary: string;
 };
 
@@ -23,6 +25,7 @@ export type ExportData = {
   exportDate: string;
   fileStem?: string;
   participants?: ExportParticipant[];
+  teamName?: string;
   consensusScore?: number;
   roundCount?: number;
   totalCostUsd?: number;
@@ -71,6 +74,8 @@ export async function downloadPdf(data: ExportData): Promise<void> {
   const answer = clean(data.answer);
   const exportDate = clean(data.exportDate);
 
+  const activeTemplate = data.teamName ? TEAM_TEMPLATES.find((t) => t.name === data.teamName) : undefined;
+
   const [logoDataUrl, watermarkDataUrl] = await Promise.all([
     loadImageDataUrl(AgentStudioLogo, 1),
     loadImageDataUrl(AgentStudioLogo, 0.05),
@@ -81,7 +86,7 @@ export async function downloadPdf(data: ExportData): Promise<void> {
     format: "a4",
   });
 
-  let y = drawPageHeader(doc, logoDataUrl, title, false);
+  let y = drawPageHeader(doc, logoDataUrl, title, false, exportDate);
 
   const headerFn: PageHeaderFn = (d) => {
     return drawPageHeader(d, logoDataUrl, title, true);
@@ -90,40 +95,46 @@ export async function downloadPdf(data: ExportData): Promise<void> {
   y = renderMarkdown(doc, `# ${title}`, y, headerFn);
 
   if (data.participants?.length) {
-    y = await drawParticipants(doc, data.participants, y + 4);
+    const templateIcon = activeTemplate ? TEMPLATE_ICONS[activeTemplate.id] : undefined;
+    const iconDataUrl = templateIcon ? await loadIconDataUrl(templateIcon, PDF.colors.brand, 26) : null;
+    const writerMember = activeTemplate?.members.find((m) => m.duty === "writer");
+    const rawDescription = (writerMember && roleDescriptionFromText(writerMember.role)) || activeTemplate?.description;
+    const sectionDescription = rawDescription ? capitalizeFirst(rawDescription) : undefined;
+
+    y = await drawParticipants(doc, data.participants, y + 4, data.teamName, sectionDescription, iconDataUrl);
   }
 
   y = drawMeta(doc, data, y);
 
-  y = renderMarkdown(doc, `*Exported ${exportDate}*`, y + 6, headerFn);
-  y = renderMarkdown(doc, `## Role\n*${role || "Not provided"}*`, y + 8, headerFn);
-  y = renderMarkdown(doc, `## Prompt\n${prompt || "Not provided"}`, y + 8, headerFn);
-  y = renderMarkdown(doc, `## Answer\n${answer || "Not provided"}`, y + 8, headerFn);
+  if (!activeTemplate) {
+    y = drawSectionLabel(doc, "Role", y + 8);
+    y = renderMarkdown(doc, `*${role || "Not provided"}*`, y, headerFn);
+  }
+
+  y = drawSectionLabel(doc, "Prompt", y + 8);
+  y = renderMarkdown(doc, prompt || "Not provided", y, headerFn);
+
+  y = drawSectionLabel(doc, "Answer", y + 8);
+  y = renderMarkdown(doc, `${answer || "Not provided"}`, y + 8, headerFn);
 
   if (data.debateRounds?.length) {
-    y = renderMarkdown(doc, "## Full Debate", y + 12, headerFn);
+    y = drawSectionLabel(doc, "Full Debate", y + 12);
 
     for (const round of data.debateRounds) {
       y = renderMarkdown(doc, `### Round ${round.round_num}`, y + 8, headerFn);
 
-      y = renderMarkdown(
-        doc,
-        `**Writer's Answer**\n\n${round.answer || "Not provided"}`,
-        y + 4,
-        headerFn
-      );
+      y = await drawMessageHeader(doc, round.writerMessage, y + 4, headerFn);
+      y = renderMarkdown(doc, round.writerMessage.text || "Not provided", y + 2, headerFn);
 
-      y = renderMarkdown(
-        doc,
-        `**Critique**\n\n${round.critique || "Not provided"}`,
-        y + 4,
-        headerFn
-      );
+      for (const critique of round.criticMessages) {
+        y = await drawMessageHeader(doc, critique, y + 8, headerFn);
+        y = renderMarkdown(doc, critique.text || "Not provided", y + 2, headerFn);
+      }
 
       y = renderMarkdown(
         doc,
         `**Round Summary**\n\n${round.summary || "Not provided"}`,
-        y + 4,
+        y + 8,
         headerFn
       );
     }
@@ -144,28 +155,51 @@ export async function downloadPdf(data: ExportData): Promise<void> {
 }
 
 function drawMeta(doc: jsPDF, data: ExportData, y: number): number {
-  const parts: string[] = [];
+  const parts: { text: string; color: string; bold: boolean }[] = [];
 
   if (data.consensusScore != null) {
-    parts.push(`Score: ${data.consensusScore.toFixed(1)} / 10`);
+    parts.push({ text: `Score: ${data.consensusScore.toFixed(1)} / 10`, color: PDF.colors.score, bold: true });
   }
 
   if (data.roundCount != null) {
-    parts.push(`${data.roundCount} round${data.roundCount === 1 ? "" : "s"}`);
+    parts.push({ text: `${data.roundCount} round${data.roundCount === 1 ? "" : "s"}`, color: PDF.colors.gray, bold: false });
   }
 
   if (data.totalCostUsd != null) {
-    parts.push(`~$${data.totalCostUsd.toFixed(4)}`);
+    parts.push({ text: `~$${data.totalCostUsd.toFixed(4)}`, color: PDF.colors.gray, bold: false });
   }
 
   if (!parts.length) {
     return y;
   }
 
-  font(doc, "normal", PDF.fontSize.meta);
-  textColor(doc, PDF.colors.muted);
+  const pageW = doc.internal.pageSize.getWidth();
+  const sep = "   ·   ";
 
-  doc.text(parts.join("  ·  "), PDF.marginX, y);
+  font(doc, "normal", PDF.fontSize.meta);
+  const sepW = doc.getTextWidth(sep);
+
+  const widths = parts.map((p) => {
+    font(doc, p.bold ? "bold" : "normal", PDF.fontSize.meta);
+    return doc.getTextWidth(p.text);
+  });
+
+  const totalW = widths.reduce((sum, w) => sum + w, 0) + sepW * (parts.length - 1);
+  let x = pageW - PDF.marginX - totalW;
+
+  parts.forEach((p, i) => {
+    if (i > 0) {
+      font(doc, "normal", PDF.fontSize.meta);
+      textColor(doc, PDF.colors.gray);
+      doc.text(sep, x, y);
+      x += sepW;
+    }
+
+    font(doc, p.bold ? "bold" : "normal", PDF.fontSize.meta);
+    textColor(doc, p.color);
+    doc.text(p.text, x, y);
+    x += widths[i];
+  });
 
   resetColor(doc);
 
@@ -184,11 +218,15 @@ function buildMarkdownBody(data: ExportData): string {
     body += "\n## Full Debate\n";
 
     for (const round of data.debateRounds) {
-      body +=
-        `\n### Round ${round.round_num}\n\n` +
-        `**Writer's Answer**\n\n${round.answer || "Not provided"}\n\n` +
-        `**Critique**\n\n${round.critique || "Not provided"}\n\n` +
-        `**Round Summary**\n\n${round.summary || "Not provided"}\n`;
+      body += `\n### Round ${round.round_num}\n\n`;
+
+      body += `**${round.writerMessage.name} (${round.writerMessage.role})**\n\n${round.writerMessage.text || "Not provided"}\n\n`;
+
+      for (const critique of round.criticMessages) {
+        body += `**${critique.name} (${critique.role})**\n\n${critique.text || "Not provided"}\n\n`;
+      }
+
+      body += `**Round Summary**\n\n${round.summary || "Not provided"}\n`;
     }
   }
 
@@ -255,4 +293,8 @@ function safe(value: string): string {
 
 function clean(value: unknown, fallback = ""): string {
   return String(value ?? "").trim() || fallback;
+}
+
+function capitalizeFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

@@ -1,15 +1,30 @@
 import type { jsPDF } from "jspdf";
 import { PDF } from "./pdfTheme";
-import { divider, fillColor, font, resetColor, textColor } from "./pdfUtils";
+import { ensurePageSpace, type PageHeaderFn } from "./pdfMarkdown";
+import { contentWidth, divider, drawSectionLabel, fillColor, font, resetColor, textColor } from "./pdfUtils";
 
 export type ExportParticipant = {
   name: string;
   role: "Writer" | "Critic";
+  roleSummary?: string;
   model: string;
   avatar: string;
 };
 
-type PdfProvider = {
+export type ExportDebateMessage = {
+  name: string;
+  role: "Writer" | "Critic";
+  model: string;
+  avatar: string;
+  text: string;
+};
+
+type AvatarSubject = {
+  name: string;
+  role: "Writer" | "Critic";
+};
+
+export type PdfProvider = {
   name: string;
   color: string;
 };
@@ -17,49 +32,60 @@ type PdfProvider = {
 export async function drawParticipants(
   doc: jsPDF,
   participants: ExportParticipant[],
-  y: number
+  y: number,
+  sectionTitle?: string,
+  sectionDescription?: string,
+  iconDataUrl?: string | null
 ): Promise<number> {
-  const pageW = doc.internal.pageSize.getWidth();
   const avatarSize = 24;
-  const maxPerRow = Math.min(participants.length, 5);
-  const colW = Math.floor((pageW - PDF.marginX * 2) / maxPerRow);
+  const iconSize = 13;
+  const numColumns = participants.length >= 3 ? 3 : 1;
+  const colGap = 16;
+  const colWidth = (contentWidth(doc) - colGap * (numColumns - 1)) / numColumns;
+  const rowHeight = numColumns > 1 ? 50 : 44;
+  const textWidth = colWidth - avatarSize - 8;
 
   const avatarUrls = await Promise.all(
     participants.map((p) => loadCircularAvatar(p.avatar, 56))
   );
 
-  font(doc, "bold", 7);
-  textColor(doc, PDF.colors.participantTitle);
-  doc.text("PARTICIPANTS", PDF.marginX, y);
+  if (iconDataUrl) {
+    doc.addImage(iconDataUrl, "PNG", PDF.marginX, y - iconSize + 2, iconSize, iconSize);
+  }
 
-  y += 12;
+  y = drawSectionLabel(doc, sectionTitle || "Team Members", y, iconDataUrl ? iconSize + 5 : 0);
 
-  let x = PDF.marginX;
-  let rowY = y;
+  if (sectionDescription) {
+    font(doc, "normal", 9.5);
+    textColor(doc, PDF.colors.gray);
+    const lines = doc.splitTextToSize(sectionDescription, contentWidth(doc));
+    doc.text(lines, PDF.marginX, y - 2);
+    resetColor(doc);
+    y += lines.length * 11;
+  }
 
   participants.forEach((participant, i) => {
-    if (i > 0 && i % maxPerRow === 0) {
-      rowY += avatarSize + 16;
-      x = PDF.marginX;
-    }
+    const col = i % numColumns;
+    const row = Math.floor(i / numColumns);
+    const colX = PDF.marginX + col * (colWidth + colGap);
+    const rowY = y + row * rowHeight;
 
-    drawAvatar(doc, participant, avatarUrls[i], x, rowY, avatarSize);
-    drawParticipantText(doc, participant, x + avatarSize + 5, rowY);
-
-    x += colW;
+    drawAvatar(doc, participant, avatarUrls[i], colX, rowY, avatarSize);
+    drawParticipantText(doc, participant, colX + avatarSize + 8, rowY, textWidth);
   });
 
   resetColor(doc);
 
-  const endY = rowY + avatarSize + 14;
+  const numRows = Math.ceil(participants.length / numColumns);
+  const endY = y + numRows * rowHeight + 4;
   divider(doc, endY, PDF.colors.dividerStrong);
 
   return endY + 10;
 }
 
-function drawAvatar(
+export function drawAvatar(
   doc: jsPDF,
-  participant: ExportParticipant,
+  subject: AvatarSubject,
   avatarUrl: string | null,
   x: number,
   y: number,
@@ -70,14 +96,14 @@ function drawAvatar(
     return;
   }
 
-  const initials = participant.name
+  const initials = subject.name
     .split(" ")
     .map((word) => word[0] ?? "")
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
-  fillColor(doc, participant.role === "Writer" ? PDF.colors.writer : PDF.colors.critic);
+  fillColor(doc, subject.role === "Writer" ? PDF.colors.writer : PDF.colors.criticAccent);
   doc.circle(x + size / 2, y + size / 2, size / 2, "F");
 
   font(doc, "bold", 8);
@@ -87,27 +113,82 @@ function drawAvatar(
   });
 }
 
+/** Draws an avatar + name + role badge + provider badge for one debate message (used in the "Full Debate" export). */
+export async function drawMessageHeader(
+  doc: jsPDF,
+  message: ExportDebateMessage,
+  y: number,
+  headerFn?: PageHeaderFn
+): Promise<number> {
+  const avatarSize = 22;
+
+  y = ensurePageSpace(doc, y, avatarSize + 4, headerFn);
+
+  const avatarUrl = await loadCircularAvatar(message.avatar, 56);
+  const x = PDF.marginX;
+  const isWriter = message.role === "Writer";
+
+  drawAvatar(doc, message, avatarUrl, x, y, avatarSize);
+
+  const textX = x + avatarSize + 8;
+  const textY = y + avatarSize / 2 + 3;
+  const firstName = message.name.split(" ")[0] || message.name;
+
+  font(doc, "bold", 10);
+  textColor(doc, PDF.colors.participantName);
+  doc.text(firstName, textX, textY);
+
+  const nameW = doc.getTextWidth(firstName);
+  const roleLabel = message.role.toUpperCase();
+
+  font(doc, "bold", 7);
+  textColor(doc, isWriter ? PDF.colors.writer : PDF.colors.criticAccent);
+  doc.text(roleLabel, textX + nameW + 6, textY);
+
+  const roleW = doc.getTextWidth(roleLabel);
+  const provider = pdfProvider(message.model);
+  drawProviderBadge(doc, provider, textX + nameW + roleW + 12, y + avatarSize / 2 - 4);
+
+  resetColor(doc);
+
+  return y + avatarSize + 6;
+}
+
 function drawParticipantText(
   doc: jsPDF,
   participant: ExportParticipant,
   x: number,
-  y: number
+  y: number,
+  maxTextWidth: number
 ): void {
   const firstName = participant.name.split(" ")[0] || participant.name;
   const provider = pdfProvider(participant.model);
+  const isWriter = participant.role === "Writer";
 
-  font(doc, "bold", 8.5);
+  font(doc, "bold", 9);
   textColor(doc, PDF.colors.participantName);
   doc.text(firstName, x, y + 9);
 
-  font(doc, "normal", 7);
-  textColor(doc, PDF.colors.muted);
-  doc.text(participant.role, x, y + 18);
+  const nameW = doc.getTextWidth(firstName);
+  const roleLabel = participant.role.toUpperCase();
 
-  drawProviderBadge(doc, provider, x, y + 20);
+  font(doc, "bold", 6.5);
+  textColor(doc, isWriter ? PDF.colors.writer : PDF.colors.criticAccent);
+  doc.text(roleLabel, x + nameW + 6, y + 9);
+
+  let summaryLines: string[] = [];
+
+  if (participant.roleSummary) {
+    font(doc, "normal", 7.5);
+    textColor(doc, PDF.colors.gray);
+    summaryLines = doc.splitTextToSize(participant.roleSummary, maxTextWidth);
+    doc.text(summaryLines, x, y + 19);
+  }
+
+  drawProviderBadge(doc, provider, x, y + 14 + summaryLines.length * 9);
 }
 
-function drawProviderBadge(
+export function drawProviderBadge(
   doc: jsPDF,
   provider: PdfProvider,
   x: number,
@@ -127,40 +208,41 @@ function drawProviderBadge(
   });
 }
 
-function pdfProvider(modelId: string): PdfProvider {
+// Colors mirror ModelProviderIcon's resolveProvider() badge backgrounds, for consistency with the app.
+export function pdfProvider(modelId: string): PdfProvider {
   const id = modelId.toLowerCase();
 
   if (id.includes("openai") || id.includes("gpt")) {
-    return { name: "OpenAI", color: "#10A37F" };
+    return { name: "OpenAI", color: "#059669" }; // emerald-600
   }
 
   if (id.includes("anthropic") || id.includes("claude")) {
-    return { name: "Claude", color: "#D97706" };
+    return { name: "Claude", color: "#B45309" }; // amber-700
   }
 
   if (id.includes("google") || id.includes("gemini")) {
-    return { name: "Gemini", color: "#4285F4" };
+    return { name: "Gemini", color: "#3B82F6" }; // blue-500
   }
 
   if (id.includes("deepseek")) {
-    return { name: "DeepSeek", color: "#1D4ED8" };
+    return { name: "DeepSeek", color: "#2563EB" }; // blue-600
   }
 
   if (id.includes("meta-llama") || id.includes("llama")) {
-    return { name: "Llama", color: "#4F46E5" };
+    return { name: "Llama", color: "#4F46E5" }; // indigo-600
   }
 
   if (id.includes("mistral")) {
-    return { name: "Mistral", color: "#EA580C" };
+    return { name: "Mistral", color: "#EA580C" }; // orange-600
   }
 
   return {
     name: "AI",
-    color: PDF.colors.providerFallback,
+    color: PDF.colors.gray,
   };
 }
 
-function loadCircularAvatar(src: string, sizePx: number): Promise<string | null> {
+export function loadCircularAvatar(src: string, sizePx: number): Promise<string | null> {
   return new Promise((resolve) => {
     const img = new Image();
 
