@@ -40,6 +40,8 @@ class ConsensusEngine:
         followup_instruction: str = "",
         writer_names: list[str] | None = None,
         critic_names: list[str] | None = None,
+        writer_roles: list[str] | None = None,
+        critic_roles: list[str] | None = None,
         progress_hook: Callable[[str], Awaitable[None]] | None = None,
     ) -> DebateSession:
         """Run multi-round consensus process and save session."""
@@ -67,6 +69,8 @@ class ConsensusEngine:
             model_critics=list(critics),
             writer_names=list(writer_names or []),
             critic_names=list(critic_names or []),
+            writer_roles=list(writer_roles or []),
+            critic_roles=list(critic_roles or []),
             thread_id=thread_id or session_id,
             parent_session_id=parent_session_id,
             is_followup=is_followup,
@@ -102,6 +106,8 @@ class ConsensusEngine:
                 domain,
                 writers,
                 critics,
+                writer_roles or [],
+                critic_roles or [],
                 max_rounds,
                 threshold,
                 self.cfg,
@@ -119,8 +125,9 @@ class ConsensusEngine:
             else:
                 synthesis_question = question_with_context
                 synthesis_scope = session.intent_scope
+            primary_writer_role = _role_for(writer_roles or [], 0, domain)
             final_prompt = FINAL_SYNTHESIS.format(
-                question=synthesis_question, current_answer=answer, critique=final_critique, role_context=domain, intent_scope=synthesis_scope
+                question=synthesis_question, current_answer=answer, critique=final_critique, role_context=primary_writer_role, intent_scope=synthesis_scope
             )
             await report("Synthesizing final answer")
             session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
@@ -130,7 +137,7 @@ class ConsensusEngine:
                 await report("Relevance failed, running one repair round")
                 repair = f"The answer drifted from user intent. Rewrite it to answer exactly: {question_with_context}"
                 refined = WRITER_REFINEMENT.format(
-                    rolling_context=rolling, question=question_with_context, critique=repair, role_context=domain, intent_scope=session.intent_scope
+                    rolling_context=rolling, question=question_with_context, critique=repair, role_context=primary_writer_role, intent_scope=session.intent_scope
                 )
                 session.final_answer = await call_openrouter(refined, writers[0], self.cfg)
                 is_ok, _, _ = await validate_relevance(question_with_context, session.final_answer, self.cfg)
@@ -159,6 +166,11 @@ class ConsensusEngine:
 def _fallback_for_image(model: str) -> str:
     """Switch image-unsupported Deepseek to Gemini Flash."""
     return "google/gemini-2.5-flash" if model == "deepseek/deepseek-chat-v3.2" else model
+
+
+def _role_for(roles: list[str], index: int, fallback: str) -> str:
+    """Return a seat-specific role, falling back to the shared role."""
+    return roles[index] if index < len(roles) and roles[index].strip() else fallback
 
 
 def _apply_usage(session: DebateSession, token: object) -> None:

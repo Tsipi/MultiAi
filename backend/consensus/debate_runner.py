@@ -32,12 +32,19 @@ def _critics_label(count: int) -> str:
     return f"{labels}, and Critic {count}"
 
 
+def _role_for(roles: list[str], index: int, fallback: str) -> str:
+    """Return a seat-specific role, falling back to the shared role."""
+    return roles[index] if index < len(roles) and roles[index].strip() else fallback
+
+
 async def run_rounds(
     session: DebateSession,
     question: str,
     domain: str,
     writers: list[str],
     critics: list[str],
+    writer_roles: list[str],
+    critic_roles: list[str],
     max_rounds: int,
     threshold: int,
     cfg: AppConfig,
@@ -46,28 +53,48 @@ async def run_rounds(
 ) -> tuple[str, str]:
     """Execute debate rounds and return latest answer and rolling summary."""
     primary_writer = writers[0]
-    initial_prompt = WRITER_INITIAL.format(
-        question=question, role_context=domain, intent_scope=session.intent_scope
-    )
 
     if len(writers) > 1:
         await report(f"Writer team ({len(writers)} models) is drafting opening answers in parallel.")
         drafts = await asyncio.gather(*[
-            call_openrouter(initial_prompt, w, cfg, image_urls=image_urls or [])
-            for w in writers
+            call_openrouter(
+                WRITER_INITIAL.format(
+                    question=question,
+                    role_context=_role_for(writer_roles, i, domain),
+                    intent_scope=session.intent_scope,
+                ),
+                writer,
+                cfg,
+                image_urls=image_urls or [],
+            )
+            for i, writer in enumerate(writers)
         ])
         answer = "\n\n".join(f"[Writer {i + 1}]\n{d}" for i, d in enumerate(drafts))
     else:
         await report("Writer is drafting the opening answer for your question.")
+        initial_prompt = WRITER_INITIAL.format(
+            question=question,
+            role_context=_role_for(writer_roles, 0, domain),
+            intent_scope=session.intent_scope,
+        )
         answer = await call_openrouter(initial_prompt, primary_writer, cfg, image_urls=image_urls or [])
 
     rolling = ""
     for idx in range(1, max_rounds + 1):
-        prompt = CRITIQUE.format(
-            rolling_context=rolling, current_answer=answer, question=question,
-            role_context=domain, intent_scope=session.intent_scope,
-        )
-        critiques = await asyncio.gather(*[call_openrouter(prompt, c, cfg) for c in critics])
+        critiques = await asyncio.gather(*[
+            call_openrouter(
+                CRITIQUE.format(
+                    rolling_context=rolling,
+                    current_answer=answer,
+                    question=question,
+                    role_context=_role_for(critic_roles, i, domain),
+                    intent_scope=session.intent_scope,
+                ),
+                critic,
+                cfg,
+            )
+            for i, critic in enumerate(critics)
+        ])
 
         await report(f"Round {idx}: {writer_summary_sentence(answer)}")
         for i, critique in enumerate(critiques):
@@ -79,7 +106,7 @@ async def run_rounds(
 
         refine = WRITER_REFINEMENT.format(
             rolling_context=rolling, question=question, critique=merged,
-            role_context=domain, intent_scope=session.intent_scope,
+            role_context=_role_for(writer_roles, 0, domain), intent_scope=session.intent_scope,
         )
         await report(f"Writer rewrites based on {_critics_label(len(critics))}.")
 

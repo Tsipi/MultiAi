@@ -1,3 +1,7 @@
+import {
+  BookOpen, Briefcase, Code2, Layers, Megaphone,
+  Network, Plane, Rocket, TrendingUp, type LucideIcon,
+} from "lucide-react";
 import { mkMember, type TeamMember, FACE_OPTIONS } from "./experts";
 
 export type TeamTemplate = {
@@ -7,8 +11,41 @@ export type TeamTemplate = {
   members: TeamMember[];
 };
 
+type TemplateCast = {
+  writerName?: string;
+  criticNames?: string[];
+  writerModel?: string;
+  criticModels?: string[];
+};
+
+export const TEMPLATE_ICONS: Record<string, LucideIcon> = {
+  "programmer":          Code2,
+  "research-writing":    BookOpen,
+  "tourist-planner":     Plane,
+  "ux-product":          Layers,
+  "startup-gtm":         Rocket,
+  "marketing-campaign":  Megaphone,
+  "investment-debate":   TrendingUp,
+  "resume-career":       Briefcase,
+  "tech-architecture":   Network,
+};
+
 function face(name: string) {
   return FACE_OPTIONS.find((f) => f.name === name) ?? FACE_OPTIONS[0];
+}
+
+/** "Senior researcher — synthesizes sources…" → "Senior researcher". Returns undefined for free-text roles without that pattern (i.e. not template-derived). */
+export function roleSummaryFromText(role: string): string | undefined {
+  const parts = role.split(/ — | - /);
+  if (parts.length < 2) return undefined;
+  return parts[0].trim() || undefined;
+}
+
+/** "Senior researcher — synthesizes sources…" → "synthesizes sources…". Returns undefined for free-text roles without that pattern (i.e. not template-derived). */
+export function roleDescriptionFromText(role: string): string | undefined {
+  const parts = role.split(/ — | - /);
+  if (parts.length < 2) return undefined;
+  return parts.slice(1).join(" — ").trim() || undefined;
 }
 
 function member(
@@ -114,3 +151,25 @@ export const TEAM_TEMPLATES: TeamTemplate[] = [
     ],
   },
 ];
+
+/** Infer a template only when both member names and selected models match it. */
+export function inferTeamTemplateId(cast: TemplateCast): string | null {
+  if (!cast.writerName || !cast.writerModel) return null;
+
+  const criticNames = cast.criticNames ?? [];
+  const criticModels = cast.criticModels ?? [];
+
+  return TEAM_TEMPLATES.find((template) => {
+    const writer = template.members.find((member) => member.duty === "writer");
+    const critics = template.members.filter((member) => member.duty === "critic");
+    if (!writer) return false;
+
+    return writer.name === cast.writerName
+      && writer.model === cast.writerModel
+      && critics.length === criticNames.length
+      && critics.length === criticModels.length
+      && critics.every((critic, index) =>
+        critic.name === criticNames[index] && critic.model === criticModels[index]
+      );
+  })?.id ?? null;
+}

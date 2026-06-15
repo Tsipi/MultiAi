@@ -14,12 +14,22 @@ const defaults: ConsultPayload = {
   question: "",
 };
 
+export function createFreshComposeState() {
+  const team = createDefaultTeam("");
+  return {
+    form: { ...defaults },
+    team,
+    attachments: [] as AttachmentInput[],
+    activeCast: selectCastFromTeam(team),
+  };
+}
+
 export function useComposeForm(setToast: (msg: string) => void) {
-  const [form, setForm] = useState<ConsultPayload>(defaults);
-  const [team, setTeam] = useState<TeamMember[]>(() => createDefaultTeam(""));
+  const [form, setForm] = useState<ConsultPayload>(() => createFreshComposeState().form);
+  const [team, setTeam] = useState<TeamMember[]>(() => createFreshComposeState().team);
   const [attachments, setAttachments] = useState<AttachmentInput[]>([]);
   const [activeCast, setActiveCast] = useState<CastSelection>(() =>
-    selectCastFromTeam(createDefaultTeam(""))
+    createFreshComposeState().activeCast
   );
 
   // Sync team member roles when the shared role field changes
@@ -53,6 +63,14 @@ export function useComposeForm(setToast: (msg: string) => void) {
     setTeam((t) => appendDefaultTeamMember(t, form.role));
   }
 
+  function resetCompose() {
+    const fresh = createFreshComposeState();
+    setForm(fresh.form);
+    setTeam(fresh.team);
+    setAttachments(fresh.attachments);
+    setActiveCast(fresh.activeCast);
+  }
+
   return {
     form,
     setForm,
@@ -63,6 +81,7 @@ export function useComposeForm(setToast: (msg: string) => void) {
     activeCast,
     setActiveCast,
     addTeamMember,
+    resetCompose,
     defaults,
   };
 }

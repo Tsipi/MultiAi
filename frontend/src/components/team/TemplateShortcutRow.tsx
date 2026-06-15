@@ -1,34 +1,13 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  BookOpen, Briefcase, Code2, Layers, Megaphone,
-  Network, Plane, Rocket, TrendingUp, type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TEAM_TEMPLATES, type TeamTemplate } from "@/data/templates";
-import type { TeamMember } from "@/data/experts";
-
-const TEMPLATE_ICONS: Record<string, LucideIcon> = {
-  "programmer":          Code2,
-  "research-writing":    BookOpen,
-  "tourist-planner":     Plane,
-  "ux-product":          Layers,
-  "startup-gtm":         Rocket,
-  "marketing-campaign":  Megaphone,
-  "investment-debate":   TrendingUp,
-  "resume-career":       Briefcase,
-  "tech-architecture":   Network,
-};
+import { TEAM_TEMPLATES, TEMPLATE_ICONS, roleSummaryFromText, type TeamTemplate } from "@/data/templates";
 
 type Props = {
   activeTemplateId: string | null;
   onSelect: (template: TeamTemplate) => void;
 };
-
-function roleSummary(member: TeamMember): string {
-  // "Senior full-stack engineer — drafts…" → "Senior full-stack engineer"
-  return member.role.split(" — ")[0].split(" - ")[0].trim();
-}
 
 function TeamChip({
   template,
@@ -114,7 +93,7 @@ function TeamChip({
                       {m.duty === "writer" ? "Writer" : "Critic"}
                     </span>
                     <p className="text-[0.62rem] text-gray-500 dark:text-gray-400 leading-snug truncate">
-                      {roleSummary(m)}
+                      {roleSummaryFromText(m.role) ?? m.role}
                     </p>
                   </div>
                 </div>

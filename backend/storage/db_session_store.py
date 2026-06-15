@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+import secrets
 import uuid
 from dataclasses import fields
 
@@ -86,6 +88,8 @@ async def save_session(
         "critics": session.model_critics,
         "writer_names": session.writer_names,
         "critic_names": session.critic_names,
+        "writer_roles": session.writer_roles,
+        "critic_roles": session.critic_roles,
     }
     if tc is None:
         db.add(TeamConfig(run_id=run.id, members_json=members))
@@ -196,3 +200,92 @@ async def delete_session(
     await db.delete(run)  # ORM delete — fires cascade on TeamConfig, Output, File
     await db.commit()
     return True
+
+
+def _slugify(text: str) -> str:
+    """Lowercase, hyphen-separated slug from arbitrary text, capped at 60 chars."""
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return slug[:60] or "consensus-result"
+
+
+async def get_share_info(
+    session_id: str,
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+) -> tuple[str, str | None] | None:
+    """Return (visibility, public_slug) for a session, or None if not found/not owned."""
+    result = await db.execute(select(Run).where(Run.session_id == session_id))
+    run = result.scalar_one_or_none()
+    if run is None:
+        return None
+    if user_id is not None and run.user_id != user_id:
+        return None
+    return run.visibility, run.public_slug
+
+
+async def share_session(
+    session_id: str,
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+) -> str | None:
+    """Mark a run public and return its slug, generating one if needed.
+
+    Pass user_id to enforce ownership — returns None when the session is not
+    found or belongs to a different user.
+    """
+    result = await db.execute(select(Run).where(Run.session_id == session_id))
+    run = result.scalar_one_or_none()
+    if run is None:
+        return None
+    if user_id is not None and run.user_id != user_id:
+        return None
+
+    if run.visibility == "public" and run.public_slug:
+        return run.public_slug
+
+    base = _slugify(run.title or run.prompt)
+    slug = f"{base}-{secrets.token_hex(3)}"
+    for _ in range(5):
+        existing = await db.execute(select(Run).where(Run.public_slug == slug))
+        if existing.scalar_one_or_none() is None:
+            break
+        slug = f"{base}-{secrets.token_hex(3)}"
+
+    run.visibility = "public"
+    run.public_slug = slug
+    await db.commit()
+    return slug
+
+
+async def unshare_session(
+    session_id: str,
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+) -> bool:
+    """Mark a run private and clear its slug.
+
+    Pass user_id to enforce ownership — returns False (not 404) when the
+    session exists but belongs to a different user.
+    """
+    result = await db.execute(select(Run).where(Run.session_id == session_id))
+    run = result.scalar_one_or_none()
+    if run is None:
+        return False
+    if user_id is not None and run.user_id != user_id:
+        return False
+
+    run.visibility = "private"
+    run.public_slug = None
+    await db.commit()
+    return True
+
+
+async def load_shared_session(slug: str, db: AsyncSession) -> DebateSession | None:
+    """Load a session by its public slug — returns None unless visibility is public."""
+    result = await db.execute(
+        select(Run).where(Run.public_slug == slug, Run.visibility == "public")
+    )
+    run = result.scalar_one_or_none()
+    if run is None:
+        return None
+    return await load_session(run.session_id, db)

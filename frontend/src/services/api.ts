@@ -87,6 +87,30 @@ export async function deleteSession(sessionId: string): Promise<void> {
   }
 }
 
+export async function shareSession(sessionId: string): Promise<string> {
+  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}/share`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error("Could not share session.");
+  }
+  const data = await response.json() as { public_slug: string };
+  return data.public_slug;
+}
+
+export async function unshareSession(sessionId: string): Promise<void> {
+  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}/unshare`, { method: "POST" });
+  if (!response.ok) {
+    throw new Error("Could not unshare session.");
+  }
+}
+
+export async function getSharedRun(slug: string): Promise<ConsultResult> {
+  const response = await apiFetch(`${BASE_URL}/api/shared/${slug}`);
+  if (!response.ok) {
+    throw new Error("Shared run not found.");
+  }
+  return normalizeResult(await response.json());
+}
+
 export async function consultStream(payload: ConsultPayload, handlers: StreamHandlers): Promise<void> {
   const response = await apiFetch(`${BASE_URL}/api/consult-stream`, {
     method: "POST",
@@ -144,6 +168,8 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     model_critics: Array.isArray(raw.model_critics) ? raw.model_critics.map(String) : [],
     writer_names: Array.isArray(raw.writer_names) ? raw.writer_names.map(String) : [],
     critic_names: Array.isArray(raw.critic_names) ? raw.critic_names.map(String) : [],
+    writer_roles: Array.isArray(raw.writer_roles) ? raw.writer_roles.map(String) : [],
+    critic_roles: Array.isArray(raw.critic_roles) ? raw.critic_roles.map(String) : [],
 
     // ── Debate output ───────────────────────────────────────────────────
     final_answer: String(raw.final_answer ?? ""),
@@ -173,6 +199,10 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     model_costs: Array.isArray(raw.model_costs) ? raw.model_costs : [],
     total_cost_usd: Number(raw.total_cost_usd ?? 0),
     total_tokens: Number(raw.total_tokens ?? 0),
+
+    // ── Sharing ─────────────────────────────────────────────────────────
+    visibility: raw.visibility === "public" ? "public" : "private",
+    public_slug: raw.public_slug != null ? String(raw.public_slug) : null,
   };
 }
 

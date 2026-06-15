@@ -30,6 +30,8 @@ export function mergeTeamIntoPayload(
     critics: critics.map((m) => withImageFallback(m.model, imageLoaded)),
     writer_names: team.filter((m) => m.duty === "writer").map((m) => m.name),
     critic_names: critics.map((m) => m.name),
+    writer_roles: team.filter((m) => m.duty === "writer").map((m) => m.role),
+    critic_roles: critics.map((m) => m.role),
     // Legacy fields so old backend versions and session replays still work
     writer: withImageFallback(writer.model, imageLoaded),
     critic_a: withImageFallback(critics[0]?.model ?? "", imageLoaded),
@@ -66,10 +68,25 @@ export function toPreview(row: {
   };
 }
 
-/** Rebuild a TeamMember[] from a CastSelection so the form/drawer shows the right people. */
-export function castToTeam(cast: CastSelection, baseRole: string): TeamMember[] {
-  const writer = mkMember(cast.writer.name.toLowerCase(), cast.writer.name, cast.writer.avatar, cast.writer.model, "writer", baseRole);
-  const critics = cast.critics.map((c) => mkMember(c.name.toLowerCase(), c.name, c.avatar, c.model, "critic", baseRole));
+/** Rebuild a TeamMember[] from a saved cast, preserving seat-specific roles when available. */
+export function castToTeam(
+  cast: CastSelection,
+  baseRole: string,
+  writerRoles: string[] = [],
+  criticRoles: string[] = []
+): TeamMember[] {
+  const writerRole = writerRoles[0]?.trim() || baseRole;
+  const writer = {
+    ...mkMember(cast.writer.name.toLowerCase(), cast.writer.name, cast.writer.avatar, cast.writer.model, "writer", writerRole),
+    lockToBaseRole: !writerRoles[0]?.trim(),
+  };
+  const critics = cast.critics.map((c, index) => {
+    const criticRole = criticRoles[index]?.trim() || baseRole;
+    return {
+      ...mkMember(c.name.toLowerCase(), c.name, c.avatar, c.model, "critic", criticRole),
+      lockToBaseRole: !criticRoles[index]?.trim(),
+    };
+  });
   return [writer, ...critics];
 }
 

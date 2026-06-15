@@ -23,14 +23,15 @@ import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 
 // ─── Lib / data ───────────────────────────────────────────────────────────────
 import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
-import { deleteSession, getSession } from "./services/api";
+import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
-import { TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
-import { createDefaultTeam } from "./data/experts";
+import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
+import { findFaceByName } from "./data/experts";
 import type { ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
+import { SharedRunPage } from "./pages/SharedRunPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export default function App() {
   const [templatesOpen, setTemplatesOpen] = useState(false);
 
   // ─── Compose / team ────────────────────────────────────────────────────────
-  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
+  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember, resetCompose } = useComposeForm(setToast);
 
   // ─── Session history ───────────────────────────────────────────────────────
   const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory(isLoggedIn);
@@ -93,14 +94,12 @@ export default function App() {
   // When viewing a saved session with no explicit template, infer it from the cast names
   const inferredTemplateId = useMemo(() => {
     if (activeTemplateId) return null; // explicit selection wins
-    const wName = displayResult?.writer_names?.[0];
-    if (!wName) return null;
-    const cNames = displayResult?.critic_names ?? [];
-    return TEAM_TEMPLATES.find((t) => {
-      const w = t.members.find((m) => m.duty === "writer");
-      const cs = t.members.filter((m) => m.duty === "critic");
-      return w?.name === wName && cs.length === cNames.length && cs.every((c, i) => c.name === cNames[i]);
-    })?.id ?? null;
+    return inferTeamTemplateId({
+      writerName: displayResult?.writer_names?.[0],
+      criticNames: displayResult?.critic_names,
+      writerModel: displayResult?.model_writers?.[0],
+      criticModels: displayResult?.model_critics,
+    });
   }, [activeTemplateId, displayResult]);
 
   const resolvedTemplateId = activeTemplateId ?? inferredTemplateId;
@@ -114,21 +113,20 @@ export default function App() {
     const res = resultsById[selectedId];
     if (res?.model_critics?.length) {
       const writerModel = res.model_writers?.[0] ?? "";
-      const writerMember =
-        team.find((m) => m.duty === "writer" && m.model === writerModel) ??
-        team.find((m) => m.duty === "writer") ??
-        team[0];
-      const usedIds = new Set<string>();
+      const writerName = res.writer_names?.[0] || team.find((m) => m.duty === "writer")?.name || team[0]?.name || "Writer";
+      const writer = {
+        name: writerName,
+        avatar: findFaceByName(writerName).avatar,
+        model: writerModel || team.find((m) => m.duty === "writer")?.model || team[0]?.model || "",
+      };
       const critics = res.model_critics.map((model, i) => {
-        const member = team.find((m) => m.model === model && !usedIds.has(m.id));
-        if (member) usedIds.add(member.id);
         const modelLabel =
           MODEL_OPTIONS.find((o) => o.id === model)?.label ??
           (model.includes("/") ? model.split("/").pop()! : model);
-        const fallbackName = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
-        return { name: member?.name ?? fallbackName, avatar: member?.avatar ?? writerMember.avatar, model };
+        const name = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
+        return { name, avatar: findFaceByName(name).avatar, model };
       });
-      return { writer: { name: writerMember.name, avatar: writerMember.avatar, model: writerMember.model }, critics };
+      return { writer, critics };
     }
     return activeCast;
   }, [selectedId, castBySession, activeCast, resultsById, team]);
@@ -203,7 +201,23 @@ export default function App() {
       { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: displayResult.source_prompt || displayResult.question, source_final_answer: displayResult.source_final_answer || displayResult.final_answer, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
       team, [], ""
     );
-    const payload = { ...basePayload, writers: [cast.writer.model], critics: cast.critics.map((c) => c.model), writer: cast.writer.model, critic_a: cast.critics[0]?.model ?? "", critic_b: cast.critics[1]?.model ?? "", writer_names: [cast.writer.name], critic_names: cast.critics.map((c) => c.name), root_question: rootQ };
+    const payload = {
+      ...basePayload,
+      writers: [cast.writer.model],
+      critics: cast.critics.map((c) => c.model),
+      writer: cast.writer.model,
+      critic_a: cast.critics[0]?.model ?? "",
+      critic_b: cast.critics[1]?.model ?? "",
+      writer_names: [cast.writer.name],
+      critic_names: cast.critics.map((c) => c.name),
+      writer_roles: followupChangedSinceOpen
+        ? basePayload.writer_roles
+        : (displayResult.writer_roles.length ? displayResult.writer_roles : basePayload.writer_roles),
+      critic_roles: followupChangedSinceOpen
+        ? basePayload.critic_roles
+        : (displayResult.critic_roles.length ? displayResult.critic_roles : basePayload.critic_roles),
+      root_question: rootQ,
+    };
     try {
       await execute(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -260,6 +274,33 @@ export default function App() {
     }
   };
 
+  const handleShareToggle = async () => {
+    if (!displayResult) return;
+    const id = displayResult.session_id;
+    try {
+      if (displayResult.visibility === "public") {
+        await unshareSession(id);
+        applyShareState(id, "private", null);
+        setToast("Run is now private.");
+      } else {
+        const slug = await shareSession(id);
+        applyShareState(id, "public", slug);
+        const url = `${window.location.origin}/shared/${slug}`;
+        await navigator.clipboard.writeText(url);
+        setToast("Share link copied to clipboard.");
+      }
+    } catch {
+      setToast("Could not update sharing for this run.");
+    }
+  };
+
+  function applyShareState(id: string, visibility: "private" | "public", slug: string | null) {
+    setResultsById((prev) =>
+      prev[id] ? { ...prev, [id]: { ...prev[id], visibility, public_slug: slug } } : prev
+    );
+    setResult((prev) => (prev?.session_id === id ? { ...prev, visibility, public_slug: slug } : prev));
+  }
+
   const removeSession = async (id: string) => {
     try {
       await deleteSession(id);
@@ -294,7 +335,7 @@ export default function App() {
   function startNewQuestionWithSessionTeam() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
-      setTeam(castToTeam(panelCast, baseRole));
+      setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
       if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
       if (resolvedTemplateId) setActiveTemplateId(resolvedTemplateId);
     }
@@ -302,15 +343,16 @@ export default function App() {
   }
 
   function startFreshNewRun() {
-    setTeam(createDefaultTeam(form.role));
+    resetCompose();
     setActiveTemplateId(null);
+    clearClarification();
     startNewQuestion();
   }
 
   function openAdvancedWithSessionTeam() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
-      setTeam(castToTeam(panelCast, baseRole));
+      setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
       if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
     }
     setAdvancedOpen(true);
@@ -364,26 +406,24 @@ export default function App() {
     onAdjustFollowupTeam: () => setAdvancedOpen(true),
     onSubmitFollowup: runFollowup,
     onRetryFollowup: runFollowup,
-    onStartFresh: startNewQuestion,
+    onStartFresh: startFreshNewRun,
     isSavedAnswer: Boolean(selectedId),
     onAskFollowup: openFollowup,
     onStartNewSession: startNewQuestionWithSessionTeam,
     onOpenInsights: () => setInsightsOpen(true),
     onOpenAdvanced: openAdvancedWithSessionTeam,
     followupError,
+    onShareToggle: handleShareToggle,
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
-  if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
-
-  if (location.pathname.startsWith("/shared/")) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
-        Public shared runs are coming in v4.2.
-      </div>
-    );
+  const sharedSlugMatch = location.pathname.match(/^\/shared\/(.+)$/);
+  if (sharedSlugMatch) {
+    return <SharedRunPage slug={sharedSlugMatch[1]} />;
   }
+
+  if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 
   return (
     <div className="min-h-screen flex flex-col">

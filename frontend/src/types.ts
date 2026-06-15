@@ -32,6 +32,8 @@ export type ConsultPayload = {
   critics?: string[];
   writer_names?: string[];
   critic_names?: string[];
+  writer_roles?: string[];
+  critic_roles?: string[];
   // Legacy single-model fields — kept for backward compat; backend coerces into the lists above
   writer: string;
   critic_a: string;
@@ -71,6 +73,8 @@ export type ConsultResult = {
   model_critics: string[];
   writer_names: string[];    // display names shown in the UI
   critic_names: string[];
+  writer_roles: string[];    // seat-specific prompt roles
+  critic_roles: string[];
 
   // ── Debate output ─────────────────────────────────────────────────────
   final_answer: string;
@@ -99,6 +103,10 @@ export type ConsultResult = {
   model_costs: Array<Record<string, unknown>>;
   total_cost_usd: number;
   total_tokens: number;
+
+  // ── Sharing ───────────────────────────────────────────────────────────
+  visibility?: "private" | "public";
+  public_slug?: string | null;
 };
 
 export type StreamHandlers = {
