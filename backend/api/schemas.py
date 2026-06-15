@@ -26,6 +26,8 @@ class ConsultRequest(BaseModel):
     critics: list[str] = Field(default_factory=list, max_length=6)
     writer_names: list[str] = Field(default_factory=list)
     critic_names: list[str] = Field(default_factory=list)
+    writer_roles: list[str] = Field(default_factory=list)
+    critic_roles: list[str] = Field(default_factory=list)
     # Legacy single-model fields — coerced into the list fields by the validator below
     writer: str = ""
     critic_a: str = ""
@@ -79,6 +81,8 @@ class ConsultResponse(BaseModel):
     model_critics: list[str] = []
     writer_names: list[str] = []
     critic_names: list[str] = []
+    writer_roles: list[str] = []
+    critic_roles: list[str] = []
 
     # ── Debate output ───────────────────────────────────────────────────────
     final_answer: str

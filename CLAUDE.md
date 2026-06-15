@@ -303,6 +303,21 @@ User: "make the team spread into 3 columns even if only 3 team members on pdf". 
 
 Verified: `tsc --noEmit` clean, `npm run build` clean, `npx vitest run` 4/4 passed.
 
+### Phase 4.2.4 - per-agent writer and critic roles (complete, uncommitted)
+Previously, the team editor stored a separate `role`/Expert focus for every member, but `mergeTeamIntoPayload()` sent only the writer's role as the shared API `role`. The backend then formatted every writer and critic prompt with that same shared role, so critic-specific focuses were visible in the UI but did not affect the debate.
+
+Implemented position-aligned `writer_roles` and `critic_roles` arrays end to end:
+- `mergeTeamIntoPayload()` sends roles in the same order as `writers`/`critics`.
+- `ConsultRequest`, `ConsultResponse`, `DebateSession`, API routes, normalized frontend results, and DB team/session persistence retain the role arrays.
+- `run_rounds()` applies each writer role to its initial draft and each critic role to its critique. The primary writer's role is used for refinement, repair, and final synthesis.
+- Empty or missing role entries fall back to the existing shared `role`, preserving old API clients and saved-session behavior.
+- Saved-session team restoration and follow-up payloads preserve the saved role arrays, unless the user explicitly changes the team/settings before starting the follow-up.
+- Added `frontend/src/lib/consultHelpers.test.ts` and `tests/test_debate_runner_roles.py` for role-array alignment and shared-role fallback.
+
+Files touched: `frontend/src/App.tsx`, `frontend/src/types.ts`, `frontend/src/lib/consultHelpers.ts`, `frontend/src/services/api.ts`, `backend/api/schemas.py`, `backend/api/app.py`, `backend/consensus/models.py`, `backend/consensus/engine.py`, `backend/consensus/debate_runner.py`, `backend/storage/db_session_store.py`, plus focused tests.
+
+Verified: `npx tsc --noEmit` clean; `npm test` 6/6 passed; `npm run build` clean (existing >500kB chunk warning); focused backend role/engine tests 3/3 passed; `python -m compileall -q backend tests` clean; broader backend suite excluding API/sharing tests 26/27 passed, with the same pre-existing `test_load_legacy_session_without_list_fields` failure. API/sharing test collection remains blocked in this environment by missing `fastapi_users`.
+
 ### Next steps
 - Await user's visual verification of: (a) PDF export rounds 3-6 changes, (b) the avatar fix (reload the page, view a saved "Marketing Campaign Team" session, confirm Sandy/Christy show their own avatars in both the Team Members editor and the PDF export), (c) round 8's tweaks (writer-role description text in gray below the template title, provider badge below each member's role summary), (d) round 9 (more row spacing, capitalized description, 3-column grid for >3 participants — try a session with 4+ team members, and "Role" section gone when a template is active) — export PDFs for a "Tourist Planner Team" session (3 members) and a 4+-member session to check, (e) the no-emoji prompt change — run a live debate and confirm no emojis appear in the Writer's Answer/Critique/Refinement/Final Answer, and (f) round 10 — export a multi-round, multi-critic session PDF (with "Include full debate" checked) and confirm "Full Debate" title is brand violet, and each writer/critic message shows its avatar, name, role badge, and LLM provider badge
 - Once confirmed, v4.2 work + this bugfix are fully done — next: v5.0 (Next.js migration + SEO) per `PLAN.md`

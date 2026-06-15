@@ -93,6 +93,8 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         model_critics=session.model_critics,
         writer_names=session.writer_names,
         critic_names=session.critic_names,
+        writer_roles=session.writer_roles,
+        critic_roles=session.critic_roles,
         total_cost_usd=session.total_cost_usd,
         total_tokens=session.total_tokens,
         thread_id=session.thread_id,
@@ -157,6 +159,8 @@ async def consult(
         followup_instruction=payload.followup_instruction,
         writer_names=payload.writer_names,
         critic_names=payload.critic_names,
+        writer_roles=payload.writer_roles,
+        critic_roles=payload.critic_roles,
     )
     async with _get_session_maker()() as db:
         await save_session_db(session, db, user_id=user.id if user else None)
@@ -196,6 +200,8 @@ async def consult_stream(
                 followup_instruction=payload.followup_instruction,
                 writer_names=payload.writer_names,
                 critic_names=payload.critic_names,
+                writer_roles=payload.writer_roles,
+                critic_roles=payload.critic_roles,
                 progress_hook=activity,
             )
             async with _get_session_maker()() as db:

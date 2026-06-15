@@ -88,6 +88,8 @@ async def save_session(
         "critics": session.model_critics,
         "writer_names": session.writer_names,
         "critic_names": session.critic_names,
+        "writer_roles": session.writer_roles,
+        "critic_roles": session.critic_roles,
     }
     if tc is None:
         db.add(TeamConfig(run_id=run.id, members_json=members))

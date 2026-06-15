@@ -168,6 +168,8 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     model_critics: Array.isArray(raw.model_critics) ? raw.model_critics.map(String) : [],
     writer_names: Array.isArray(raw.writer_names) ? raw.writer_names.map(String) : [],
     critic_names: Array.isArray(raw.critic_names) ? raw.critic_names.map(String) : [],
+    writer_roles: Array.isArray(raw.writer_roles) ? raw.writer_roles.map(String) : [],
+    critic_roles: Array.isArray(raw.critic_roles) ? raw.critic_roles.map(String) : [],
 
     // ── Debate output ───────────────────────────────────────────────────
     final_answer: String(raw.final_answer ?? ""),

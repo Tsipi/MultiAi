@@ -26,7 +26,7 @@ import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature
 import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
-import { createDefaultTeam, findFaceByName } from "./data/experts";
+import { findFaceByName } from "./data/experts";
 import type { ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ export default function App() {
   const [templatesOpen, setTemplatesOpen] = useState(false);
 
   // ─── Compose / team ────────────────────────────────────────────────────────
-  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember } = useComposeForm(setToast);
+  const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember, resetCompose } = useComposeForm(setToast);
 
   // ─── Session history ───────────────────────────────────────────────────────
   const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory(isLoggedIn);
@@ -201,7 +201,23 @@ export default function App() {
       { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: displayResult.source_prompt || displayResult.question, source_final_answer: displayResult.source_final_answer || displayResult.final_answer, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
       team, [], ""
     );
-    const payload = { ...basePayload, writers: [cast.writer.model], critics: cast.critics.map((c) => c.model), writer: cast.writer.model, critic_a: cast.critics[0]?.model ?? "", critic_b: cast.critics[1]?.model ?? "", writer_names: [cast.writer.name], critic_names: cast.critics.map((c) => c.name), root_question: rootQ };
+    const payload = {
+      ...basePayload,
+      writers: [cast.writer.model],
+      critics: cast.critics.map((c) => c.model),
+      writer: cast.writer.model,
+      critic_a: cast.critics[0]?.model ?? "",
+      critic_b: cast.critics[1]?.model ?? "",
+      writer_names: [cast.writer.name],
+      critic_names: cast.critics.map((c) => c.name),
+      writer_roles: followupChangedSinceOpen
+        ? basePayload.writer_roles
+        : (displayResult.writer_roles.length ? displayResult.writer_roles : basePayload.writer_roles),
+      critic_roles: followupChangedSinceOpen
+        ? basePayload.critic_roles
+        : (displayResult.critic_roles.length ? displayResult.critic_roles : basePayload.critic_roles),
+      root_question: rootQ,
+    };
     try {
       await execute(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -319,7 +335,7 @@ export default function App() {
   function startNewQuestionWithSessionTeam() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
-      setTeam(castToTeam(panelCast, baseRole));
+      setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
       if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
       if (resolvedTemplateId) setActiveTemplateId(resolvedTemplateId);
     }
@@ -327,15 +343,16 @@ export default function App() {
   }
 
   function startFreshNewRun() {
-    setTeam(createDefaultTeam(form.role));
+    resetCompose();
     setActiveTemplateId(null);
+    clearClarification();
     startNewQuestion();
   }
 
   function openAdvancedWithSessionTeam() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
-      setTeam(castToTeam(panelCast, baseRole));
+      setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
       if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
     }
     setAdvancedOpen(true);
@@ -389,7 +406,7 @@ export default function App() {
     onAdjustFollowupTeam: () => setAdvancedOpen(true),
     onSubmitFollowup: runFollowup,
     onRetryFollowup: runFollowup,
-    onStartFresh: startNewQuestion,
+    onStartFresh: startFreshNewRun,
     isSavedAnswer: Boolean(selectedId),
     onAskFollowup: openFollowup,
     onStartNewSession: startNewQuestionWithSessionTeam,

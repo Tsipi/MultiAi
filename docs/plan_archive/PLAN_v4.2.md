@@ -172,3 +172,18 @@ The `/shared/:slug` route was stubbed in v4.0 — this phase fills it in.
 
 - [ ] **4.2.3.4.1** `SessionPromptDownloads.tsx` — add a checkbox "Include full debate"
 - [ ] **4.2.3.4.2** Pass the choice down to `downloadMarkdown` / `downloadPdf`
+
+---
+
+## Phase 4.2.4 - Per-Agent Writer and Critic Roles
+
+**Goal:** Make each team member's "Expert focus" affect that specific agent's LLM prompt instead
+of sending the writer's shared role to every writer and critic.
+
+- [x] **4.2.4.1** Frontend payload includes position-aligned `writer_roles` and `critic_roles` arrays
+- [x] **4.2.4.2** API request/response schemas and persisted sessions retain per-agent roles
+- [x] **4.2.4.3** Each writer receives its own role for initial drafting; the primary writer role is reused for refinement and final synthesis
+- [x] **4.2.4.4** Each critic receives its own role for critique prompts
+- [x] **4.2.4.5** Missing role-array entries fall back to the existing shared `role` for old clients and sessions
+- [x] **4.2.4.6** Add focused frontend and backend tests for role alignment and fallback behavior
+- [x] **4.2.4.7** Preserve saved per-agent roles when reusing a session team or starting a follow-up

@@ -39,6 +39,8 @@ class DebateSession:
     # Display names shown in the UI (set by the user in the team builder)
     writer_names: list[str] = field(default_factory=list)
     critic_names: list[str] = field(default_factory=list)
+    writer_roles: list[str] = field(default_factory=list)
+    critic_roles: list[str] = field(default_factory=list)
 
     # ── Debate output ───────────────────────────────────────────────────────
     rounds: list[DebateRound] = field(default_factory=list)
