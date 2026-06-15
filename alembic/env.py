@@ -12,8 +12,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 load_dotenv(find_dotenv(usecwd=True), override=True)
 
-from backend.storage.database import Base, _async_url  # noqa: E402
-import backend.storage.db_models  # noqa: E402, F401
+from storage.database import Base, _async_url  # noqa: E402
+import storage.db_models  # noqa: E402, F401
 
 alembic_cfg = context.config
 if alembic_cfg.config_file_name is not None:
