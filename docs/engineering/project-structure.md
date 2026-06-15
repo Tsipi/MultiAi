@@ -43,7 +43,14 @@ MultiAi/
       services/
         api.ts         ← fetch wrappers for all backend endpoints
         attachments.ts ← File/clipboard reading utilities
-        exporter.ts    ← Download as Markdown or PDF
+        pdf/
+          exporter.ts  ← Download as Markdown or PDF
+          pdfHeader.ts ← PDF page headers, numbering, and watermarks
+          pdfIcons.tsx ← PDF icon rendering
+          pdfMarkdown.ts ← Markdown-to-PDF rendering
+          pdfParticipants.ts ← PDF participant and message layout
+          pdfTheme.ts  ← Shared PDF theme values
+          pdfUtils.ts  ← Shared PDF drawing utilities
       data/
         experts.ts     ← Persona definitions (names, avatars, fun facts, createDefaultTeam)
         models.ts      ← LLM options shown in UI dropdowns
@@ -52,4 +59,3 @@ MultiAi/
   tests/               ← pytest tests (all mock LLM calls, never real API)
   .env                 ← secrets (gitignored — never commit this)
   CLAUDE.md            ← instructions for Claude Code
-

@@ -13,6 +13,8 @@ export const PDF = {
 
     divider: "#EDE9FE", // violet-100
     dividerStrong: "#DDD6FE", // violet-200
+    roundBackground: "#F5F3FF", // violet-50
+    roundBorder: "#DDD6FE", // violet-200
 
     participantName: "#1E143C",
 

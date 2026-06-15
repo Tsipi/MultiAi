@@ -129,7 +129,7 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `frontend/src/data/models.ts` | Model options list |
 | `frontend/src/services/api.ts` | Backend fetch wrapper |
 | `frontend/src/services/attachments.ts` | File/attachment handling |
-| `frontend/src/services/exporter.ts` | Export (markdown/PDF) |
+| `frontend/src/services/pdf/exporter.ts` | Export (markdown/PDF) |
 
 ## Coding standards
 

@@ -2,11 +2,11 @@ import { jsPDF } from "jspdf";
 import { TEAM_TEMPLATES, TEMPLATE_ICONS, roleDescriptionFromText } from "@/data/templates";
 import { renderMarkdown, type PageHeaderFn } from "./pdfMarkdown";
 import { drawPageHeader, drawPageNumbers, drawWatermarks } from "./pdfHeader";
-import { drawParticipants, drawMessageHeader, type ExportParticipant, type ExportDebateMessage } from "./pdfParticipants";
+import { drawParticipants, drawMessageHeader, drawRoundDivider, type ExportParticipant, type ExportDebateMessage } from "./pdfParticipants";
 import { loadIconDataUrl } from "./pdfIcons";
 import { PDF } from "./pdfTheme";
 import { drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
-import AgentStudioLogo from "../../avatars/AgentStudioAssistant.png";
+import AgentStudioLogo from "../../../avatars/AgentStudioAssistant.png";
 
 export type { ExportParticipant, ExportDebateMessage };
 
@@ -121,9 +121,9 @@ export async function downloadPdf(data: ExportData): Promise<void> {
     y = drawSectionLabel(doc, "Full Debate", y + 12);
 
     for (const round of data.debateRounds) {
-      y = renderMarkdown(doc, `### Round ${round.round_num}`, y + 8, headerFn);
+      y = drawRoundDivider(doc, round.round_num, data.roundCount, y + 8, headerFn);
 
-      y = await drawMessageHeader(doc, round.writerMessage, y + 4, headerFn);
+      y = await drawMessageHeader(doc, round.writerMessage, y + 2, headerFn);
       y = renderMarkdown(doc, round.writerMessage.text || "Not provided", y + 2, headerFn);
 
       for (const critique of round.criticMessages) {

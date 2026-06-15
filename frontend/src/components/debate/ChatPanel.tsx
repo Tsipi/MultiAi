@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "../session/ClarificationBox";
-import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/exporter";
+import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/pdf/exporter";
 import { generateTitle } from "../../services/api";
 import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 import { promptTextForExport } from "@/lib/promptDisplay";

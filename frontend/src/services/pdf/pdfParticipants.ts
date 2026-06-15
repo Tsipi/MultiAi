@@ -1,7 +1,7 @@
 import type { jsPDF } from "jspdf";
 import { PDF } from "./pdfTheme";
 import { ensurePageSpace, type PageHeaderFn } from "./pdfMarkdown";
-import { contentWidth, divider, drawSectionLabel, fillColor, font, resetColor, textColor } from "./pdfUtils";
+import { contentWidth, divider, drawColor, drawSectionLabel, fillColor, font, resetColor, textColor } from "./pdfUtils";
 
 export type ExportParticipant = {
   name: string;
@@ -151,7 +151,56 @@ export async function drawMessageHeader(
 
   resetColor(doc);
 
-  return y + avatarSize + 6;
+  return y + avatarSize + 12;
+}
+
+/** Draws the centered violet round pill and divider used by the app's Full Debate view. */
+export function drawRoundDivider(
+  doc: jsPDF,
+  round: number,
+  maxRounds: number | undefined,
+  y: number,
+  headerFn?: PageHeaderFn
+): number {
+  const pillHeight = 16;
+  const pillPaddingX = 9;
+  const label = `ROUND ${round}`;
+  const suffix = maxRounds && maxRounds > 0 ? `  of ${maxRounds}` : "";
+
+  y = ensurePageSpace(doc, y, pillHeight + 8, headerFn);
+
+  font(doc, "bold", 7.5);
+  const labelWidth = doc.getTextWidth(label);
+  font(doc, "normal", 7);
+  const suffixWidth = doc.getTextWidth(suffix);
+
+  const pillWidth = labelWidth + suffixWidth + pillPaddingX * 2;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pillX = (pageWidth - pillWidth) / 2;
+  const lineY = y + pillHeight / 2;
+
+  drawColor(doc, PDF.colors.divider);
+  doc.setLineWidth(0.5);
+  doc.line(PDF.marginX, lineY, pillX - 8, lineY);
+  doc.line(pillX + pillWidth + 8, lineY, pageWidth - PDF.marginX, lineY);
+
+  fillColor(doc, PDF.colors.roundBackground);
+  drawColor(doc, PDF.colors.roundBorder);
+  doc.roundedRect(pillX, y, pillWidth, pillHeight, pillHeight / 2, pillHeight / 2, "FD");
+
+  const textY = y + 10.8;
+  font(doc, "bold", 7.5);
+  textColor(doc, PDF.colors.brand);
+  doc.text(label, pillX + pillPaddingX, textY);
+
+  if (suffix) {
+    font(doc, "normal", 7);
+    textColor(doc, PDF.colors.gray);
+    doc.text(suffix, pillX + pillPaddingX + labelWidth, textY);
+  }
+
+  resetColor(doc);
+  return y + pillHeight + 8;
 }
 
 function drawParticipantText(

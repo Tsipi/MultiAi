@@ -31,9 +31,11 @@ export function renderMarkdown(
       continue;
     }
 
-    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    // Treat deeper and tightly-spaced model-generated headings as headings too,
+    // so literal Markdown hashes never leak into the PDF.
+    const heading = line.match(/^(#{1,})\s*(\S.*)$/);
     if (heading) {
-      const level = heading[1].length;
+      const level = Math.min(heading[1].length, 3);
       const text = cleanInline(heading[2]);
 
       const size =

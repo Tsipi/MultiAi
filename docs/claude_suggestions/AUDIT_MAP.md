@@ -40,8 +40,8 @@
 | `src/services/api.ts` | Backend fetch wrapper |
 | `src/services/api.test.ts` | Frontend API tests (collocated with source — see inconsistencies) |
 | `src/services/attachments.ts` | File/attachment handling |
-| `src/services/exporter.ts` | Export logic |
-| `src/services/pdfMarkdown.ts` | PDF + markdown export helper |
+| `src/services/pdf/exporter.ts` | Export logic |
+| `src/services/pdf/pdfMarkdown.ts` | PDF + markdown export helper |
 | `vite.config.ts` | Vite config — React plugin, Tailwind v4 plugin, `@` alias → `./src` |
 | `tsconfig.json` | TypeScript config — strict mode, `@/*` paths alias |
 | `package.json` | npm manifest |
