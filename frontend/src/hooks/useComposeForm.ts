@@ -12,6 +12,7 @@ const defaults: ConsultPayload = {
   consensus_score: 8,
   role: "",
   question: "",
+  web_search_mode: "auto",
 };
 
 export function createFreshComposeState() {

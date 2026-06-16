@@ -43,6 +43,20 @@ The user poses a question;
 a Writer LLM answers it, two Critic LLMs critique it, and the loop continues until a Scorer (always Deepseek v3.2) rates agreement ≥ the configured threshold or max rounds is reached. 
 A Summarizer (always Deepseek v3.2) compresses each round into a rolling context used in subsequent rounds. All LLM calls go through OpenRouter.
 
+### Live web research
+
+Phase 4.2.5 is implemented. Consult requests include `web_search_mode` (`off`, `auto`, or `on`;
+default `auto`). Explicit search requests and clearly time-sensitive questions activate one
+controlled OpenRouter web-plugin research call after clarification checks and before the debate.
+The dated, source-linked packet is appended to the shared question context, so every Writer,
+Critic, refinement, validator, and final-synthesis call receives the same evidence. Scorer and
+summarizer do not search independently.
+
+Search metadata is persisted on `DebateSession`, returned through the API, shown by
+`WebResearchStatus` on live/saved/shared results, and included in PDF/Markdown exports. Failed
+searches continue with a visible freshness warning. Never claim live search or current verification
+occurred unless `web_search_performed` is true.
+
 ### Debate loop flow
 
 ```
@@ -97,6 +111,7 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `backend/consensus/prompts.py` | All LLM prompt templates (locked — do not modify without instruction) |
 | `backend/consensus/intent.py` | Intent ambiguity detection and clarification |
 | `backend/consensus/attachments.py` | File/image attachment normalization; Deepseek→Gemini image fallback |
+| `backend/consensus/web_research.py` | Live-search activation, OpenRouter web plugin, source packet formatting |
 | `backend/consensus/usage_tracker.py` | Per-model token and cost tracking |
 | `backend/consensus/costs.py` | Cost calculation |
 | `backend/consensus/parsing.py` | LLM output parsing (extracts revised answers, scores) |

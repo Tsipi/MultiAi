@@ -11,3 +11,4 @@ export { FinalAnswerHeaderRoster } from "./FinalAnswerAvatarStrip";
 export type { RosterFace } from "./FinalAnswerAvatarStrip";
 export { SavedAnswerMarketingCard } from "./SavedAnswerMarketingCard";
 export { ClarificationBox } from "./ClarificationBox";
+export { WebResearchStatus } from "./WebResearchStatus";

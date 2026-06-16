@@ -201,8 +201,25 @@ export function ChatPanel(props: Props) {
             };
           })
         : undefined;
+      const webResearch = (result.web_search_performed || result.web_search_warning || result.web_search_sources.length)
+        ? {
+            mode: result.web_search_mode,
+            performed: result.web_search_performed,
+            query: result.web_search_query,
+            retrievedAt: result.web_search_retrieved_at,
+            sources: result.web_search_sources,
+            warning: result.web_search_warning,
+          }
+        : undefined;
+      const followupExport = result.is_followup
+        ? {
+            originalPrompt: result.source_prompt || result.root_question || result.base_question || result.question,
+            previousFinalAnswer: result.source_final_answer || "",
+            revisedAnswerLabel: "Revised Answer",
+          }
+        : undefined;
       if (kind === "md") {
-        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds });
+        downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds, webResearch, followup: followupExport });
       } else {
         await downloadPdf({
           title: pdfTitle,
@@ -216,6 +233,8 @@ export function ChatPanel(props: Props) {
           roundCount: result.full_discussion.length,
           totalCostUsd: result.total_cost_usd,
           debateRounds,
+          webResearch,
+          followup: followupExport,
         });
       }
     } finally {

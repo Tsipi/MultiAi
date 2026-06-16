@@ -7,6 +7,7 @@ describe("createFreshComposeState", () => {
 
     expect(fresh.form.role).toBe("");
     expect(fresh.form.question).toBe("");
+    expect(fresh.form.web_search_mode).toBe("auto");
     expect(fresh.attachments).toEqual([]);
     expect(fresh.team.every((member) => member.role === "")).toBe(true);
   });

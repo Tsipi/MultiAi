@@ -162,6 +162,13 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     role: String(raw.role ?? raw.domain ?? ""),
     base_question: String(raw.base_question ?? ""),
     attachment_files: normalizeAttachmentFiles(raw.attachment_files),
+    web_search_mode: raw.web_search_mode === "off" || raw.web_search_mode === "on" ? raw.web_search_mode : "auto",
+    web_search_performed: toBoolean(raw.web_search_performed),
+    web_search_query: String(raw.web_search_query ?? ""),
+    web_search_retrieved_at: String(raw.web_search_retrieved_at ?? ""),
+    web_search_sources: normalizeWebSearchSources(raw.web_search_sources),
+    web_search_summary: String(raw.web_search_summary ?? ""),
+    web_search_warning: String(raw.web_search_warning ?? ""),
 
     // ── Team ────────────────────────────────────────────────────────────
     model_writers: Array.isArray(raw.model_writers) ? raw.model_writers.map(String) : [],
@@ -222,6 +229,30 @@ function normalizeAttachmentFiles(raw: unknown): AttachmentFileRef[] {
       };
     })
     .filter((x): x is AttachmentFileRef => x !== null);
+}
+
+function normalizeWebSearchSources(raw: unknown): ConsultResult["web_search_sources"] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const source = item as Record<string, unknown>;
+      const url = String(source.url ?? "").trim();
+      if (!isSafeHttpUrl(url)) return [];
+      return [{
+        title: String(source.title ?? url),
+        url,
+        ...(source.content != null ? { content: String(source.content) } : {}),
+      }];
+    });
+}
+
+function isSafeHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function toBoolean(value: unknown): boolean {

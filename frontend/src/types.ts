@@ -11,6 +11,14 @@ export type AttachmentInput = {
   data: string;
 };
 
+export type WebSearchMode = "off" | "auto" | "on";
+
+export type WebSearchSource = {
+  title: string;
+  url: string;
+  content?: string;
+};
+
 /** Serialized attachment reference returned with a session (data URL for display). */
 export type AttachmentFileRef = {
   name: string;
@@ -25,6 +33,7 @@ export type ConsultPayload = {
   question: string;
   role: string;
   attachments?: AttachmentInput[];
+  web_search_mode?: WebSearchMode;
 
   // ── Team ──────────────────────────────────────────────────────────────
   // Preferred: full lists (what the backend actually reads)
@@ -67,6 +76,13 @@ export type ConsultResult = {
   role: string;
   base_question: string;
   attachment_files: AttachmentFileRef[];
+  web_search_mode: WebSearchMode;
+  web_search_performed: boolean;
+  web_search_query: string;
+  web_search_retrieved_at: string;
+  web_search_sources: WebSearchSource[];
+  web_search_summary: string;
+  web_search_warning: string;
 
   // ── Team ──────────────────────────────────────────────────────────────
   model_writers: string[];   // OpenRouter model IDs — which LLMs ran
