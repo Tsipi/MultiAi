@@ -7,6 +7,7 @@ describe("createFreshComposeState", () => {
 
     expect(fresh.form.role).toBe("");
     expect(fresh.form.question).toBe("");
+    expect(fresh.form.max_rounds).toBe(2);
     expect(fresh.form.web_search_mode).toBe("auto");
     expect(fresh.form.answer_mode).toBe("balanced");
     expect(fresh.attachments).toEqual([]);

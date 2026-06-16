@@ -34,7 +34,7 @@ class AppConfig:
     web_research_context_chars: int = int(os.getenv("WEB_RESEARCH_CONTEXT_CHARS", "12000"))
     jwt_secret: str = os.getenv("JWT_SECRET", "change-me-in-production")
     sessions_dir: Path = Path("sessions")
-    max_rounds_default: int = 3
+    max_rounds_default: int = 2
     consensus_default: int = 8
     min_relevance_score: float = 7.0
     summary_max_tokens: int = 200

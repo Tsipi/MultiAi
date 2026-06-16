@@ -73,10 +73,10 @@ Default should be **Balanced** or **Fast** for general questions. Users can choo
 
 ### Tasks
 
-- [ ] Change default run setup to fewer rounds
-- [ ] Keep manual override for advanced users
-- [ ] Add copy explaining that more rounds usually means slower but more reviewed answers
-- [ ] Verify follow-up runs inherit the selected mode/rounds correctly
+- [x] Change default run setup to fewer rounds
+- [x] Keep manual override for advanced users
+- [x] Add copy explaining that more rounds usually means slower but more reviewed answers
+- [x] Verify follow-up runs inherit the selected mode/rounds correctly
 
 ---
 

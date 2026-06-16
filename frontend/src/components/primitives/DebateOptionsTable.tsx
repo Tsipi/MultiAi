@@ -30,7 +30,7 @@ export function DebateOptionsTable({
                 Debate passes
               </p>
               <p className="m-0 mt-1 text-[0.78rem] font-normal leading-snug text-muted-foreground">
-                Max critique-and-rewrite rounds before wrap-up.
+                Max critique-and-rewrite rounds before wrap-up. More passes are slower but more reviewed.
               </p>
             </th>
             <td className="w-[140px] px-3 py-2 align-middle">

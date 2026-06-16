@@ -8,6 +8,7 @@ import { SlidersHorizontal, UserPlus } from "lucide-react";
 import { InfoTip } from "./InfoTip";
 import { AnswerModeControl } from "./AnswerModeControl";
 import { WebResearchControl } from "./WebResearchControl";
+import { recommendedRoundsForAnswerMode } from "@/lib/answerMode";
 
 type Props = {
   value: ConsultPayload;
@@ -19,6 +20,9 @@ type Props = {
 export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
   const set = <K extends keyof ConsultPayload>(key: K, val: ConsultPayload[K]) =>
     onChange({ ...value, [key]: val });
+
+  const setAnswerMode = (mode: NonNullable<ConsultPayload["answer_mode"]>) =>
+    onChange({ ...value, answer_mode: mode, max_rounds: recommendedRoundsForAnswerMode(mode) });
 
   const updateMember = (idx: number, next: TeamMember) =>
     onTeamChange(team.map((m, i) => (i === idx ? next : m)));
@@ -68,7 +72,7 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
       </section>
       <AnswerModeControl
         value={value.answer_mode ?? "balanced"}
-        onChange={(mode) => set("answer_mode", mode)}
+        onChange={setAnswerMode}
       />
       <WebResearchControl
         value={value.web_search_mode ?? "auto"}
