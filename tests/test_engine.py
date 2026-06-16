@@ -6,6 +6,7 @@ from pathlib import Path
 from backend.config import AppConfig
 from backend.consensus.engine import ConsensusEngine
 from backend.consensus.models import DebateRound
+from backend.consensus.web_research import WebResearchResult
 
 
 def test_engine_requests_clarification_for_ambiguous_prompt(tmp_path: Path):
@@ -124,3 +125,58 @@ def test_fast_mode_runs_validation_for_obviously_off_topic_answer(monkeypatch, t
     )
 
     assert validate_calls == 1
+
+
+def test_fast_mode_uses_shorter_web_search_timeout(monkeypatch, tmp_path: Path):
+    """Fast mode passes the fast web-search timeout into the research step."""
+    cfg = AppConfig(sessions_dir=tmp_path, fast_web_search_timeout_seconds=7, web_search_timeout_seconds=45)
+    engine = ConsensusEngine(cfg)
+    observed_timeouts: list[float | None] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        class Assessment:
+            is_ambiguous = False
+            reason = ""
+            clarification_question = ""
+            clarification_options = []
+            intent_scope = "clear"
+
+        return Assessment()
+
+    async def fake_research(*_args, timeout_seconds=None, **_kwargs):
+        observed_timeouts.append(timeout_seconds)
+        return WebResearchResult(
+            performed=True,
+            query="latest release",
+            retrieved_at="2026-06-16T00:00:00+00:00",
+            sources=[{"title": "Source", "url": "https://example.com"}],
+            summary="Current evidence.",
+        )
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "latest release answer", "critique", 8.0, "ok", "summary"))
+        return "latest release answer", ""
+
+    async def fake_call(*_args, **_kwargs):
+        return "latest release final"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.research_web", fake_research)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+
+    asyncio.run(
+        engine.consult(
+            question="What is the latest release?",
+            domain="",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            web_search_mode="auto",
+            answer_mode="fast",
+        )
+    )
+
+    assert observed_timeouts == [7]

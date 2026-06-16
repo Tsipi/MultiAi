@@ -62,7 +62,7 @@ Full spec: `docs/plan_archive/PLAN_v4.3.md`
 | 4.3.2 | Reduce Default Rounds | **Done** |
 | 4.3.3 | Skip Unnecessary Support Calls in Fast Mode | **Done** |
 | 4.3.4 | Use Faster Models for Utility Roles | **Done** |
-| 4.3.5 | Make Web Search Strictly Conditional | Planned |
+| 4.3.5 | Make Web Search Strictly Conditional | **Done** |
 | 4.3.6 | Defer Non-Essential Work | Planned |
 | 4.3.7 | Improve Perceived Speed | Planned |
 | 4.3.8 | Measure Before and After | Planned |

@@ -143,11 +143,11 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Keep current auto-detection conservative
-- [ ] Add a visible "search skipped" state so users understand why no search ran
-- [ ] Add timeout fallback that continues the run with a warning
-- [ ] Consider shorter web-search timeout in Fast mode
-- [ ] Add tests for false positives like "binary search"
+- [x] Keep current auto-detection conservative
+- [x] Add a visible "search skipped" state so users understand why no search ran
+- [x] Add timeout fallback that continues the run with a warning
+- [x] Consider shorter web-search timeout in Fast mode
+- [x] Add tests for false positives like "binary search"
 
 ---
 

@@ -107,7 +107,12 @@ class ConsensusEngine:
         if should_search(search_subject, web_search_mode):
             await report("Searching the live web for current sources.")
             try:
-                research = await research_web(search_subject, self.cfg)
+                search_timeout = (
+                    self.cfg.fast_web_search_timeout_seconds
+                    if answer_mode == "fast"
+                    else self.cfg.web_search_timeout_seconds
+                )
+                research = await research_web(search_subject, self.cfg, timeout_seconds=search_timeout)
                 session.web_search_performed = research.performed
                 session.web_search_query = research.query
                 session.web_search_retrieved_at = research.retrieved_at

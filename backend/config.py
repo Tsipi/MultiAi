@@ -34,6 +34,7 @@ class AppConfig:
     web_search_engine: str = os.getenv("WEB_SEARCH_ENGINE", "exa")
     web_search_max_results: int = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "5"))
     web_search_timeout_seconds: float = float(os.getenv("WEB_SEARCH_TIMEOUT_SECONDS", "45"))
+    fast_web_search_timeout_seconds: float = float(os.getenv("FAST_WEB_SEARCH_TIMEOUT_SECONDS", "20"))
     web_research_context_chars: int = int(os.getenv("WEB_RESEARCH_CONTEXT_CHARS", "12000"))
     jwt_secret: str = os.getenv("JWT_SECRET", "change-me-in-production")
     sessions_dir: Path = Path("sessions")

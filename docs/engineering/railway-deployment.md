@@ -146,6 +146,7 @@ The defaults are suitable for production, but these variables can tune cost and 
 - `WEB_SEARCH_ENGINE=exa` - forces consistent OpenRouter web-plugin search behavior
 - `WEB_SEARCH_MAX_RESULTS=5` - source limit, clamped to 1-10
 - `WEB_SEARCH_TIMEOUT_SECONDS=45` - research request timeout
+- `FAST_WEB_SEARCH_TIMEOUT_SECONDS=20` - shorter research timeout for Fast answer mode
 - `WEB_RESEARCH_CONTEXT_CHARS=12000` - maximum research briefing injected into the debate
 
 OpenRouter's Exa web plugin adds a separate search charge per researched run. `Auto` mode avoids
