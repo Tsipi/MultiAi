@@ -5,7 +5,7 @@ import { drawPageHeader, drawPageNumbers, drawWatermarks } from "./pdfHeader";
 import { drawParticipants, drawMessageHeader, drawRoundDivider, type ExportParticipant, type ExportDebateMessage } from "./pdfParticipants";
 import { loadIconDataUrl } from "./pdfIcons";
 import { PDF } from "./pdfTheme";
-import { drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
+import { divider, drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
 import AgentStudioLogo from "../../../avatars/AgentStudioAssistant.png";
 
 export type { ExportParticipant, ExportDebateMessage };
@@ -30,6 +30,19 @@ export type ExportData = {
   roundCount?: number;
   totalCostUsd?: number;
   debateRounds?: ExportDebateRound[];
+  followup?: {
+    originalPrompt: string;
+    previousFinalAnswer: string;
+    revisedAnswerLabel?: string;
+  };
+  webResearch?: {
+    mode: "off" | "auto" | "on";
+    performed: boolean;
+    query: string;
+    retrievedAt: string;
+    sources: Array<{ title: string; url: string }>;
+    warning: string;
+  };
 };
 
 export function exportDateLocal(): string {
@@ -47,7 +60,7 @@ export function exportFileStem(titlePhrase: string, isoLocalDate: string): strin
 }
 
 export function downloadMarkdown(data: ExportData): void {
-  const title = clean(data.title, "Untitled");
+  const title = capitalizeFirst(clean(data.title, "Untitled"));
   const exportDate = clean(data.exportDate);
 
   const body = buildMarkdownBody({
@@ -68,7 +81,7 @@ export function downloadMarkdown(data: ExportData): void {
 }
 
 export async function downloadPdf(data: ExportData): Promise<void> {
-  const title = clean(data.title, "Untitled");
+  const title = capitalizeFirst(clean(data.title, "Untitled"));
   const role = clean(data.role);
   const prompt = clean(data.prompt);
   const answer = clean(data.answer);
@@ -92,7 +105,7 @@ export async function downloadPdf(data: ExportData): Promise<void> {
     return drawPageHeader(d, logoDataUrl, title, true);
   };
 
-  y = renderMarkdown(doc, `# ${title}`, y, headerFn);
+  y = renderMarkdown(doc, `# ${capitalizeFirst(title)}`, y, headerFn);
 
   if (data.participants?.length) {
     const templateIcon = activeTemplate ? TEMPLATE_ICONS[activeTemplate.id] : undefined;
@@ -111,10 +124,18 @@ export async function downloadPdf(data: ExportData): Promise<void> {
     y = renderMarkdown(doc, `*${role || "Not provided"}*`, y, headerFn);
   }
 
-  y = drawSectionLabel(doc, "Prompt", y + 8);
-  y = renderMarkdown(doc, prompt || "Not provided", y, headerFn);
+  if (data.followup) {
+    y = drawSectionLabel(doc, "Original Prompt", y + 8);
+    y = renderMarkdown(doc, data.followup.originalPrompt || prompt || "Not provided", y, headerFn);
 
-  y = drawSectionLabel(doc, "Answer", y + 8);
+    y = drawSectionLabel(doc, "Previous Final Answer", y + 8);
+    y = renderMarkdown(doc, data.followup.previousFinalAnswer || "Not provided", y, headerFn);
+  } else {
+    y = drawSectionLabel(doc, "Prompt", y + 8);
+    y = renderMarkdown(doc, prompt || "Not provided", y, headerFn);
+  }
+
+  y = drawSectionLabel(doc, data.followup?.revisedAnswerLabel || "Answer", y + 8);
   y = renderMarkdown(doc, `${answer || "Not provided"}`, y + 8, headerFn);
 
   if (data.debateRounds?.length) {
@@ -138,6 +159,13 @@ export async function downloadPdf(data: ExportData): Promise<void> {
         headerFn
       );
     }
+  }
+
+  if (data.webResearch) {
+    y += 12;
+    divider(doc, y, PDF.colors.dividerStrong);
+    y = drawSectionLabel(doc, webResearchTitle(data.webResearch), y + 18);
+    y = renderMarkdown(doc, webResearchMarkdown(data.webResearch), y, headerFn);
   }
 
   const totalPages = getPageCount(doc);
@@ -209,10 +237,22 @@ function drawMeta(doc: jsPDF, data: ExportData, y: number): number {
 function buildMarkdownBody(data: ExportData): string {
   let body =
     `# ${data.title}\n\n` +
-    `*Exported ${data.exportDate}*\n\n` +
-    `## Role\n${data.role || "Not provided"}\n\n` +
-    `## Prompt\n${data.prompt || "Not provided"}\n\n` +
-    `## Answer\n${data.answer || "Not provided"}\n`;
+    `*Exported ${data.exportDate}*\n\n`;
+
+  if (data.role) {
+    body += `## Role\n${data.role}\n\n`;
+  }
+
+  if (data.followup) {
+    body +=
+      `## Original Prompt\n${data.followup.originalPrompt || data.prompt || "Not provided"}\n\n` +
+      `## Previous Final Answer\n${data.followup.previousFinalAnswer || "Not provided"}\n\n` +
+      `## ${data.followup.revisedAnswerLabel || "Revised Answer"}\n${data.answer || "Not provided"}\n`;
+  } else {
+    body +=
+      `## Prompt\n${data.prompt || "Not provided"}\n\n` +
+      `## Answer\n${data.answer || "Not provided"}\n`;
+  }
 
   if (data.debateRounds?.length) {
     body += "\n## Full Debate\n";
@@ -230,7 +270,42 @@ function buildMarkdownBody(data: ExportData): string {
     }
   }
 
+  if (data.webResearch) {
+    body += `\n## ${webResearchTitle(data.webResearch)}\n\n${webResearchMarkdown(data.webResearch)}\n`;
+  }
+
   return body;
+}
+
+function webResearchMarkdown(research: NonNullable<ExportData["webResearch"]>): string {
+  const lines = [
+    research.retrievedAt ? `Retrieved: ${formatExportDateTime(research.retrievedAt)}` : "",
+    research.query ? `Search query: ${research.query}` : "",
+    research.warning ? `Warning: ${research.warning}` : "",
+  ].filter(Boolean);
+
+  if (research.sources.length) {
+    lines.push("", ...research.sources.map((source) => `- [${source.title || source.url}](${source.url})`));
+  }
+
+  return lines.join("\n");
+}
+
+function webResearchTitle(research: NonNullable<ExportData["webResearch"]>): string {
+  if (research.performed) return "Live web research used";
+  if (research.warning) return "Live web research unavailable";
+  return "Web research not used";
+}
+
+function formatExportDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
 function triggerBlobDownload(blob: Blob, filename: string): void {

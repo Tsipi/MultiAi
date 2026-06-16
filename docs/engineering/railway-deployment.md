@@ -137,6 +137,20 @@ Environment variables are secret configuration values that your app reads at run
 - Value: `https://openrouter.ai/api/v1`
 - Why: tells the backend where to send LLM requests. This is the OpenRouter API endpoint.
 
+### Optional live web research tuning
+
+Live web research uses the same `OPENROUTER_API_KEY`; no second search-provider key is required.
+The defaults are suitable for production, but these variables can tune cost and timeout behavior:
+
+- `WEB_SEARCH_MODEL=openai/gpt-5.4` - model used for the single research call
+- `WEB_SEARCH_ENGINE=exa` - forces consistent OpenRouter web-plugin search behavior
+- `WEB_SEARCH_MAX_RESULTS=5` - source limit, clamped to 1-10
+- `WEB_SEARCH_TIMEOUT_SECONDS=45` - research request timeout
+- `WEB_RESEARCH_CONTEXT_CHARS=12000` - maximum research briefing injected into the debate
+
+OpenRouter's Exa web plugin adds a separate search charge per researched run. `Auto` mode avoids
+that charge for stable/general questions; users can choose `No web` in Advanced Setup.
+
 **`JWT_SECRET`**
 - Value: a long random string — you need to generate one. Use this command on your local machine:
   ```bash

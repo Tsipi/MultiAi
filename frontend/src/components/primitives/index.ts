@@ -14,3 +14,4 @@ export { DebateSettings } from "./DebateSettings";
 export { ModelUsageTable } from "./ModelUsageTable";
 export { SettingsBar } from "./SettingsBar";
 export { LeadRoleField } from "./LeadRoleField";
+export { WebResearchControl } from "./WebResearchControl";

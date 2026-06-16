@@ -14,7 +14,9 @@ LOGGER = logging.getLogger(__name__)
 SYSTEM_GUARDRAIL = (
     "Follow the provided instructions exactly. Stay strictly on-topic. "
     "Do not introduce studies, literature, surveys, statistics, citations, "
-    "or invented numbers unless the user explicitly asks for them."
+    "or invented numbers unless the user explicitly asks for them or live web "
+    "research context is provided. Never invent sources or claim web research "
+    "was performed unless live web research context is present."
 )
 
 

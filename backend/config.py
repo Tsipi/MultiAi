@@ -27,6 +27,11 @@ class AppConfig:
     scorer_model: str = "deepseek/deepseek-chat-v3.2"
     summarizer_model: str = "deepseek/deepseek-chat-v3.2"
     export_title_model: str = os.getenv("EXPORT_TITLE_MODEL", "openrouter/gpt-oss-120b")
+    web_search_model: str = os.getenv("WEB_SEARCH_MODEL", "openai/gpt-5.4")
+    web_search_engine: str = os.getenv("WEB_SEARCH_ENGINE", "exa")
+    web_search_max_results: int = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "5"))
+    web_search_timeout_seconds: float = float(os.getenv("WEB_SEARCH_TIMEOUT_SECONDS", "45"))
+    web_research_context_chars: int = int(os.getenv("WEB_RESEARCH_CONTEXT_CHARS", "12000"))
     jwt_secret: str = os.getenv("JWT_SECRET", "change-me-in-production")
     sessions_dir: Path = Path("sessions")
     max_rounds_default: int = 3

@@ -14,6 +14,7 @@ from backend.consensus.intent import assess_intent
 from backend.consensus.prompts import FINAL_SYNTHESIS, WRITER_REFINEMENT
 from backend.consensus.usage_tracker import start_usage_collection, stop_usage_collection
 from backend.consensus.validator import validate_relevance
+from backend.consensus.web_research import build_research_context, research_web, should_search
 class ConsensusEngine:
     """Orchestrates writer/critics toward consensus."""
 
@@ -42,6 +43,7 @@ class ConsensusEngine:
         critic_names: list[str] | None = None,
         writer_roles: list[str] | None = None,
         critic_roles: list[str] | None = None,
+        web_search_mode: str = "auto",
         progress_hook: Callable[[str], Awaitable[None]] | None = None,
     ) -> DebateSession:
         """Run multi-round consensus process and save session."""
@@ -83,6 +85,7 @@ class ConsensusEngine:
                 {"name": a.name, "mime_type": a.mime_type, "kind": a.kind, "data": a.data}
                 for a in normalized_attachments
             ],
+            web_search_mode=web_search_mode,
         )
         if clarification:
             session.clarification_question = clarification_question_asked
@@ -98,6 +101,24 @@ class ConsensusEngine:
             await report(f"Clarification required: {assessment.reason}")
             _apply_usage(session, usage_token)
             return session
+        search_subject = followup_instruction or question
+        if should_search(search_subject, web_search_mode):
+            await report("Searching the live web for current sources.")
+            try:
+                research = await research_web(search_subject, self.cfg)
+                session.web_search_performed = research.performed
+                session.web_search_query = research.query
+                session.web_search_retrieved_at = research.retrieved_at
+                session.web_search_sources = research.sources
+                session.web_search_summary = research.summary
+                session.web_search_warning = research.warning
+                question_with_context += build_research_context(research)
+                await report(f"Live web research found {len(research.sources)} source(s).")
+            except LLMCallError as exc:
+                session.web_search_warning = str(exc)
+                await report("Live web research failed; continuing with a freshness warning.")
+        else:
+            await report("Live web research skipped for this question.")
         try:
             await report("Your Writer and both Critics are in session — drafting, challenging, then converging.")
             answer, rolling = await run_rounds(

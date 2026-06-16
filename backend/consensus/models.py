@@ -31,6 +31,13 @@ class DebateSession:
     base_question: str = ""     # raw user question before attachment injection
     domain: str = ""            # writer expert-role prompt (maps to "role" in API)
     attachment_files: list[dict] = field(default_factory=list)
+    web_search_mode: str = "auto"
+    web_search_performed: bool = False
+    web_search_query: str = ""
+    web_search_retrieved_at: str = ""
+    web_search_sources: list[dict] = field(default_factory=list)
+    web_search_summary: str = ""
+    web_search_warning: str = ""
 
     # ── Team ────────────────────────────────────────────────────────────────
     # OpenRouter model IDs — determine which LLMs are called

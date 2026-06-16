@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
 import { SlidersHorizontal, UserPlus } from "lucide-react";
 import { InfoTip } from "./InfoTip";
+import { WebResearchControl } from "./WebResearchControl";
 
 type Props = {
   value: ConsultPayload;
@@ -64,6 +65,10 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
           />
         </div>
       </section>
+      <WebResearchControl
+        value={value.web_search_mode ?? "auto"}
+        onChange={(mode) => set("web_search_mode", mode)}
+      />
       <p className="m-0 text-[0.85rem] text-muted-foreground">Scorer and summarizer always use Deepseek v3.2.</p>
     </>
   );

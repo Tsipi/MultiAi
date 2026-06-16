@@ -11,6 +11,7 @@ import { SessionAttachmentList } from "./SessionAttachmentList";
 import { SessionViewActions } from "./SessionViewActions";
 import { MarkdownView } from "../primitives/MarkdownView";
 import { TemplateNameChip } from "../team/TemplateNameChip";
+import { WebResearchStatus } from "./WebResearchStatus";
 
 type Props = {
   result: ConsultResult;
@@ -81,6 +82,8 @@ export function SessionPromptBlock({
           {stripAttachmentBlock(result.source_prompt || result.base_question || result.question)}
         </p>
       </div>
+
+      <WebResearchStatus result={result} />
 
       {/* 2. Previous answer — collapsible to keep the panel compact */}
       <details className="group/prev">
@@ -201,6 +204,8 @@ export function SessionPromptBlock({
           {prompt}
         </p>
       ) : null}
+
+      <WebResearchStatus result={result} />
 
       {sharedRole && (
         <div className="rounded-lg border border-violet-500/15 bg-card/50 p-3">
