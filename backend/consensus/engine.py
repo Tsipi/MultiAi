@@ -13,7 +13,7 @@ from backend.consensus.models import DebateSession
 from backend.consensus.intent import assess_intent
 from backend.consensus.prompts import FINAL_SYNTHESIS, WRITER_REFINEMENT
 from backend.consensus.usage_tracker import start_usage_collection, stop_usage_collection
-from backend.consensus.validator import validate_relevance
+from backend.consensus.validator import _token_overlap, validate_relevance
 from backend.consensus.web_research import build_research_context, research_web, should_search
 class ConsensusEngine:
     """Orchestrates writer/critics toward consensus."""
@@ -136,6 +136,7 @@ class ConsensusEngine:
                 self.cfg,
                 report,
                 image_urls=image_urls,
+                fast_mode=answer_mode == "fast",
             )
             final_critique = session.rounds[-1].critique if session.rounds else ""
             # For follow-ups both {question} and {intent_scope} were the full 500-word context
@@ -155,7 +156,11 @@ class ConsensusEngine:
             await report("Synthesizing final answer")
             session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
             session.final_score = session.rounds[-1].consensus_score if session.rounds else 0.0
-            is_ok, rel_score, rel_reason = await validate_relevance(question_with_context, session.final_answer, self.cfg)
+            if answer_mode == "fast" and _token_overlap(question_with_context, session.final_answer) >= 0.05:
+                await report("Fast mode: skipping final relevance validation.")
+                is_ok, rel_score, rel_reason = True, 0.0, ""
+            else:
+                is_ok, rel_score, rel_reason = await validate_relevance(question_with_context, session.final_answer, self.cfg)
             if not is_ok:
                 await report("Relevance failed, running one repair round")
                 repair = f"The answer drifted from user intent. Rewrite it to answer exactly: {question_with_context}"

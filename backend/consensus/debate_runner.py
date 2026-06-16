@@ -50,6 +50,7 @@ async def run_rounds(
     cfg: AppConfig,
     report: Callable[[str], Awaitable[None]],
     image_urls: list[str] | None = None,
+    fast_mode: bool = False,
 ) -> tuple[str, str]:
     """Execute debate rounds and return latest answer and rolling summary."""
     primary_writer = writers[0]
@@ -103,6 +104,21 @@ async def run_rounds(
 
         revised_answers = [extract_revised_answer(c) for c in critiques]
         merged = "\n\n".join(f"[{_critic_name(i, len(critics))}]\n{c}" for i, c in enumerate(critiques))
+
+        if fast_mode:
+            await report("Fast mode: using critic revisions without an extra writer rewrite.")
+            if len(revised_answers) >= 2:
+                score, reason = await score_consensus_multi(revised_answers, cfg)
+            else:
+                score, reason = await score_consensus(answer, revised_answers[0], cfg)
+            refined_answer = "\n\n".join(
+                f"[{_critic_name(i, len(critics))} revised answer]\n{revised}"
+                for i, revised in enumerate(revised_answers)
+            )
+            session.rounds.append(DebateRound(idx, refined_answer, merged, score, reason, "Summary skipped in fast mode."))
+            rolling += f"\n[Round {idx} summary]: Fast mode used critic revisions directly."
+            await report(f"Round {idx}: consensus {score:.1f}. Summary skipped in fast mode.")
+            return refined_answer, rolling
 
         refine = WRITER_REFINEMENT.format(
             rolling_context=rolling, question=question, critique=merged,

@@ -38,7 +38,7 @@ class AppConfig:
     consensus_default: int = 8
     min_relevance_score: float = 7.0
     summary_max_tokens: int = 200
-    attachment_text_chars: int = 8000
     attachment_image_limit: int = 3
+    attachment_text_chars: int = 8000  
     attachment_pdf_page_limit: int = 12
     allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")

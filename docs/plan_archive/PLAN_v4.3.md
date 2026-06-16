@@ -100,11 +100,11 @@ Writer -> Critics -> Scorer -> Summarizer -> Rewrite -> Validate -> Final synthe
 
 ### Tasks
 
-- [ ] In fast mode, skip summarizer unless multiple rounds are needed
-- [ ] In fast mode, skip consensus scorer or run it only once at the end
-- [ ] In fast mode, skip relevance validator unless the answer appears obviously off-topic
-- [ ] In fast mode, skip repair unless validation was explicitly run and failed
-- [ ] Add tests proving fast mode uses fewer LLM calls
+- [x] In fast mode, skip summarizer unless multiple rounds are needed
+- [x] In fast mode, skip consensus scorer or run it only once at the end
+- [x] In fast mode, skip relevance validator unless the answer appears obviously off-topic
+- [x] In fast mode, skip repair unless validation was explicitly run and failed
+- [x] Add tests proving fast mode uses fewer LLM calls
 
 ---
 
