@@ -216,6 +216,9 @@ export default function App() {
       critic_roles: followupChangedSinceOpen
         ? basePayload.critic_roles
         : (displayResult.critic_roles.length ? displayResult.critic_roles : basePayload.critic_roles),
+      answer_mode: followupChangedSinceOpen
+        ? basePayload.answer_mode
+        : (displayResult.answer_mode || basePayload.answer_mode),
       root_question: rootQ,
     };
     try {
@@ -336,7 +339,9 @@ export default function App() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
       setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
-      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+      if (displayResult?.role) {
+        setForm((f) => ({ ...f, role: displayResult.role!, answer_mode: displayResult.answer_mode }));
+      }
       if (resolvedTemplateId) setActiveTemplateId(resolvedTemplateId);
     }
     startNewQuestion();
@@ -353,7 +358,9 @@ export default function App() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
       setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
-      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+      if (displayResult?.role) {
+        setForm((f) => ({ ...f, role: displayResult.role!, answer_mode: displayResult.answer_mode }));
+      }
     }
     setAdvancedOpen(true);
   }

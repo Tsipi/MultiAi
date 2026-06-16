@@ -163,6 +163,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     base_question: String(raw.base_question ?? ""),
     attachment_files: normalizeAttachmentFiles(raw.attachment_files),
     web_search_mode: raw.web_search_mode === "off" || raw.web_search_mode === "on" ? raw.web_search_mode : "auto",
+    answer_mode: normalizeAnswerMode(raw.answer_mode),
     web_search_performed: toBoolean(raw.web_search_performed),
     web_search_query: String(raw.web_search_query ?? ""),
     web_search_retrieved_at: String(raw.web_search_retrieved_at ?? ""),
@@ -244,6 +245,10 @@ function normalizeWebSearchSources(raw: unknown): ConsultResult["web_search_sour
         ...(source.content != null ? { content: String(source.content) } : {}),
       }];
     });
+}
+
+function normalizeAnswerMode(value: unknown): ConsultResult["answer_mode"] {
+  return value === "fast" || value === "deep" ? value : "balanced";
 }
 
 function isSafeHttpUrl(value: string): boolean {

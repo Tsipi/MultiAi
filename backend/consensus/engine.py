@@ -44,6 +44,7 @@ class ConsensusEngine:
         writer_roles: list[str] | None = None,
         critic_roles: list[str] | None = None,
         web_search_mode: str = "auto",
+        answer_mode: str = "balanced",
         progress_hook: Callable[[str], Awaitable[None]] | None = None,
     ) -> DebateSession:
         """Run multi-round consensus process and save session."""
@@ -86,6 +87,7 @@ class ConsensusEngine:
                 for a in normalized_attachments
             ],
             web_search_mode=web_search_mode,
+            answer_mode=answer_mode,
         )
         if clarification:
             session.clarification_question = clarification_question_asked

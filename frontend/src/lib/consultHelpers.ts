@@ -92,5 +92,5 @@ export function castToTeam(
 
 export function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
   const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}`).join("|");
-  return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}:${form.web_search_mode ?? "auto"}`;
+  return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}:${form.web_search_mode ?? "auto"}:${form.answer_mode ?? "balanced"}`;
 }

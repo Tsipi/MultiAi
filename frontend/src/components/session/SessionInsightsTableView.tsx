@@ -12,7 +12,7 @@ type ModelRow = {
 
 type Props = Pick<
   ConsultResult,
-  "total_cost_usd" | "total_tokens" | "final_score" | "model_costs" | "session_id"
+  "total_cost_usd" | "total_tokens" | "final_score" | "answer_mode" | "model_costs" | "session_id"
 >;
 
 /** Summary metrics + per-model table for the session insights drawer. */
@@ -20,6 +20,7 @@ export function SessionInsightsTableView({
   total_cost_usd,
   total_tokens,
   final_score,
+  answer_mode,
   model_costs,
   session_id,
 }: Props) {
@@ -51,6 +52,14 @@ export function SessionInsightsTableView({
               {final_score.toFixed(1)} / 10
             </td>
           </tr>
+          <tr className="border-t border-violet-500/15">
+            <th scope="row" className="px-4 py-3 text-left font-medium text-muted-foreground">
+              Answer mode
+            </th>
+            <td className="px-4 py-3 text-right font-semibold text-foreground">
+              {answerModeLabel(answer_mode)}
+            </td>
+          </tr>
         </tbody>
       </table>
 
@@ -63,4 +72,10 @@ export function SessionInsightsTableView({
       ) : null}
     </div>
   );
+}
+
+function answerModeLabel(mode: ConsultResult["answer_mode"]): string {
+  if (mode === "fast") return "Fast";
+  if (mode === "deep") return "Deep";
+  return "Balanced";
 }

@@ -11,6 +11,7 @@ const form: ConsultPayload = {
   critic_b: "",
   max_rounds: 2,
   consensus_score: 8,
+  answer_mode: "deep",
 };
 
 const team: TeamMember[] = [
@@ -51,6 +52,7 @@ describe("mergeTeamIntoPayload", () => {
     expect(payload.writer_roles).toEqual(["Generalist Synthesizer"]);
     expect(payload.critics).toEqual(["critic-a-model", "critic-b-model"]);
     expect(payload.critic_roles).toEqual(["Accuracy Reviewer", "User Advocate"]);
+    expect(payload.answer_mode).toBe("deep");
   });
 });
 

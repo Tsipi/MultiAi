@@ -13,6 +13,7 @@ const defaults: ConsultPayload = {
   role: "",
   question: "",
   web_search_mode: "auto",
+  answer_mode: "balanced",
 };
 
 export function createFreshComposeState() {

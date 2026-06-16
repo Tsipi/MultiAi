@@ -55,6 +55,7 @@ export function InsightsDrawer({ open, onOpenChange, result }: Props) {
               total_cost_usd={result.total_cost_usd}
               total_tokens={result.total_tokens}
               final_score={result.final_score}
+              answer_mode={result.answer_mode}
               model_costs={result.model_costs}
               session_id={result.session_id}
             />

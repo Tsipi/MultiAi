@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
 import { SlidersHorizontal, UserPlus } from "lucide-react";
 import { InfoTip } from "./InfoTip";
+import { AnswerModeControl } from "./AnswerModeControl";
 import { WebResearchControl } from "./WebResearchControl";
 
 type Props = {
@@ -65,6 +66,10 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
           />
         </div>
       </section>
+      <AnswerModeControl
+        value={value.answer_mode ?? "balanced"}
+        onChange={(mode) => set("answer_mode", mode)}
+      />
       <WebResearchControl
         value={value.web_search_mode ?? "auto"}
         onChange={(mode) => set("web_search_mode", mode)}

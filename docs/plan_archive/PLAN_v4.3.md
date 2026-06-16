@@ -53,11 +53,11 @@ Default should be **Balanced** or **Fast** for general questions. Users can choo
 
 ### Tasks
 
-- [ ] Add `answer_mode: "fast" | "balanced" | "deep"` to frontend payload and backend schema
-- [ ] Add UI control in Advanced Setup near debate settings
-- [ ] Store answer mode on `DebateSession`
-- [ ] Show answer mode in session metadata / insights
-- [ ] Include answer mode in saved/shared sessions
+- [x] Add `answer_mode: "fast" | "balanced" | "deep"` to frontend payload and backend schema
+- [x] Add UI control in Advanced Setup near debate settings
+- [x] Store answer mode on `DebateSession`
+- [x] Show answer mode in session metadata / insights
+- [x] Include answer mode in saved/shared sessions
 
 ---
 

@@ -58,7 +58,7 @@ Full spec: `docs/plan_archive/PLAN_v4.3.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 4.3.1 | Add Answer Mode | Planned |
+| 4.3.1 | Add Answer Mode | **Done** |
 | 4.3.2 | Reduce Default Rounds | Planned |
 | 4.3.3 | Skip Unnecessary Support Calls in Fast Mode | Planned |
 | 4.3.4 | Use Faster Models for Utility Roles | Planned |

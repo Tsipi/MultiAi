@@ -12,6 +12,7 @@ export type AttachmentInput = {
 };
 
 export type WebSearchMode = "off" | "auto" | "on";
+export type AnswerMode = "fast" | "balanced" | "deep";
 
 export type WebSearchSource = {
   title: string;
@@ -34,6 +35,7 @@ export type ConsultPayload = {
   role: string;
   attachments?: AttachmentInput[];
   web_search_mode?: WebSearchMode;
+  answer_mode?: AnswerMode;
 
   // ── Team ──────────────────────────────────────────────────────────────
   // Preferred: full lists (what the backend actually reads)
@@ -77,6 +79,7 @@ export type ConsultResult = {
   base_question: string;
   attachment_files: AttachmentFileRef[];
   web_search_mode: WebSearchMode;
+  answer_mode: AnswerMode;
   web_search_performed: boolean;
   web_search_query: string;
   web_search_retrieved_at: string;

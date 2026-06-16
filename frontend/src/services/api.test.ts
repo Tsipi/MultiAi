@@ -22,6 +22,7 @@ describe("consult", () => {
     vi.stubGlobal("fetch", fetchMock);
     const value = await consult(payload);
     expect(value.session_id).toBe("id");
+    expect(value.answer_mode).toBe("balanced");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain("/api/consult");
   });
@@ -47,6 +48,20 @@ describe("consult", () => {
     });
     expect(value.needs_clarification).toBe(false);
     expect(value.status).toBe("completed");
+    expect(value.answer_mode).toBe("balanced");
+  });
+
+  it("normalizes explicit answer mode from the API", async () => {
+    const result = {
+      session_id: "id", question: "q", role: "r", final_answer: "ok", final_score: 8, cost_hint: "x", full_discussion: [],
+      needs_clarification: false, clarification_question: "", clarification_reason: "", answer_mode: "fast",
+      clarification_options: [], model_costs: [], total_cost_usd: 0, total_tokens: 0
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => result }));
+    const value = await consult({
+      writer: "w", critic_a: "a", critic_b: "b", max_rounds: 1, consensus_score: 6, role: "r", question: "q"
+    });
+    expect(value.answer_mode).toBe("fast");
   });
 
   it("streams activity and final result events", async () => {
