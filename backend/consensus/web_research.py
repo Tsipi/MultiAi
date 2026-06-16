@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import re
+from time import perf_counter
 from urllib.parse import urlparse
 
 import httpx
@@ -94,6 +95,7 @@ async def research_web(question: str, cfg: AppConfig) -> WebResearchResult:
     }
 
     try:
+        started_at = perf_counter()
         async with httpx.AsyncClient(timeout=cfg.web_search_timeout_seconds) as client:
             response = await client.post(
                 url,
@@ -110,6 +112,7 @@ async def research_web(question: str, cfg: AppConfig) -> WebResearchResult:
             cfg.web_search_model,
             int(usage.get("prompt_tokens", max(1, len(prompt) // 4))),
             int(usage.get("completion_tokens", max(1, len(summary) // 4))),
+            perf_counter() - started_at,
         )
         return WebResearchResult(
             performed=True,

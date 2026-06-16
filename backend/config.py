@@ -1,6 +1,6 @@
 """Application configuration and constants."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import os
 
@@ -24,8 +24,11 @@ class AppConfig:
     default_critic_model_b: str = os.getenv(
         "DEFAULT_CRITIC_MODEL_B", "google/gemini-3.1-pro"
     )
-    scorer_model: str = "deepseek/deepseek-chat-v3.2"
-    summarizer_model: str = "deepseek/deepseek-chat-v3.2"
+    utility_model: str = field(default_factory=lambda: os.getenv("UTILITY_MODEL", "deepseek/deepseek-chat-v3.2"))
+    intent_model: str = field(default_factory=lambda: os.getenv("INTENT_MODEL", ""))
+    scorer_model: str = field(default_factory=lambda: os.getenv("SCORER_MODEL", ""))
+    summarizer_model: str = field(default_factory=lambda: os.getenv("SUMMARIZER_MODEL", ""))
+    validator_model: str = field(default_factory=lambda: os.getenv("VALIDATOR_MODEL", ""))
     export_title_model: str = os.getenv("EXPORT_TITLE_MODEL", "openrouter/gpt-oss-120b")
     web_search_model: str = os.getenv("WEB_SEARCH_MODEL", "openai/gpt-5.4")
     web_search_engine: str = os.getenv("WEB_SEARCH_ENGINE", "exa")
@@ -38,7 +41,13 @@ class AppConfig:
     consensus_default: int = 8
     min_relevance_score: float = 7.0
     summary_max_tokens: int = 200
+    attachment_text_chars: int = 8000
     attachment_image_limit: int = 3
-    attachment_text_chars: int = 8000  
     attachment_pdf_page_limit: int = 12
     allowed_origins: str = os.getenv("ALLOWED_ORIGINS", "*")
+
+    def __post_init__(self) -> None:
+        """Fill utility-role model defaults from the shared utility model."""
+        for name in ("intent_model", "scorer_model", "summarizer_model", "validator_model"):
+            if not getattr(self, name):
+                object.__setattr__(self, name, self.utility_model)

@@ -1,4 +1,4 @@
-import { fmtTokensCompact, fmtUsd, shortModel } from "@/lib/sessionInsightsFormatters";
+import { fmtSeconds, fmtTokensCompact, fmtUsd, shortModel } from "@/lib/sessionInsightsFormatters";
 
 type ModelRow = {
   model: string;
@@ -6,6 +6,8 @@ type ModelRow = {
   completion_tokens: number;
   total_tokens: number;
   total_cost_usd: number;
+  call_count?: number;
+  total_latency_seconds?: number;
 };
 
 type Props = { rows: ModelRow[] };
@@ -21,8 +23,10 @@ export function ModelUsageTable({ rows }: Props) {
       completion_tokens: acc.completion_tokens + Number(row.completion_tokens ?? 0),
       total_tokens: acc.total_tokens + Number(row.total_tokens ?? 0),
       total_cost_usd: acc.total_cost_usd + Number(row.total_cost_usd ?? 0),
+      call_count: acc.call_count + Number(row.call_count ?? 0),
+      total_latency_seconds: acc.total_latency_seconds + Number(row.total_latency_seconds ?? 0),
     }),
-    { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, total_cost_usd: 0 }
+    { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, total_cost_usd: 0, call_count: 0, total_latency_seconds: 0 }
   );
 
   return (
@@ -34,10 +38,11 @@ export function ModelUsageTable({ rows }: Props) {
         <table className="w-full table-fixed border-collapse text-[0.82rem]">
           <thead>
             <tr className="border-b border-violet-500/25 bg-violet-500/10 text-left">
-              <th className="w-[37%] px-2 py-2 font-display font-semibold text-foreground">Model</th>
-              <th className="w-[15%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Input</th>
-              <th className="w-[15%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Output</th>
-              <th className="w-[15%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Total</th>
+              <th className="w-[30%] px-2 py-2 font-display font-semibold text-foreground">Model</th>
+              <th className="w-[13%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Calls</th>
+              <th className="w-[13%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Input</th>
+              <th className="w-[13%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Output</th>
+              <th className="w-[13%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Time</th>
               <th className="w-[17%] px-2 py-2 text-right text-[0.72rem] font-medium text-muted-foreground">Cost</th>
             </tr>
           </thead>
@@ -56,13 +61,16 @@ export function ModelUsageTable({ rows }: Props) {
                   </span>
                 </td>
                 <td className="px-1.5 py-2 text-right tabular-nums text-foreground/90 whitespace-nowrap">
+                  {Number(row.call_count ?? 0)}
+                </td>
+                <td className="px-1.5 py-2 text-right tabular-nums text-foreground/90 whitespace-nowrap">
                   {fmtTokensCompact(row.prompt_tokens)}
                 </td>
                 <td className="px-1.5 py-2 text-right tabular-nums text-foreground/90 whitespace-nowrap">
                   {fmtTokensCompact(row.completion_tokens)}
                 </td>
-                <td className="px-1.5 py-2 text-right tabular-nums text-foreground whitespace-nowrap">
-                  {fmtTokensCompact(row.total_tokens)}
+                <td className="px-1.5 py-2 text-right tabular-nums text-foreground/90 whitespace-nowrap">
+                  {fmtSeconds(row.total_latency_seconds)}
                 </td>
                 <td className="px-1.5 py-2 text-right tabular-nums text-foreground whitespace-nowrap">
                   {fmtUsd(row.total_cost_usd)}
@@ -74,13 +82,16 @@ export function ModelUsageTable({ rows }: Props) {
                 Total
               </td>
               <td className="px-1.5 py-2 text-right font-medium tabular-nums text-foreground/90 whitespace-nowrap">
+                {totals.call_count}
+              </td>
+              <td className="px-1.5 py-2 text-right font-medium tabular-nums text-foreground/90 whitespace-nowrap">
                 {fmtTokensCompact(totals.prompt_tokens)}
               </td>
               <td className="px-1.5 py-2 text-right font-medium tabular-nums text-foreground/90 whitespace-nowrap">
                 {fmtTokensCompact(totals.completion_tokens)}
               </td>
               <td className="px-1.5 py-2 text-right font-semibold tabular-nums text-foreground whitespace-nowrap">
-                {fmtTokensCompact(totals.total_tokens)}
+                {fmtSeconds(totals.total_latency_seconds)}
               </td>
               <td className="px-1.5 py-2 text-right font-semibold tabular-nums text-foreground whitespace-nowrap">
                 {fmtUsd(totals.total_cost_usd)}

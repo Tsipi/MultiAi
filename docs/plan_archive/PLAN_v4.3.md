@@ -124,11 +124,10 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Review current fixed utility models
-- [ ] Benchmark faster OpenRouter options for scorer/summarizer/validator
-- [ ] Add config values for utility model selection
-- [ ] Track latency per model call so decisions are based on measured data
-- [ ] Keep cost display accurate after model changes
+- [x] Review current fixed utility models
+- [x] Add config values for utility model selection
+- [x] Track latency per model call so decisions are based on measured data
+- [x] Keep cost display accurate after model changes
 
 ---
 
@@ -217,8 +216,7 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 3. Reduce default rounds for Fast/Balanced.
 4. Skip summarizer/scorer/validator in Fast mode where safe.
 5. Defer title generation.
-6. Benchmark faster utility models.
-7. Polish progress UI.
+6. Polish progress UI.
 
 ---
 

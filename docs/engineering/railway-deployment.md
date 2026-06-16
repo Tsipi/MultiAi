@@ -151,6 +151,20 @@ The defaults are suitable for production, but these variables can tune cost and 
 OpenRouter's Exa web plugin adds a separate search charge per researched run. `Auto` mode avoids
 that charge for stable/general questions; users can choose `No web` in Advanced Setup.
 
+### Optional utility model tuning
+
+Utility calls are separate from the user-selected Writer and Critic models. By default they share
+the low-cost utility model, but each role can be tuned independently:
+
+- `UTILITY_MODEL=deepseek/deepseek-chat-v3.2` - fallback model for utility roles
+- `INTENT_MODEL=deepseek/deepseek-chat-v3.2` - clarification / ambiguity assessment
+- `SCORER_MODEL=deepseek/deepseek-chat-v3.2` - consensus scoring
+- `SUMMARIZER_MODEL=deepseek/deepseek-chat-v3.2` - round summaries
+- `VALIDATOR_MODEL=deepseek/deepseek-chat-v3.2` - final relevance validation
+
+Session Insights records call count and total latency per model so utility model changes can be
+compared against real runs before changing production defaults.
+
 **`JWT_SECRET`**
 - Value: a long random string — you need to generate one. Use this command on your local machine:
   ```bash

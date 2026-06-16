@@ -61,7 +61,7 @@ Full spec: `docs/plan_archive/PLAN_v4.2.md`
 | 4.3.1 | Add Answer Mode - done |
 | 4.3.2 | Reduce Default Rounds - done |
 | 4.3.3 | Skip Unnecessary Support Calls in Fast Mode - done |
-| 4.3.4 | Use Faster Models for Utility Roles |
+| 4.3.4 | Use Faster Models for Utility Roles - done |
 | 4.3.5 | Make Web Search Strictly Conditional |
 | 4.3.6 | Defer Non-Essential Work |
 | 4.3.7 | Improve Perceived Speed |

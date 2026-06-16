@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from time import perf_counter
 
 import httpx
 
@@ -48,6 +49,7 @@ async def call_openrouter(
             {"type": "image_url", "image_url": {"url": url}} for url in image_urls
         ]
     try:
+        started_at = perf_counter()
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
                 url,
@@ -65,7 +67,7 @@ async def call_openrouter(
         usage = body.get("usage", {})
         prompt_tokens = int(usage.get("prompt_tokens", max(1, len(prompt) // 4)))
         completion_tokens = int(usage.get("completion_tokens", max(1, len(body["choices"][0]["message"]["content"]) // 4)))
-        record_usage(model, prompt_tokens, completion_tokens)
+        record_usage(model, prompt_tokens, completion_tokens, perf_counter() - started_at)
         return body["choices"][0]["message"]["content"].strip()
     except httpx.HTTPStatusError as exc:
         details = exc.response.text[:300]

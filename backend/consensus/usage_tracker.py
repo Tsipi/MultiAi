@@ -19,13 +19,28 @@ def stop_usage_collection(token: object) -> dict[str, dict[str, float]]:
     return data
 
 
-def record_usage(model: str, prompt_tokens: int, completion_tokens: int) -> None:
+def record_usage(
+    model: str,
+    prompt_tokens: int,
+    completion_tokens: int,
+    latency_seconds: float = 0.0,
+) -> None:
     """Record tokens and estimated cost for a model call."""
     collector = _COLLECTOR.get()
     if collector is None:
         return
     row = collector.setdefault(
-        model, {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "prompt_cost_usd": 0.0, "completion_cost_usd": 0.0, "total_cost_usd": 0.0}
+        model,
+        {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "prompt_cost_usd": 0.0,
+            "completion_cost_usd": 0.0,
+            "total_cost_usd": 0.0,
+            "call_count": 0,
+            "total_latency_seconds": 0.0,
+        },
     )
     p_cost, c_cost, t_cost = estimate_cost_usd(model, prompt_tokens, completion_tokens)
     row["prompt_tokens"] += prompt_tokens
@@ -34,3 +49,5 @@ def record_usage(model: str, prompt_tokens: int, completion_tokens: int) -> None
     row["prompt_cost_usd"] += p_cost
     row["completion_cost_usd"] += c_cost
     row["total_cost_usd"] += t_cost
+    row["call_count"] += 1
+    row["total_latency_seconds"] += round(max(latency_seconds, 0.0), 3)
