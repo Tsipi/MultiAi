@@ -14,7 +14,7 @@ export function LeadRoleField({ value, onChange, disabled }: Props) {
         label="Lead expert role"
         tip="Persona and guardrails shared across models unless a seat overrides it in Advanced setup."
       />
-      <div className="rounded-2xl border border-[#ffffff10] bg-[var(--app-surface)] p-1.5 sm:p-2">
+      <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-1.5 sm:p-2">
         <Input
           value={value}
           maxLength={255}

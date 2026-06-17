@@ -98,7 +98,7 @@ export function PinnedAnswer({
             variant="ghost"
             size="sm"
             onClick={() => setExpanded(true)}
-            className="mt-3 h-auto px-0 py-0 text-xs font-medium text-violet-600 hover:bg-transparent hover:underline dark:text-violet-400"
+            className="mt-3 h-auto px-0 py-0 text-xs font-medium text-violet-600 hover:bg-transparent hover:underline hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
           >
             Show full answer
           </Button>

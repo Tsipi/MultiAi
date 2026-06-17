@@ -44,7 +44,7 @@ export function LoginPage({ onLogin, onRegister }: Props) {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-[#ffffff12] bg-[var(--app-surface)] p-6 shadow-xl">
+        <div className="rounded-2xl border border-border] bg-[var(--app-surface)] p-6 shadow-xl">
           <h1 className="text-lg font-semibold text-foreground mb-1">
             {mode === "login" ? "Welcome back" : "Create account"}
           </h1>
@@ -66,7 +66,7 @@ export function LoginPage({ onLogin, onRegister }: Props) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="rounded-lg border border-[#ffffff18] bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition"
+                className="rounded-lg border border-input bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition"
               />
             </div>
 
@@ -81,7 +81,7 @@ export function LoginPage({ onLogin, onRegister }: Props) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-lg border border-[#ffffff18] bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition"
+                className="rounded-lg border border-input bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition"
               />
             </div>
 

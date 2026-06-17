@@ -187,7 +187,7 @@ export function SessionPromptBlock({
           <Button
             type="button"
             variant="secondary"
-            className="font-display h-10 rounded-xl px-6 font-semibold"
+            className="font-display h-10 rounded-xl px-6 font-semibold hover:text-violet-800"
             onClick={onAskFollowup}
           >
             Ask follow-up
@@ -314,7 +314,7 @@ export function SessionPromptBlock({
           <Button
             type="button"
             variant="secondary"
-            className="font-display h-10 rounded-xl px-6 font-semibold"
+            className="font-display h-10 rounded-xl px-6 font-semibold hover:text-violet-800"
             onClick={onAskFollowup}
           >
             Ask follow-up

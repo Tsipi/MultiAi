@@ -33,11 +33,11 @@ export function InsightsDrawer({ open, onOpenChange, result }: Props) {
       />
       <aside
         className={cn(
-          "absolute right-0 top-0 h-full w-full max-w-[520px] overflow-y-auto border-l border-[#ffffff10]",
+          "absolute right-0 top-0 h-full w-full max-w-[520px] overflow-y-auto border-l border-border",
           "bg-[var(--app-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]"
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[#ffffff10] bg-[var(--app-elevated)] px-4 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-[var(--app-elevated)] px-4 py-3">
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
               <BarChart3 className="h-4 w-4 shrink-0 text-violet-400" aria-hidden />

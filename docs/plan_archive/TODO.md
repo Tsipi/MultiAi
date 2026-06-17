@@ -1,5 +1,9 @@
 # Version 4.3 — Cleanup and fixing inconsistencies 
 
+  
+## General follow-up items that are useful but not part of the active implementation plan.
+---
+
 1. check the docs\claude_suggestions\AUDIT_MAP.md - ## Inconsistencies and flags and see what should be solved
 2. fix repetition of violet an too many styling properties (remove for exmple:
 `# colors... inside the html
@@ -13,5 +17,20 @@
 
  5. make the Team Template drawer use the same styling conventions for the "Writer/critics, roles and llm badge for each team member
  
-  
+ 6. Optional Utility Model Benchmarking
+
+    Consider benchmarking faster OpenRouter options for scorer, summarizer, validator, and intent
+    assessment only if real production runs show that utility calls are still a meaningful source of
+    latency or cost after v4.3.
+
+    This is not required for v4.3 because utility models are already configurable through environment
+    variables, and Session Insights records per-model call count, cost, and latency.
+
+    When it becomes useful, compare candidate utility models on:
+
+    - Response latency for the same representative prompts
+    - Cost per call and total run cost
+    - Reliability of strict formats such as `SCORE:` / `REASON:`
+    - Quality of scoring, validation, summary, and clarification decisions
+    - Compatibility with current OpenRouter model IDs and Railway configuration
 
