@@ -76,6 +76,15 @@ def test_fast_mode_skips_final_relevance_validation(monkeypatch, tmp_path: Path)
 
     assert session.final_answer == "decide final"
     assert validate_calls == 0
+    assert session.total_duration_seconds >= 0
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert "intent_assessment" in phases
+    assert "web_research" in phases
+    assert phases["web_research"]["status"] == "skipped"
+    assert "debate_rounds" in phases
+    assert phases["debate_rounds"]["round_count"] == 1
+    assert "final_synthesis" in phases
+    assert phases["relevance_validation"]["status"] == "skipped_fast_mode"
 
 
 def test_fast_mode_runs_validation_for_obviously_off_topic_answer(monkeypatch, tmp_path: Path):
@@ -180,3 +189,90 @@ def test_fast_mode_uses_shorter_web_search_timeout(monkeypatch, tmp_path: Path):
     )
 
     assert observed_timeouts == [7]
+
+
+def test_engine_records_timings_for_clarification_return(tmp_path: Path):
+    """Clarification-only responses still include timing metadata."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    session = asyncio.run(
+        engine.consult(
+            question="search process issues",
+            domain="",
+            writers=["openai/gpt-5.4"],
+            critics=["anthropic/claude-sonnet-4.6"],
+            max_rounds=2,
+            threshold=8,
+        )
+    )
+
+    assert session.needs_clarification is True
+    assert session.total_duration_seconds >= 0
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert "input_preparation" in phases
+    assert phases["intent_assessment"]["status"] == "needs_clarification"
+
+
+def test_followup_final_synthesis_keeps_parent_answer_and_clarification(monkeypatch, tmp_path: Path):
+    """Follow-up synthesis should not lose details that live in parent context."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    captured_prompts: list[str] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        class Assessment:
+            is_ambiguous = False
+            reason = ""
+            clarification_question = ""
+            clarification_options = []
+            intent_scope = "clear follow-up"
+
+        return Assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft answer mentions Verona", "critique", 8.0, "ok", "summary"))
+        return "draft answer mentions Verona", ""
+
+    async def fake_call(prompt, *_args, **_kwargs):
+        captured_prompts.append(prompt)
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    session = asyncio.run(
+        engine.consult(
+            question=(
+                "Original prompt:\nPlan a northern Italy itinerary\n\n"
+                "Previous final answer:\nSpend two days in Verona before Venice.\n\n"
+                "Follow-up instruction:\nMake the second follow-up answer include the city stop."
+            ),
+            domain="travel planner",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=2,
+            threshold=8,
+            clarification="The city stop is Verona.",
+            clarification_question_asked="Which city should be included?",
+            is_followup=True,
+            source_prompt="Plan a northern Italy itinerary",
+            source_final_answer="Spend two days in Verona before Venice.",
+            followup_instruction="Make the second follow-up answer include the city stop.",
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert session.final_answer == "final answer"
+    assert captured_prompts
+    final_prompt = captured_prompts[0]
+    assert "Follow-up instruction:" in final_prompt
+    assert "Previous final answer to revise or extend:" in final_prompt
+    assert "User clarification:" in final_prompt
+    assert "Verona" in final_prompt

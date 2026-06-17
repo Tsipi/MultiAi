@@ -65,7 +65,7 @@ Full spec: `docs/plan_archive/PLAN_v4.3.md`
 | 4.3.5 | Make Web Search Strictly Conditional | **Done** |
 | 4.3.6 | Defer Non-Essential Work | **Done** |
 | 4.3.7 | Improve Perceived Speed | **Done** |
-| 4.3.8 | Measure Before and After | Planned |
+| 4.3.8 | Measure Before and After | **Done** |
 
 ---
 

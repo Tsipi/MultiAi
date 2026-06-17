@@ -1,5 +1,5 @@
 import { mkMember, TeamMember } from "@/data/experts";
-import { AttachmentInput, ConsultPayload, SessionPreview } from "@/types";
+import { AttachmentInput, ConsultPayload, ConsultResult, SessionPreview } from "@/types";
 
 export type CastPerson = { name: string; avatar: string; model: string };
 export type CastSelection = { writer: CastPerson; critics: CastPerson[] };
@@ -93,4 +93,20 @@ export function castToTeam(
 export function buildRunSignature(team: TeamMember[], form: ConsultPayload): string {
   const seats = team.map((m) => `${m.id}:${m.duty}:${m.model}:${m.role}`).join("|");
   return `${seats}:${form.max_rounds}:${form.consensus_score}:${form.role}:${form.web_search_mode ?? "auto"}:${form.answer_mode ?? "balanced"}`;
+}
+
+export function buildFollowupContext(result: ConsultResult): {
+  rootQuestion: string;
+  parentPrompt: string;
+  parentFinalAnswer: string;
+} {
+  const rootQuestion = result.root_question || result.source_prompt || result.question;
+  const parentPrompt = result.is_followup
+    ? (result.followup_instruction || result.base_question || result.question)
+    : (result.source_prompt || result.question);
+  return {
+    rootQuestion,
+    parentPrompt,
+    parentFinalAnswer: result.final_answer || result.source_final_answer,
+  };
 }

@@ -57,6 +57,8 @@ export function InsightsDrawer({ open, onOpenChange, result }: Props) {
               final_score={result.final_score}
               answer_mode={result.answer_mode}
               model_costs={result.model_costs}
+              total_duration_seconds={result.total_duration_seconds}
+              phase_timings={result.phase_timings}
               session_id={result.session_id}
             />
           ) : (

@@ -76,6 +76,8 @@ class DebateSession:
     model_costs: list[dict] = field(default_factory=list)
     total_cost_usd: float = 0.0
     total_tokens: int = 0
+    total_duration_seconds: float = 0.0
+    phase_timings: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return serializable session dictionary."""

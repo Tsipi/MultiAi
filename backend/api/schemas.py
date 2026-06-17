@@ -121,3 +121,5 @@ class ConsultResponse(BaseModel):
     model_costs: list[dict] = []
     total_cost_usd: float = 0.0
     total_tokens: int = 0
+    total_duration_seconds: float = 0.0
+    phase_timings: list[dict] = []

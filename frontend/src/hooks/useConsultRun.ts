@@ -77,6 +77,13 @@ export function generatedSessionTitlePrompt(next: ConsultResult, title: string):
   return next.followup_instruction || next.base_question || next.question || title;
 }
 
+export function shouldUseGeneratedSessionTitle(generatedTitle: string, fallbackTitle: string): boolean {
+  const normalized = generatedTitle.trim().toLowerCase();
+  if (!normalized) return false;
+  if (normalized === "consensus team answer" || normalized === "saved team answer") return false;
+  return normalized !== fallbackTitle.trim().toLowerCase();
+}
+
 // ─── Shared helper (used by both executeConsult callers in App.tsx) ───────────
 
 /**
@@ -118,6 +125,10 @@ export function applyRunResult(
   ]);
   setSessionTitles((prev) => ({ ...prev, [next.session_id]: fallbackTitle }));
   generateTitle(generatedSessionTitlePrompt(next, title), next.role || "")
-    .then((t) => setSessionTitles((prev) => ({ ...prev, [next.session_id]: t })))
+    .then((t) => {
+      if (shouldUseGeneratedSessionTitle(t, fallbackTitle)) {
+        setSessionTitles((prev) => ({ ...prev, [next.session_id]: t }));
+      }
+    })
     .catch(() => {});
 }

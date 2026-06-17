@@ -207,6 +207,8 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     model_costs: Array.isArray(raw.model_costs) ? raw.model_costs : [],
     total_cost_usd: Number(raw.total_cost_usd ?? 0),
     total_tokens: Number(raw.total_tokens ?? 0),
+    total_duration_seconds: Number(raw.total_duration_seconds ?? 0),
+    phase_timings: normalizePhaseTimings(raw.phase_timings),
 
     // ── Sharing ─────────────────────────────────────────────────────────
     visibility: raw.visibility === "public" ? "public" : "private",
@@ -245,6 +247,21 @@ function normalizeWebSearchSources(raw: unknown): ConsultResult["web_search_sour
         ...(source.content != null ? { content: String(source.content) } : {}),
       }];
     });
+}
+
+function normalizePhaseTimings(raw: unknown): ConsultResult["phase_timings"] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const phase = String(row.phase ?? "").trim();
+    if (!phase) return [];
+    return [{
+      ...row,
+      phase,
+      duration_seconds: Number(row.duration_seconds ?? 0),
+    }];
+  });
 }
 
 function normalizeAnswerMode(value: unknown): ConsultResult["answer_mode"] {

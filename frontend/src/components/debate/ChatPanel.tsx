@@ -82,6 +82,7 @@ export function ChatPanel(props: Props) {
 
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
+  const showPreviousFullDebate = showFullDiscussion && !loading && (result?.full_discussion.length ?? 0) > 0;
 
   // Scroll to the follow-up composer whenever it opens
   useEffect(() => {
@@ -370,7 +371,7 @@ export function ChatPanel(props: Props) {
         )}
 
         {/* 5. Director's Cut: full answer/critique text per round */}
-        {showFullDiscussion && result.full_discussion.length > 0 && (
+        {showPreviousFullDebate && (
           <CollapsiblePanel
             title="Full Debate"
             defaultOpen

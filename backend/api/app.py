@@ -89,6 +89,8 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         clarification_reason=session.clarification_reason,
         clarification_options=session.clarification_options,
         model_costs=session.model_costs,
+        total_duration_seconds=session.total_duration_seconds,
+        phase_timings=session.phase_timings,
         model_writers=session.model_writers,
         model_critics=session.model_critics,
         writer_names=session.writer_names,

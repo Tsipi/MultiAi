@@ -20,6 +20,13 @@ export type WebSearchSource = {
   content?: string;
 };
 
+export type PhaseTiming = {
+  phase: string;
+  duration_seconds: number;
+  status?: string;
+  [key: string]: unknown;
+};
+
 /** Serialized attachment reference returned with a session (data URL for display). */
 export type AttachmentFileRef = {
   name: string;
@@ -122,6 +129,8 @@ export type ConsultResult = {
   model_costs: Array<Record<string, unknown>>;
   total_cost_usd: number;
   total_tokens: number;
+  total_duration_seconds: number;
+  phase_timings: PhaseTiming[];
 
   // ── Sharing ───────────────────────────────────────────────────────────
   visibility?: "private" | "public";

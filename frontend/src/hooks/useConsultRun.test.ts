@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ConsultResult } from "@/types";
-import { generatedSessionTitlePrompt, sessionTitleFallback } from "./useConsultRun";
+import { generatedSessionTitlePrompt, sessionTitleFallback, shouldUseGeneratedSessionTitle } from "./useConsultRun";
 
 const baseResult = {
   session_id: "session-1",
@@ -53,5 +53,15 @@ describe("generatedSessionTitlePrompt", () => {
     expect(generatedSessionTitlePrompt(baseResult, "Original compose title")).toBe(
       "How should we reduce latency?",
     );
+  });
+});
+
+describe("shouldUseGeneratedSessionTitle", () => {
+  it("does not replace a meaningful follow-up title with a generic fallback", () => {
+    expect(shouldUseGeneratedSessionTitle("consensus team answer", "and in Jerusalem")).toBe(false);
+  });
+
+  it("allows a useful generated title", () => {
+    expect(shouldUseGeneratedSessionTitle("jerusalem budget stays", "and in Jerusalem")).toBe(true);
   });
 });

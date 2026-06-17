@@ -201,11 +201,19 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Add timing around each backend phase
-- [ ] Include timings in debug logs
-- [ ] Optionally expose timings in Session Insights
-- [ ] Compare Fast/Balanced/Deep on the same prompts
-- [ ] Use measurements before changing default models
+- [x] Add timing around each backend phase
+- [x] Include timings in debug logs
+- [x] Expose timings in Session Insights
+- [x] Enable Fast/Balanced/Deep comparison on the same prompts through saved timing fields
+- [x] Keep default-model decisions measurement-driven; no further default model changes made in this phase
+
+### Post-phase QA fixes
+
+- [x] Preserve the immediate parent answer when chaining second follow-ups, so details introduced in follow-up #1 are available to follow-up #2
+- [x] Keep parent answer, original prompt, and clarification context available to final synthesis without restoring the oversized follow-up prompt blob
+- [x] Prevent live follow-up runs from showing the previous Full Debate panel while the new Team Debate is running
+- [x] Keep the question / clarification compose area visible when resuming a follow-up after a clarification answer
+- [x] Avoid generic sidebar titles such as "consensus team answer" for short follow-up instructions
 
 ---
 
