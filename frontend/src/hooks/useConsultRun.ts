@@ -60,6 +60,23 @@ export function useConsultRun(callbacks: ConsultRunCallbacks) {
   return { loading, setLoading, activity, setActivity, isResuming, setIsResuming, execute };
 }
 
+export function sessionTitleFallback(next: ConsultResult, title: string): string {
+  const rawTitle = (
+    next.followup_instruction ||
+    next.base_question ||
+    title ||
+    next.question ||
+    "Untitled run"
+  ).trim().replace(/\s+/g, " ");
+  const words = rawTitle.split(" ").filter(Boolean);
+  if (words.length <= 12) return rawTitle || "Untitled run";
+  return `${words.slice(0, 12).join(" ")}...`;
+}
+
+export function generatedSessionTitlePrompt(next: ConsultResult, title: string): string {
+  return next.followup_instruction || next.base_question || next.question || title;
+}
+
 // ─── Shared helper (used by both executeConsult callers in App.tsx) ───────────
 
 /**
@@ -81,6 +98,7 @@ export function applyRunResult(
   }
 ) {
   const { setResult, setResultsById, setCastBySession, setSelectedId, setHistory, setSessionTitles } = setters;
+  const fallbackTitle = sessionTitleFallback(next, title);
   setResult(next);
   setResultsById((prev) => ({ ...prev, [next.session_id]: next }));
   setCastBySession((prev) => ({ ...prev, [next.session_id]: cast }));
@@ -94,11 +112,12 @@ export function applyRunResult(
       thread_id: next.thread_id,
       parent_session_id: next.parent_session_id,
       is_followup: next.is_followup,
-      run_title: next.followup_instruction || next.question,
+      run_title: fallbackTitle,
     }),
     ...prev.filter((p) => p.id !== next.session_id),
   ]);
-  generateTitle(next.question || title, next.role || "")
+  setSessionTitles((prev) => ({ ...prev, [next.session_id]: fallbackTitle }));
+  generateTitle(generatedSessionTitlePrompt(next, title), next.role || "")
     .then((t) => setSessionTitles((prev) => ({ ...prev, [next.session_id]: t })))
     .catch(() => {});
 }

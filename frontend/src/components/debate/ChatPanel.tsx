@@ -143,9 +143,7 @@ export function ChatPanel(props: Props) {
     const role = result.role || "";
     setExportBusy(true);
     try {
-      // Sidebar title: AI-generated short label (3-6 words) — fine for markdown filename
-      // PDF title: the actual question text so it reads as a proper document heading
-      const sidebarTitle = await generateTitle(prompt, role);
+      // PDF title uses the question text so it reads as a proper document heading.
       const pdfTitle = pdfTitleFromResult(result);
       const exportDate = exportDateLocal();
       const activeTemplate = props.teamTemplateName
@@ -219,6 +217,8 @@ export function ChatPanel(props: Props) {
           }
         : undefined;
       if (kind === "md") {
+        // Markdown keeps the short generated title for the downloaded filename.
+        const sidebarTitle = await generateTitle(prompt, role);
         downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds, webResearch, followup: followupExport });
       } else {
         await downloadPdf({

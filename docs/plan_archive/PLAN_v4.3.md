@@ -164,10 +164,10 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Ensure title generation does not block final answer display
-- [ ] Generate export titles only when exporting, not during the run
-- [ ] Keep session saving reliable even if deferred title generation fails
-- [ ] Add UI fallback title while title generation is pending
+- [x] Ensure title generation does not block final answer display
+- [x] Generate export titles only when exporting, not during the run
+- [x] Keep session saving reliable even if deferred title generation fails
+- [x] Add UI fallback title while title generation is pending
 
 ---
 
