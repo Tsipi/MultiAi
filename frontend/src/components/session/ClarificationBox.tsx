@@ -20,7 +20,7 @@ export function ClarificationBox(props: Props) {
   const canSubmit = props.selected && (!usingOther || props.otherText.trim());
 
   return (
-    <div className="rounded-xl border border-violet-500/20 bg-[var(--v2-surface)] p-4 grid gap-3 shadow-sm">
+    <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 grid gap-3 shadow-sm">
       <div>
         <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300 m-0">
           Clarification Needed

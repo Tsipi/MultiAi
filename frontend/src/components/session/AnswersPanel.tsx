@@ -109,7 +109,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
         "flex flex-col gap-3",
         compact
           ? "bg-transparent border-0 shadow-none p-1 sm:p-2"
-          : "v2-consensus-shell p-4 border border-violet-500/15"
+          : "consensus-shell p-4 border border-violet-500/15"
       )}
     >
       {!compact && (
@@ -128,12 +128,12 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
       )}
 
       {compact && sessions.length > 0 && (
-        <div className="grid gap-1.5 rounded-xl border border-[#ffffff0a] bg-[var(--v2-elevated)]/55 p-2">
+        <div className="grid gap-1.5 rounded-xl border border-[#ffffff0a] bg-[var(--app-elevated)]/55 p-2">
           <Input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search team answers..."
-            className="h-8 bg-[var(--v2-surface)]"
+            className="h-8 bg-[var(--app-surface)]"
           />
           <div className="flex items-center justify-between">
             <p className="m-0 text-[11px] text-muted-foreground">
@@ -177,7 +177,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
         {filteredThreads.map((thread) => (
           <div
             key={thread.threadId}
-            className="flex flex-col gap-1.5 rounded-xl border border-[#ffffff08] bg-[var(--v2-surface)] p-1"
+            className="flex flex-col gap-1.5 rounded-xl border border-[#ffffff08] bg-[var(--app-surface)] p-1"
           >
             <AccordionItem
               session={thread.parent}
@@ -227,7 +227,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
           </div>
         ))}
         {compact && query && filteredThreads.length === 0 && (
-          <p className="m-0 rounded-lg border border-[#ffffff08] bg-[var(--v2-elevated)]/45 px-3 py-2 text-xs text-muted-foreground">
+          <p className="m-0 rounded-lg border border-[#ffffff08] bg-[var(--app-elevated)]/45 px-3 py-2 text-xs text-muted-foreground">
             No answers match your search. Use Show all to reset.
           </p>
         )}
@@ -366,7 +366,7 @@ function AccordionItem({
   }
 
   return (
-    <div className={cn("rounded-xl border border-[#ffffff06] bg-[var(--v2-elevated)]/55 overflow-visible", child && "ml-3")}>
+    <div className={cn("rounded-xl border border-[#ffffff06] bg-[var(--app-elevated)]/55 overflow-visible", child && "ml-3")}>
       <div className="flex items-stretch gap-1">
         <button
           type="button"

@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-/*
-  Global stylesheet
-  -----------------
-  Keep this file focused on:
-  1. Design tokens
-  2. Base styles
-  3. Reusable utilities
-  4. App-specific component helpers
-*/
-
 /* Class-based dark mode: toggled via .dark on <html> */
 @variant dark (&:is(.dark, .dark *));
 
@@ -80,9 +70,9 @@
   --sidebar: #e9ecf0;
 
   /* App surfaces */
-  --v2-surface: var(--card);
-  --v2-elevated: var(--muted);
-  --v2-accent: var(--brand-600);
+  --app-surface: var(--card);
+  --app-elevated: var(--muted);
+  --app-accent: var(--brand-600);
 
   /* Shared effects */
   --focus-ring-shadow: 0 0 0 1px rgb(255 255 255 / 0.12);
@@ -136,9 +126,9 @@
   --destructive-foreground: #ffffff;
   --sidebar: var(--background);
 
-  --v2-surface: var(--card);
-  --v2-elevated: var(--muted);
-  --v2-accent: var(--brand-600);
+  --app-surface: var(--card);
+  --app-elevated: var(--muted);
+  --app-accent: var(--brand-600);
 
   --panel-glass: rgb(15 15 26 / 0.92);
   --panel-cheer-overlay: linear-gradient(
@@ -177,35 +167,35 @@ body {
 /* Focus states and CTAs                                                       */
 /* ========================================================================== */
 
-.v2-command-input:focus,
-.v2-field-focus:focus,
-.v2-field-focus:focus-visible,
-.v2-field-focus[data-state="open"] {
+.command-input:focus,
+.field-focus:focus,
+.field-focus:focus-visible,
+.field-focus[data-state="open"] {
   outline: none;
-  border-color: color-mix(in srgb, var(--v2-accent) 55%, transparent);
+  border-color: color-mix(in srgb, var(--app-accent) 55%, transparent);
   box-shadow:
     var(--focus-ring-shadow),
     0 0 var(--focus-glow-size, 22px) rgb(var(--brand-600-rgb) / var(--focus-glow-opacity, 0.24)),
     var(--inner-highlight-shadow);
 }
 
-.v2-command-input:focus {
+.command-input:focus {
   --focus-glow-size: 28px;
   --focus-glow-opacity: 0.28;
 }
 
-.v2-primary-cta {
+.primary-cta {
   color: var(--brand-50);
   background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
   border: 1px solid color-mix(in srgb, var(--brand-300) 40%, transparent);
   box-shadow: 0 0 24px rgb(var(--brand-600-rgb) / 0.32);
 }
 
-.v2-primary-cta:hover {
+.primary-cta:hover {
   filter: brightness(1.06);
 }
 
-.v2-primary-cta:disabled {
+.primary-cta:disabled {
   opacity: 0.55;
   filter: none;
 }
@@ -214,8 +204,8 @@ body {
 /* App components                                                              */
 /* ========================================================================== */
 
-.v2-consensus-shell {
-  background: var(--v2-elevated);
+.consensus-shell {
+  background: var(--app-elevated);
   border: 1px solid rgb(255 255 255 / 0.08);
   border-radius: 18px;
   box-shadow: var(--inner-highlight-shadow);
@@ -223,7 +213,7 @@ body {
 
 .sidebar-answer-card {
   border-color: transparent;
-  background-color: color-mix(in srgb, var(--v2-elevated) 82%, var(--card));
+  background-color: color-mix(in srgb, var(--app-elevated) 82%, var(--card));
   outline: none;
   box-shadow: none;
 }
@@ -231,7 +221,7 @@ body {
 .sidebar-answer-card:hover {
   transform: translateY(-1px);
   border-color: var(--brand-200);
-  background-color: color-mix(in srgb, var(--v2-accent) 4%, var(--v2-elevated));
+  background-color: color-mix(in srgb, var(--app-accent) 4%, var(--app-elevated));
   box-shadow: 0 2px 8px rgb(var(--brand-600-rgb) / 0.1);
 }
 
@@ -242,22 +232,22 @@ body {
 }
 
 .sidebar-answer-card-selected {
-  background-color: color-mix(in srgb, var(--v2-accent) 8%, var(--v2-elevated));
+  background-color: color-mix(in srgb, var(--app-accent) 8%, var(--app-elevated));
 }
 
 .clarification-answer-card {
   border-color: var(--brand-200);
-  background-color: color-mix(in srgb, var(--v2-accent) 5%, var(--card));
+  background-color: color-mix(in srgb, var(--app-accent) 5%, var(--card));
   outline: none;
   box-shadow: none;
 }
 
 .dark .clarification-answer-card {
-  border-color: var(--v2-accent);
-  background-color: color-mix(in srgb, var(--v2-accent) 13%, var(--card));
+  border-color: var(--app-accent);
+  background-color: color-mix(in srgb, var(--app-accent) 13%, var(--card));
 }
 
-.v2-strip-grid {
+.strip-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
   gap: 0.75rem;
@@ -265,7 +255,7 @@ body {
 }
 
 @media (min-width: 640px) {
-  .v2-strip-grid {
+  .strip-grid {
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   }
 }
@@ -274,18 +264,18 @@ body {
 /* Animations                                                                  */
 /* ========================================================================== */
 
-.v2-agent-pulse {
-  animation: v2-pulse 1.35s ease-in-out infinite;
+.agent-pulse {
+  animation: pulse 1.35s ease-in-out infinite;
 }
 
-.v2-strip-stagger > * {
-  animation: v2-seat-in 0.48s ease-out both;
+.strip-stagger > * {
+  animation: seat-in 0.48s ease-out both;
 }
 
-.v2-strip-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.v2-strip-stagger > *:nth-child(2) { animation-delay: 110ms; }
-.v2-strip-stagger > *:nth-child(3) { animation-delay: 220ms; }
-.v2-strip-stagger > *:nth-child(4) { animation-delay: 330ms; }
+.strip-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.strip-stagger > *:nth-child(2) { animation-delay: 110ms; }
+.strip-stagger > *:nth-child(3) { animation-delay: 220ms; }
+.strip-stagger > *:nth-child(4) { animation-delay: 330ms; }
 
 .slide-in-right {
   animation: slide-in-right 0.4s ease-out forwards;
@@ -295,7 +285,7 @@ body {
   animation: green-pulse 1.4s ease-in-out infinite;
 }
 
-@keyframes v2-pulse {
+@keyframes pulse {
   0%,
   100% {
     box-shadow: 0 0 0 0 rgb(var(--brand-600-rgb) / 0.35);
@@ -305,7 +295,7 @@ body {
   }
 }
 
-@keyframes v2-seat-in {
+@keyframes seat-in {
   from {
     opacity: 0;
     transform: translateY(8px);

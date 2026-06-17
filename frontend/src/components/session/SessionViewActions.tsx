@@ -10,7 +10,7 @@ type Props = {
 
 export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, onOpenAdvanced }: Props) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-1.5 py-1.5 shadow-sm">
+    <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--app-surface)] px-1.5 py-1.5 shadow-sm">
       <Button
         type="button"
         variant="ghost"

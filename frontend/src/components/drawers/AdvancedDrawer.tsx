@@ -55,10 +55,10 @@ export function AdvancedDrawer({
       <aside
         className={cn(
           "absolute right-0 top-0 h-full w-full max-w-[560px] overflow-y-auto overflow-x-hidden border-l border-[#ffffff10]",
-          "bg-[var(--v2-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]"
+          "bg-[var(--app-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]"
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[#ffffff10] bg-[var(--v2-elevated)] px-4 py-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[#ffffff10] bg-[var(--app-elevated)] px-4 py-3">
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
               <Settings2 className="h-4 w-4 shrink-0 text-violet-400" aria-hidden />
@@ -81,7 +81,7 @@ export function AdvancedDrawer({
           <Button
             type="button"
             size="lg"
-            className="v2-primary-cta font-display h-11 border-0 shadow-none w-full sm:w-auto"
+            className="primary-cta font-display h-11 border-0 shadow-none w-full sm:w-auto"
             disabled={loading || !canSubmit}
             onClick={onSubmit}
           >

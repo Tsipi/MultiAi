@@ -505,7 +505,7 @@ export default function App() {
               />
             )}
 
-            <div ref={mainPanelRef} className="v2-consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
+            <div ref={mainPanelRef} className="consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
               <ChatPanel {...panelProps} />
             </div>
 

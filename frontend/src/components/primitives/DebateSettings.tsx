@@ -51,7 +51,7 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
         ))}
       </div>
       <div className="flex justify-start">
-        <Button size="sm" className="v2-primary-cta h-10 border-0 px-4 shadow-none font-display" onClick={addMember}>
+        <Button size="sm" className="primary-cta h-10 border-0 px-4 shadow-none font-display" onClick={addMember}>
           <UserPlus className="mr-1.5 h-4 w-4" />
           Add another team member
         </Button>

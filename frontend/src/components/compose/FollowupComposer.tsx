@@ -57,7 +57,7 @@ export function FollowupComposer(props: Props) {
           </div>
           <Button
             type="button"
-            className="v2-primary-cta font-display h-10 shrink-0 w-full sm:w-auto min-w-[148px] rounded-xl border-0 font-semibold shadow-none"
+            className="primary-cta font-display h-10 shrink-0 w-full sm:w-auto min-w-[148px] rounded-xl border-0 font-semibold shadow-none"
             onClick={props.onOpen}
           >
             Write follow-up
@@ -117,7 +117,7 @@ export function FollowupComposer(props: Props) {
             <div className="flex items-center gap-3 flex-wrap">
               <Button
                 type="button"
-                className="v2-primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
+                className="primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
                 onClick={props.onSubmit}
                 disabled={!canSubmit}
               >

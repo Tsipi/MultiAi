@@ -21,7 +21,7 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col bg-[var(--v2-surface)] transition-all duration-200 ease-out",
+        "flex shrink-0 flex-col bg-[var(--app-surface)] transition-all duration-200 ease-out",
         "max-md:max-h-[min(46vh,380px)] max-md:w-full max-md:self-stretch max-md:border-b max-md:border-[#ffffff10]",
         "md:flex-row md:border-r md:border-[#ffffff10] md:sticky md:top-14 md:z-30 md:max-h-none md:h-[calc(100vh-3.5rem)] md:w-auto md:self-start"
       )}
@@ -104,7 +104,7 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
 
       <nav
         className={cn(
-          "flex shrink-0 flex-col items-center gap-3 border-[#ffffff08] bg-[var(--v2-surface)]",
+          "flex shrink-0 flex-col items-center gap-3 border-[#ffffff08] bg-[var(--app-surface)]",
           "max-md:flex-row max-md:w-full max-md:justify-end max-md:border-b-0 max-md:border-t max-md:py-2",
           open
             ? "md:w-0 md:overflow-hidden md:opacity-0 md:pointer-events-none md:border-l-0 md:py-0"

@@ -13,7 +13,7 @@ type Props = {
 /** Shared light-purple action button used across advanced/main controls. */
 export function ActionGhostButton({ children, icon, disabled, onClick, className }: Props) {
   return (
-    <Button
+    <Button    
       type="button"
       size="sm"
       variant="outline"

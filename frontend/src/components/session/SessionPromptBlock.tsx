@@ -116,7 +116,7 @@ export function SessionPromptBlock({
       {useStoredClarification && effectiveClarificationQuestion ? (
         <div className="grid gap-1.5">
           <p className={sectionLabel}>Clarification</p>
-          <div className="rounded-xl border border-violet-500/20 bg-[var(--v2-surface)] p-4 shadow-sm">
+          <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
             {effectiveClarificationReason && (
               <p className="m-0 mb-2 text-sm text-muted-foreground">{effectiveClarificationReason}</p>
             )}
@@ -147,7 +147,7 @@ export function SessionPromptBlock({
               onChange={(e) => onFollowupInstructionChange?.(e.target.value)}
               placeholder="Describe what you want next..."
               disabled={loading}
-              className="v2-command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
+              className="command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
             />
           </div>
           <div>
@@ -159,13 +159,13 @@ export function SessionPromptBlock({
               onChange={(e) => onFollowupConstraintsChange?.(e.target.value)}
               placeholder="Add any additional constraints or requirements..."
               disabled={loading}
-              className="v2-command-input w-full min-h-[80px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
+              className="command-input w-full min-h-[80px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
             />
           </div>
           <div className="flex items-center gap-2 pt-1">
             <Button
               type="button"
-              className="v2-primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
+              className="primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
               disabled={loading || !followupInstruction?.trim()}
               onClick={() => onSubmitFollowup?.()}
             >
@@ -217,7 +217,7 @@ export function SessionPromptBlock({
       )}
 
       {effectiveClarificationQuestion ? (
-        <div className="rounded-xl border border-violet-500/20 bg-[var(--v2-surface)] p-4 shadow-sm">
+        <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
           <p className={`${sectionLabel} mb-2`}>Clarification</p>
           {effectiveClarificationReason && (
             <p className="m-0 mb-2 text-sm text-muted-foreground">{effectiveClarificationReason}</p>
@@ -241,7 +241,7 @@ export function SessionPromptBlock({
             name="resend_question"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            className="v2-command-input min-h-[120px] w-full resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground"
+            className="command-input min-h-[120px] w-full resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground"
           />
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setEditing(false)} disabled={loading}>
@@ -250,7 +250,7 @@ export function SessionPromptBlock({
             <Button
               type="button"
               size="sm"
-              className="v2-primary-cta border-0"
+              className="primary-cta border-0"
               disabled={loading || !draft.trim()}
               onClick={async () => {
                 await onResendQuestion(draft);
@@ -274,7 +274,7 @@ export function SessionPromptBlock({
               onChange={(e) => onFollowupInstructionChange?.(e.target.value)}
               placeholder="Describe what you want next..."
               disabled={loading}
-              className="v2-command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
+              className="command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
             />
           </div>
           <div>
@@ -286,13 +286,13 @@ export function SessionPromptBlock({
               onChange={(e) => onFollowupConstraintsChange?.(e.target.value)}
               placeholder="Add any additional constraints or requirements..."
               disabled={loading}
-              className="v2-command-input w-full min-h-[80px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
+              className="command-input w-full min-h-[80px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
             />
           </div>
           <div className="flex items-center gap-2 pt-1">
             <Button
               type="button"
-              className="v2-primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
+              className="primary-cta font-display h-10 rounded-xl border-0 px-6 font-semibold shadow-none"
               disabled={loading || !followupInstruction?.trim()}
               onClick={() => onSubmitFollowup?.()}
             >
