@@ -4,12 +4,16 @@ import { ChatPanel } from "../debate/ChatPanel";
 import { ChatroomDebateView } from "../debate/ChatroomDebateView";
 import { cn } from "@/lib/utils";
 import { panelHeadingClass } from "@/lib/panelStyles";
-import { ConsultResult, SessionPreview } from "../../types";
+import { AnswerMode, ConsultResult, SessionPreview } from "../../types";
 import { type CastSelection } from "@/lib/consultHelpers";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type ChatPanelProps = React.ComponentProps<typeof ChatPanel>;
+
+function answerModeForResult(result: ConsultResult | null | undefined, fallback: AnswerMode): AnswerMode {
+  return result?.answer_mode ?? fallback;
+}
 
 export type AnswersPanelProps = {
   sessions: SessionPreview[];
@@ -161,6 +165,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
           loading
           maxRounds={chatPanelProps.maxRounds}
           consensusThreshold={chatPanelProps.consensusThreshold}
+          answerMode={chatPanelProps.answerMode}
           prominent
         />
       )}
@@ -273,6 +278,7 @@ function buildSessionChatProps(
     team: activeChatProps.team,
     maxRounds: activeChatProps.maxRounds,
     consensusThreshold: activeChatProps.consensusThreshold,
+    answerMode: answerModeForResult(resultsById[sessionId], activeChatProps.answerMode),
   };
 }
 

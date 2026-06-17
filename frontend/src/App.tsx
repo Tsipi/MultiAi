@@ -27,13 +27,21 @@ import { deleteSession, getSession, shareSession, unshareSession } from "./servi
 import { MODEL_OPTIONS } from "./data/models";
 import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
 import { findFaceByName } from "./data/experts";
-import type { ConsultPayload, ConsultResult } from "./types";
+import type { AnswerMode, ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
 import { SharedRunPage } from "./pages/SharedRunPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+function normalizeAnswerMode(mode?: AnswerMode): AnswerMode {
+  return mode ?? "balanced";
+}
+
+function answerModeLabel(mode: AnswerMode): string {
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+}
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -69,6 +77,7 @@ export default function App() {
 
   // ─── Run engine ────────────────────────────────────────────────────────────
   const [result, setResult] = useState<ConsultResult | null>(null);
+  const [activeRunAnswerMode, setActiveRunAnswerMode] = useState<AnswerMode>(normalizeAnswerMode(form.answer_mode));
   const mainPanelRef = useRef<HTMLDivElement | null>(null);
   const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
 
@@ -154,11 +163,12 @@ export default function App() {
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
     setLoading(true);
+    setActiveRunAnswerMode(normalizeAnswerMode(form.answer_mode));
     setResult(null);
     setSelectedId(null);
     navigate("/app/new");
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    setActivity(["Queued request. Your team is assembling the debate..."]);
+    setActivity([`Preparing ${answerModeLabel(normalizeAnswerMode(form.answer_mode))} run. Your team is assembling the debate...`]);
     clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
@@ -188,8 +198,6 @@ export default function App() {
     setRunsSidebarOpen(true);
     setLoading(true);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    setActivity([`Starting follow-up run from session ${displayResult.session_id}`]);
-    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
     const rootQ = displayResult.root_question || displayResult.source_prompt || displayResult.question;
     const followupQuestion = [
@@ -221,6 +229,11 @@ export default function App() {
         : (displayResult.answer_mode || basePayload.answer_mode),
       root_question: rootQ,
     };
+    setActiveRunAnswerMode(normalizeAnswerMode(payload.answer_mode));
+    setActivity([
+      `Preparing ${answerModeLabel(normalizeAnswerMode(payload.answer_mode))} follow-up run from session ${displayResult.session_id}`,
+    ]);
+    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     try {
       await execute(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -250,6 +263,11 @@ export default function App() {
       title: form.question,
     };
     const nextPayload: ConsultPayload = { ...basePayload, clarification: answer, clarification_question: questionAsked };
+    setActiveRunAnswerMode(normalizeAnswerMode(nextPayload.answer_mode));
+    setActivity((prev) => [
+      ...prev,
+      `Resuming ${answerModeLabel(normalizeAnswerMode(nextPayload.answer_mode))} run with your clarification...`,
+    ]);
     try {
       await execute(nextPayload, baseCast, baseTitle);
     } catch (error) {
@@ -391,6 +409,7 @@ export default function App() {
     team,
     maxRounds: form.max_rounds,
     consensusThreshold: form.consensus_score,
+    answerMode: loading ? activeRunAnswerMode : normalizeAnswerMode(displayResult?.answer_mode || form.answer_mode),
     clarificationPrompt,
     clarificationReason,
     clarificationOptions,

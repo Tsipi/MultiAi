@@ -24,6 +24,7 @@ export type ChatroomMessage = {
 
 export type ChatroomState = {
   activeSpeaker: AgentId | null;
+  currentStage: string;
   currentRound: number;
   latestScore: number | null;
   previousScore: number | null;
@@ -42,6 +43,9 @@ const RE_SCORER        = /^Round \d+: consensus/i;
 const RE_SYNTH         = /synthesizing final answer/i;
 const RE_COMPLETE      = /completed successfully/i;
 const RE_QUEUED        = /queued request/i;
+const RE_RESEARCH      = /(searching the live web|live web research)/i;
+const RE_PREP          = /(assembling|preparing|starting follow-up|resuming|in session)/i;
+const RE_ERROR         = /stream error/i;
 
 function toCriticId(n: number): AgentId | null {
   if (n >= 1 && n <= 6) return `critic${n}` as AgentId;
@@ -81,9 +85,24 @@ function messageType(text: string): "message" | "score_announcement" | "system" 
   return "message";
 }
 
+function detectStage(text: string): string {
+  if (RE_ERROR.test(text)) return "Needs attention";
+  if (RE_COMPLETE.test(text)) return "Complete";
+  if (RE_SYNTH.test(text)) return "Synthesizing";
+  if (RE_THRESHOLD.test(text)) return "Consensus reached";
+  if (RE_SCORER.test(text) || RE_SCORE_LINE.test(text)) return "Scoring";
+  if (RE_WRITER_TYPING.test(text)) return "Drafting";
+  if (RE_CRITIC_NUM.test(text)) return "Critiquing";
+  if (RE_RESEARCH.test(text)) return "Researching";
+  if (RE_PREP.test(text) || RE_QUEUED.test(text)) return "Preparing";
+  if (RE_ROUND_NUM.test(text)) return "Drafting";
+  return "Working";
+}
+
 export function parseActivityMessages(activity: string[]): ChatroomState {
   const messages: ChatroomMessage[] = [];
   let currentRound = 0;
+  let currentStage = activity.length > 0 ? "Preparing" : "Idle";
   let latestScore: number | null = null;
   let previousScore: number | null = null;
   let activeSpeaker: AgentId | null = null;
@@ -92,6 +111,7 @@ export function parseActivityMessages(activity: string[]): ChatroomState {
 
   for (let i = 0; i < activity.length; i++) {
     const text = activity[i];
+    currentStage = detectStage(text);
 
     const roundMatch = text.match(RE_ROUND_NUM);
     if (roundMatch) {
@@ -130,6 +150,7 @@ export function parseActivityMessages(activity: string[]): ChatroomState {
 
   return {
     activeSpeaker,
+    currentStage,
     currentRound,
     latestScore,
     previousScore,

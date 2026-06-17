@@ -177,11 +177,11 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Stream clearer activity messages for each major stage
-- [ ] Show which stage is currently running: research, drafting, critique, scoring, synthesis
-- [ ] Show "Fast / Balanced / Deep" mode in the live header
-- [ ] Add elapsed time or stage progress labels
-- [ ] Avoid long silent gaps between activity events
+- [x] Stream clearer activity messages for each major stage
+- [x] Show which stage is currently running: research, drafting, critique, scoring, synthesis
+- [x] Show "Fast / Balanced / Deep" mode in the live header
+- [x] Add elapsed time or stage progress labels
+- [x] Avoid long silent gaps between activity events
 
 ---
 

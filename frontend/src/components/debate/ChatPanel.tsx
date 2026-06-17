@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ConsultResult } from "../../types";
+import { AnswerMode, ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "../session/ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/pdf/exporter";
@@ -31,6 +31,7 @@ type Props = {
   team: TeamMember[];
   maxRounds: number;
   consensusThreshold: number;
+  answerMode: AnswerMode;
   clarificationPrompt: string;
   clarificationReason: string;
   clarificationOptions: string[];
@@ -76,6 +77,7 @@ export function ChatPanel(props: Props) {
     team,
     maxRounds,
     consensusThreshold,
+    answerMode,
   } = props;
 
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
@@ -117,6 +119,7 @@ export function ChatPanel(props: Props) {
       loading={loading}
       maxRounds={maxRounds}
       consensusThreshold={consensusThreshold}
+      answerMode={answerMode}
       teamTemplateName={props.teamTemplateName}
     />
   );
@@ -345,18 +348,20 @@ export function ChatPanel(props: Props) {
           <div className="flex justify-start">
             <div className="w-full max-w-[880px]">
               <CollapsiblePanel
-                title="Live Debate Replay"
+                title={loading ? "Live Follow-up Run" : "Live Debate Replay"}
                 titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
-                defaultOpen={false}
+                defaultOpen={loading}
               >
                 <div className="-mx-3.5 -mb-3.5 -mt-3">
                   <ChatroomDebateView
                     activity={activity}
                     cast={cast}
                     team={team}
-                    loading={false}
+                    loading={loading}
                     maxRounds={maxRounds}
                     consensusThreshold={consensusThreshold}
+                    answerMode={answerMode}
+                    prominent={loading}
                   />
                 </div>
               </CollapsiblePanel>

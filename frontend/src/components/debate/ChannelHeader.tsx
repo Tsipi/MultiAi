@@ -7,6 +7,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { TeamMember } from "@/data/experts";
 import { TEAM_TEMPLATES } from "@/data/templates";
+import type { AnswerMode } from "@/types";
+import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 
 const TEMPLATE_ICONS: Record<string, LucideIcon> = {
   "programmer":         Code2,
@@ -26,6 +28,9 @@ type Props = {
   score: number | null;
   previousScore: number | null;
   loading: boolean;
+  stageLabel: string;
+  answerMode: AnswerMode;
+  elapsedSeconds?: number;
   team: TeamMember[];
   teamTemplateName?: string;
 };
@@ -55,7 +60,7 @@ function useAnimatedScore(target: number | null, duration = 800) {
 }
 
 export function ChannelHeader({
-  currentRound, maxRounds, score, previousScore, loading, team, teamTemplateName,
+  currentRound, maxRounds, score, previousScore, loading, stageLabel, answerMode, elapsedSeconds, team, teamTemplateName,
 }: Props) {
   const animatedScore = useAnimatedScore(score);
   const improved = score !== null && previousScore !== null && score > previousScore;
@@ -67,12 +72,18 @@ export function ChannelHeader({
     : null;
   const Icon: LucideIcon = template ? (TEMPLATE_ICONS[template.id] ?? Users) : Users;
   const displayName = teamTemplateName ?? "Team Debate";
+  const modeLabel = answerMode.charAt(0).toUpperCase() + answerMode.slice(1);
+  const elapsedLabel = elapsedSeconds != null
+    ? elapsedSeconds < 60
+      ? `${elapsedSeconds}s`
+      : `${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s`
+    : null;
 
   return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10 rounded-t-xl">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10 rounded-t-xl">
 
       {/* Channel name */}
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex min-w-[180px] flex-1 items-center gap-2">
         <Icon className="h-3.5 w-3.5 shrink-0 text-violet-500 dark:text-violet-400" strokeWidth={2} />
         <span className="font-display text-sm font-bold text-violet-700 dark:text-violet-400 truncate tracking-tight">
           {displayName}
@@ -88,8 +99,24 @@ export function ChannelHeader({
         )}
       </div>
 
+      {loading && (
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-[0.68rem] font-semibold">
+          <span className="truncate rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-sky-700 dark:text-sky-300">
+            {stageLabel}
+          </span>
+          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-700 dark:text-amber-300">
+            {modeLabel}
+          </span>
+          {elapsedLabel && (
+            <span className="tabular-nums text-muted-foreground">
+              {elapsedLabel}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Round + score */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      <div className="flex min-w-[120px] items-center justify-end gap-3 text-xs text-muted-foreground">
         {currentRound > 0 && (
           <span className="tabular-nums">
             Round{" "}
@@ -117,10 +144,13 @@ export function ChannelHeader({
         {team.slice(0, 6).map((m) => (
           <img
             key={m.id}
-            src={m.avatar}
+            src={m.avatar || DEBATE_SYSTEM_AVATAR}
             alt={m.name}
             title={m.name}
             className="h-6 w-6 rounded-full border-2 border-card object-cover"
+            onError={(event) => {
+              event.currentTarget.src = DEBATE_SYSTEM_AVATAR;
+            }}
           />
         ))}
         {team.length > 6 && (
