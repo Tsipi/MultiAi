@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ConsultResult } from "../../types";
+import { AnswerMode, ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "../session/ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/pdf/exporter";
@@ -31,6 +31,7 @@ type Props = {
   team: TeamMember[];
   maxRounds: number;
   consensusThreshold: number;
+  answerMode: AnswerMode;
   clarificationPrompt: string;
   clarificationReason: string;
   clarificationOptions: string[];
@@ -76,10 +77,12 @@ export function ChatPanel(props: Props) {
     team,
     maxRounds,
     consensusThreshold,
+    answerMode,
   } = props;
 
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
+  const showPreviousFullDebate = showFullDiscussion && !loading && (result?.full_discussion.length ?? 0) > 0;
 
   // Scroll to the follow-up composer whenever it opens
   useEffect(() => {
@@ -117,6 +120,7 @@ export function ChatPanel(props: Props) {
       loading={loading}
       maxRounds={maxRounds}
       consensusThreshold={consensusThreshold}
+      answerMode={answerMode}
       teamTemplateName={props.teamTemplateName}
     />
   );
@@ -143,9 +147,7 @@ export function ChatPanel(props: Props) {
     const role = result.role || "";
     setExportBusy(true);
     try {
-      // Sidebar title: AI-generated short label (3-6 words) — fine for markdown filename
-      // PDF title: the actual question text so it reads as a proper document heading
-      const sidebarTitle = await generateTitle(prompt, role);
+      // PDF title uses the question text so it reads as a proper document heading.
       const pdfTitle = pdfTitleFromResult(result);
       const exportDate = exportDateLocal();
       const activeTemplate = props.teamTemplateName
@@ -219,6 +221,8 @@ export function ChatPanel(props: Props) {
           }
         : undefined;
       if (kind === "md") {
+        // Markdown keeps the short generated title for the downloaded filename.
+        const sidebarTitle = await generateTitle(prompt, role);
         downloadMarkdown({ title: sidebarTitle, role: result.role, prompt, answer: result.final_answer, exportDate, debateRounds, webResearch, followup: followupExport });
       } else {
         await downloadPdf({
@@ -345,18 +349,20 @@ export function ChatPanel(props: Props) {
           <div className="flex justify-start">
             <div className="w-full max-w-[880px]">
               <CollapsiblePanel
-                title="Live Debate Replay"
+                title={loading ? "Live Follow-up Run" : "Live Debate Replay"}
                 titleClassName="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
-                defaultOpen={false}
+                defaultOpen={loading}
               >
                 <div className="-mx-3.5 -mb-3.5 -mt-3">
                   <ChatroomDebateView
                     activity={activity}
                     cast={cast}
                     team={team}
-                    loading={false}
+                    loading={loading}
                     maxRounds={maxRounds}
                     consensusThreshold={consensusThreshold}
+                    answerMode={answerMode}
+                    prominent={loading}
                   />
                 </div>
               </CollapsiblePanel>
@@ -365,7 +371,7 @@ export function ChatPanel(props: Props) {
         )}
 
         {/* 5. Director's Cut: full answer/critique text per round */}
-        {showFullDiscussion && result.full_discussion.length > 0 && (
+        {showPreviousFullDebate && (
           <CollapsiblePanel
             title="Full Debate"
             defaultOpen

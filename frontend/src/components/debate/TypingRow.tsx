@@ -1,12 +1,17 @@
+import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
+
 type Props = { label: string; avatar: string };
 
 export function TypingRow({ label, avatar }: Props) {
   return (
     <div className="flex items-center gap-3 px-1 py-1.5 animate-in fade-in duration-200">
       <img
-        src={avatar}
+        src={avatar || DEBATE_SYSTEM_AVATAR}
         alt={label}
         className="h-8 w-8 shrink-0 rounded-full border border-border object-cover"
+        onError={(event) => {
+          event.currentTarget.src = DEBATE_SYSTEM_AVATAR;
+        }}
       />
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <span className="font-medium">{label}</span>

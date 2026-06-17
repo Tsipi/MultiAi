@@ -86,7 +86,7 @@ export function CommandBar({
 
           <div
             className={cn(
-              "rounded-[28px] border border-violet-200/60 bg-[var(--v2-surface)] shadow-[0_8px_32px_rgba(124,58,237,0.08)]",
+              "rounded-[28px] border border-violet-200/60 bg-[var(--app-surface)] shadow-[0_8px_32px_rgba(124,58,237,0.08)]",
               "dark:border-violet-500/25 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]",
               isSending && "opacity-75"
             )}
@@ -110,7 +110,7 @@ export function CommandBar({
                 name="question"
                 aria-label="Describe your mission"
                 className={cn(
-                  "v2-command-input min-h-[130px] max-h-[280px] w-full resize-y rounded-2xl border border-transparent bg-[var(--v2-elevated)] px-3 py-3",
+                  "command-input min-h-[130px] max-h-[280px] w-full resize-y rounded-2xl border border-transparent bg-[var(--app-elevated)] px-3 py-3",
                   "text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/45 placeholder:font-normal"
                 )}
                 placeholder="Describe the challenge, question, or decision you want your team to tackle…"
@@ -135,7 +135,7 @@ export function CommandBar({
                 type="button"
                 size="lg"
                 disabled={busy || !value.trim()}
-                className="v2-primary-cta font-display h-10 rounded-xl border-0 px-5 font-semibold shadow-none"
+                className="primary-cta font-display h-10 rounded-xl border-0 px-5 font-semibold shadow-none"
                 onClick={handleSubmit}
               >
                 {isSending ? "Mission Initializing…" : "Send to team"}

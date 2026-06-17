@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { MarkdownView } from "../primitives/MarkdownView";
 import { FinalAnswerHeaderRoster, type RosterFace } from "./FinalAnswerAvatarStrip";
 import { TEAM_TEMPLATES } from "@/data/templates";
+import { Button } from "@/components/ui/button";
 
 const TEMPLATE_ICONS: Record<string, LucideIcon> = {
   "programmer":         Code2,
@@ -47,10 +48,11 @@ export function PinnedAnswer({
       )}
     >
       <div className="overflow-hidden rounded-xl bg-gradient-to-br from-violet-500/[0.04] via-card/95 to-muted/15">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           onClick={() => setExpanded((v) => !v)}
-          className="relative flex w-full items-center gap-2 border-b border-border/45 px-4 py-3 pr-12 text-left transition-colors hover:bg-muted/25"
+          className="relative flex h-auto w-full justify-start whitespace-normal rounded-none border-b border-border/45 px-4 py-3 pr-12 text-left font-normal hover:bg-muted/25 focus-visible:ring-offset-0"
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             <span className="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
@@ -83,7 +85,7 @@ export function PinnedAnswer({
               expanded && "rotate-180"
             )}
           />
-        </button>
+        </Button>
 
       {!expanded && (
         <div className="border-t border-border/40 bg-card/50 px-4 pb-3 pt-3 dark:bg-card/30">
@@ -91,13 +93,15 @@ export function PinnedAnswer({
             content={finalAnswer}
             className="border-0 bg-transparent px-0 py-2 max-w-none shadow-none prose prose-sm prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-strong:font-bold prose-strong:text-foreground prose-li:marker:text-muted-foreground text-foreground/80 line-clamp-5 overflow-hidden"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setExpanded(true)}
-            className="mt-3 text-xs text-violet-600 dark:text-violet-400 hover:underline font-medium"
+            className="mt-3 h-auto px-0 py-0 text-xs font-medium text-violet-600 hover:bg-transparent hover:underline hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
           >
             Show full answer
-          </button>
+          </Button>
         </div>
       )}
 

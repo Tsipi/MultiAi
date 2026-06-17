@@ -39,7 +39,7 @@ export function AgentStrip({ team, onTeamChange, leadRole, loading, lastActivity
         subtitle="Fixed roster for each run: the Writer drafts answers, two Critics push back, and the Bench (scorer + summarizer, always DeepSeek on the server) turns rounds into scores and short summaries."
         tip="Double-click any roster card to edit name, seat, model, and strengths. More options live under Advanced setup."
       />
-      <div className="v2-strip-grid v2-strip-stagger">
+      <div className="strip-grid strip-stagger">
         {roster.map((m) => (
           <StripCard
             key={m.id}
@@ -60,7 +60,7 @@ export function AgentStrip({ team, onTeamChange, leadRole, loading, lastActivity
           onClick={() => onTeamChange(appendDefaultTeamMember(team, leadRole))}
           className={cn(
             "flex min-h-[104px] w-full min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-violet-500/35",
-            "bg-[var(--v2-surface)] px-3 py-4 text-violet-600 transition-colors hover:border-violet-500/55 hover:bg-violet-500/5",
+            "bg-[var(--app-surface)] px-3 py-4 text-violet-600 transition-colors hover:border-violet-500/55 hover:bg-violet-500/5",
             "dark:text-violet-300 disabled:opacity-50 disabled:pointer-events-none"
           )}
         >

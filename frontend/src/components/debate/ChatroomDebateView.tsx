@@ -4,6 +4,7 @@ import { parseActivityMessages, extractScoreFromMessage } from "@/lib/parseActiv
 import type { AgentId } from "@/lib/parseActivityMessages";
 import type { TeamMember } from "@/data/experts";
 import { TEAM_TEMPLATES } from "@/data/templates";
+import type { AnswerMode } from "@/types";
 import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChannelHeader } from "./ChannelHeader";
 import { RoundDivider } from "./RoundDivider";
@@ -11,6 +12,7 @@ import { ScoreBadge } from "../primitives/ScoreBadge";
 import { ChatMessage, SystemMessage, SkeletonMessage } from "./ChatMessage";
 import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";
+import { Button } from "@/components/ui/button";
 
 type Person = { name: string; avatar: string; model?: string };
 type Cast = { writer: Person; critics: Person[] };
@@ -22,6 +24,7 @@ type Props = {
   loading: boolean;
   maxRounds: number;
   consensusThreshold: number;
+  answerMode: AnswerMode;
   teamTemplateName?: string;
   /** Taller scroll area when used as the primary live panel */
   prominent?: boolean;
@@ -43,14 +46,14 @@ function resolvePerson(
   let base: { name: string; avatar: string; role: string; model?: string };
 
   if (speaker === "writer") {
-    base = { ...cast.writer, role: "Writer", model: cast.writer.model };
+    base = { ...cast.writer, avatar: cast.writer.avatar || DEBATE_SYSTEM_AVATAR, role: "Writer", model: cast.writer.model };
   } else {
     const m = speaker.match(/^critic(\d+)$/);
     if (m) {
       const idx = parseInt(m[1], 10) - 1;
       const member = cast.critics[idx];
       base = member
-        ? { name: member.name, avatar: member.avatar, role: "Critic", model: member.model }
+        ? { name: member.name, avatar: member.avatar || DEBATE_SYSTEM_AVATAR, role: "Critic", model: member.model }
         : { name: `Critic ${idx + 1}`, avatar: DEBATE_SYSTEM_AVATAR, role: "Critic" };
     } else {
       base = { name: "System", avatar: DEBATE_SYSTEM_AVATAR, role: "System" };
@@ -66,9 +69,12 @@ function resolvePerson(
 
 function resolveTypingPerson(speaker: AgentId | null, cast: Cast): Person | null {
   if (!speaker) return null;
-  if (speaker === "writer") return cast.writer;
+  if (speaker === "writer") return { ...cast.writer, avatar: cast.writer.avatar || DEBATE_SYSTEM_AVATAR };
   const m = speaker.match(/^critic(\d+)$/);
-  if (m) return cast.critics[parseInt(m[1], 10) - 1] ?? null;
+  if (m) {
+    const critic = cast.critics[parseInt(m[1], 10) - 1];
+    return critic ? { ...critic, avatar: critic.avatar || DEBATE_SYSTEM_AVATAR } : null;
+  }
   return null;
 }
 
@@ -79,12 +85,14 @@ export function ChatroomDebateView({
   loading,
   maxRounds,
   consensusThreshold: _consensusThreshold,
+  answerMode,
   teamTemplateName,
   prominent,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const [userScrolled, setUserScrolled] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const prevLenRef = useRef(0);
 
   const state = useMemo(() => parseActivityMessages(activity), [activity]);
@@ -97,6 +105,19 @@ export function ChatroomDebateView({
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [activity.length, userScrolled]);
+
+  useEffect(() => {
+    if (!loading) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const startedAt = Date.now();
+    setElapsedSeconds(0);
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [loading]);
 
   const handleScroll = () => {
     const el = feedRef.current;
@@ -160,6 +181,9 @@ export function ChatroomDebateView({
           score={state.latestScore}
           previousScore={state.previousScore}
           loading={loading}
+          stageLabel={state.currentStage}
+          answerMode={answerMode}
+          elapsedSeconds={loading ? elapsedSeconds : undefined}
           team={team}
           teamTemplateName={teamTemplateName}
         />
@@ -231,16 +255,18 @@ export function ChatroomDebateView({
 
         {userScrolled && loading && (
           <div className="flex justify-center py-1.5 border-t border-border/40">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setUserScrolled(false);
                 bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
               }}
-              className="text-[0.7rem] font-medium px-3 py-1 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400 hover:bg-violet-500/25 transition-colors"
+              className="h-auto rounded-full bg-violet-500/15 px-3 py-1 text-[0.7rem] font-medium text-violet-600 hover:bg-violet-500/25 dark:text-violet-400"
             >
               Jump to live
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SessionPreview } from "../../types";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   sessions: SessionPreview[];
@@ -63,6 +64,9 @@ type RowProps = {
   child?: boolean;
 };
 
+const rowButtonFocusClass =
+  "outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/35 focus-visible:ring-offset-0";
+
 function SessionRow({ session, selectedId, onSelect, onDelete, child = false }: RowProps) {
   const title = (session.run_title || session.question || "Untitled run").slice(0, 60);
   const description = [
@@ -82,7 +86,10 @@ function SessionRow({ session, selectedId, onSelect, onDelete, child = false }: 
       )}
     >
       <button
-        className="text-left bg-transparent border-0 shadow-none p-1 flex flex-col gap-0.5 min-h-0 cursor-pointer"
+        className={cn(
+          "text-left bg-transparent border-0 shadow-none p-1 flex flex-col gap-0.5 min-h-0 cursor-pointer rounded-sm",
+          rowButtonFocusClass
+        )}
         onClick={() => onSelect(session.id)}
       >
         <span className={cn("font-semibold leading-snug line-clamp-1", child && "font-normal")}>
@@ -92,14 +99,17 @@ function SessionRow({ session, selectedId, onSelect, onDelete, child = false }: 
           <span className="text-[0.72rem] text-muted-foreground leading-tight">{description}</span>
         )}
       </button>
-      <button
-        className="flex items-center justify-center w-6 h-6 rounded border border-transparent bg-transparent text-muted-foreground hover:border-border hover:text-foreground transition-colors shadow-none p-0 cursor-pointer"
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="h-6 w-6 rounded border border-transparent bg-transparent p-0 text-muted-foreground hover:border-border hover:text-foreground"
         onClick={() => onDelete(session.id)}
         aria-label="Delete session"
         title="Delete this run"
       >
         <Trash2 className="w-3 h-3" />
-      </button>
+      </Button>
     </div>
   );
 }

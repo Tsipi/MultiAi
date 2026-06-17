@@ -26,8 +26,8 @@ export function SharedRunPage({ slug }: Props) {
   }, [slug]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--v2-bg)]">
-      <header className="border-b border-[#ffffff12] px-4 py-3">
+    <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+      <header className="border-b border-border px-4 py-3">
         <div className="mx-auto flex w-full max-w-[880px] items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 font-bold text-white text-sm shadow-md">
             M

@@ -25,7 +25,7 @@ export function SavedAnswerMarketingCard({ onStartNewSession }: Props) {
       </div>
       <Button
         type="button"
-        className="v2-primary-cta font-display h-11 rounded-xl border-0 px-6 font-semibold shadow-none"
+        className="primary-cta font-display h-11 rounded-xl border-0 px-6 font-semibold shadow-none"
         onClick={onStartNewSession}
       >
         Start new session

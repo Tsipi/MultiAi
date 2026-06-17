@@ -12,11 +12,19 @@ export type AttachmentInput = {
 };
 
 export type WebSearchMode = "off" | "auto" | "on";
+export type AnswerMode = "fast" | "balanced" | "deep";
 
 export type WebSearchSource = {
   title: string;
   url: string;
   content?: string;
+};
+
+export type PhaseTiming = {
+  phase: string;
+  duration_seconds: number;
+  status?: string;
+  [key: string]: unknown;
 };
 
 /** Serialized attachment reference returned with a session (data URL for display). */
@@ -34,6 +42,7 @@ export type ConsultPayload = {
   role: string;
   attachments?: AttachmentInput[];
   web_search_mode?: WebSearchMode;
+  answer_mode?: AnswerMode;
 
   // ── Team ──────────────────────────────────────────────────────────────
   // Preferred: full lists (what the backend actually reads)
@@ -77,6 +86,7 @@ export type ConsultResult = {
   base_question: string;
   attachment_files: AttachmentFileRef[];
   web_search_mode: WebSearchMode;
+  answer_mode: AnswerMode;
   web_search_performed: boolean;
   web_search_query: string;
   web_search_retrieved_at: string;
@@ -119,6 +129,8 @@ export type ConsultResult = {
   model_costs: Array<Record<string, unknown>>;
   total_cost_usd: number;
   total_tokens: number;
+  total_duration_seconds: number;
+  phase_timings: PhaseTiming[];
 
   // ── Sharing ───────────────────────────────────────────────────────────
   visibility?: "private" | "public";

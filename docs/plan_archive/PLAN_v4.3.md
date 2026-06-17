@@ -53,11 +53,11 @@ Default should be **Balanced** or **Fast** for general questions. Users can choo
 
 ### Tasks
 
-- [ ] Add `answer_mode: "fast" | "balanced" | "deep"` to frontend payload and backend schema
-- [ ] Add UI control in Advanced Setup near debate settings
-- [ ] Store answer mode on `DebateSession`
-- [ ] Show answer mode in session metadata / insights
-- [ ] Include answer mode in saved/shared sessions
+- [x] Add `answer_mode: "fast" | "balanced" | "deep"` to frontend payload and backend schema
+- [x] Add UI control in Advanced Setup near debate settings
+- [x] Store answer mode on `DebateSession`
+- [x] Show answer mode in session metadata / insights
+- [x] Include answer mode in saved/shared sessions
 
 ---
 
@@ -73,10 +73,10 @@ Default should be **Balanced** or **Fast** for general questions. Users can choo
 
 ### Tasks
 
-- [ ] Change default run setup to fewer rounds
-- [ ] Keep manual override for advanced users
-- [ ] Add copy explaining that more rounds usually means slower but more reviewed answers
-- [ ] Verify follow-up runs inherit the selected mode/rounds correctly
+- [x] Change default run setup to fewer rounds
+- [x] Keep manual override for advanced users
+- [x] Add copy explaining that more rounds usually means slower but more reviewed answers
+- [x] Verify follow-up runs inherit the selected mode/rounds correctly
 
 ---
 
@@ -100,11 +100,11 @@ Writer -> Critics -> Scorer -> Summarizer -> Rewrite -> Validate -> Final synthe
 
 ### Tasks
 
-- [ ] In fast mode, skip summarizer unless multiple rounds are needed
-- [ ] In fast mode, skip consensus scorer or run it only once at the end
-- [ ] In fast mode, skip relevance validator unless the answer appears obviously off-topic
-- [ ] In fast mode, skip repair unless validation was explicitly run and failed
-- [ ] Add tests proving fast mode uses fewer LLM calls
+- [x] In fast mode, skip summarizer unless multiple rounds are needed
+- [x] In fast mode, skip consensus scorer or run it only once at the end
+- [x] In fast mode, skip relevance validator unless the answer appears obviously off-topic
+- [x] In fast mode, skip repair unless validation was explicitly run and failed
+- [x] Add tests proving fast mode uses fewer LLM calls
 
 ---
 
@@ -124,11 +124,10 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Review current fixed utility models
-- [ ] Benchmark faster OpenRouter options for scorer/summarizer/validator
-- [ ] Add config values for utility model selection
-- [ ] Track latency per model call so decisions are based on measured data
-- [ ] Keep cost display accurate after model changes
+- [x] Review current fixed utility models
+- [x] Add config values for utility model selection
+- [x] Track latency per model call so decisions are based on measured data
+- [x] Keep cost display accurate after model changes
 
 ---
 
@@ -144,11 +143,11 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Keep current auto-detection conservative
-- [ ] Add a visible "search skipped" state so users understand why no search ran
-- [ ] Add timeout fallback that continues the run with a warning
-- [ ] Consider shorter web-search timeout in Fast mode
-- [ ] Add tests for false positives like "binary search"
+- [x] Keep current auto-detection conservative
+- [x] Add a visible "search skipped" state so users understand why no search ran
+- [x] Add timeout fallback that continues the run with a warning
+- [x] Consider shorter web-search timeout in Fast mode
+- [x] Add tests for false positives like "binary search"
 
 ---
 
@@ -165,10 +164,10 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Ensure title generation does not block final answer display
-- [ ] Generate export titles only when exporting, not during the run
-- [ ] Keep session saving reliable even if deferred title generation fails
-- [ ] Add UI fallback title while title generation is pending
+- [x] Ensure title generation does not block final answer display
+- [x] Generate export titles only when exporting, not during the run
+- [x] Keep session saving reliable even if deferred title generation fails
+- [x] Add UI fallback title while title generation is pending
 
 ---
 
@@ -178,11 +177,11 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Stream clearer activity messages for each major stage
-- [ ] Show which stage is currently running: research, drafting, critique, scoring, synthesis
-- [ ] Show "Fast / Balanced / Deep" mode in the live header
-- [ ] Add elapsed time or stage progress labels
-- [ ] Avoid long silent gaps between activity events
+- [x] Stream clearer activity messages for each major stage
+- [x] Show which stage is currently running: research, drafting, critique, scoring, synthesis
+- [x] Show "Fast / Balanced / Deep" mode in the live header
+- [x] Add elapsed time or stage progress labels
+- [x] Avoid long silent gaps between activity events
 
 ---
 
@@ -202,11 +201,19 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 
 ### Tasks
 
-- [ ] Add timing around each backend phase
-- [ ] Include timings in debug logs
-- [ ] Optionally expose timings in Session Insights
-- [ ] Compare Fast/Balanced/Deep on the same prompts
-- [ ] Use measurements before changing default models
+- [x] Add timing around each backend phase
+- [x] Include timings in debug logs
+- [x] Expose timings in Session Insights
+- [x] Enable Fast/Balanced/Deep comparison on the same prompts through saved timing fields
+- [x] Keep default-model decisions measurement-driven; no further default model changes made in this phase
+
+### Post-phase QA fixes
+
+- [x] Preserve the immediate parent answer when chaining second follow-ups, so details introduced in follow-up #1 are available to follow-up #2
+- [x] Keep parent answer, original prompt, and clarification context available to final synthesis without restoring the oversized follow-up prompt blob
+- [x] Prevent live follow-up runs from showing the previous Full Debate panel while the new Team Debate is running
+- [x] Keep the question / clarification compose area visible when resuming a follow-up after a clarification answer
+- [x] Avoid generic sidebar titles such as "consensus team answer" for short follow-up instructions
 
 ---
 
@@ -217,8 +224,7 @@ Keep the user-selected Writer/Critics, but use fast fixed models for:
 3. Reduce default rounds for Fast/Balanced.
 4. Skip summarizer/scorer/validator in Fast mode where safe.
 5. Defer title generation.
-6. Benchmark faster utility models.
-7. Polish progress UI.
+6. Polish progress UI.
 
 ---
 

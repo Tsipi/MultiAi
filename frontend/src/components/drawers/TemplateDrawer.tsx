@@ -30,7 +30,7 @@ export function TemplateDrawer({ open, onClose, activeTemplateId, onSelect }: Pr
       {/* Drawer */}
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[var(--v2-surface)] shadow-2xl transition-transform duration-200 ease-out",
+          "fixed right-0 top-0 z-50 flex h-full w-full max-w-sm flex-col bg-[var(--app-surface)] shadow-2xl transition-transform duration-200 ease-out",
           open ? "translate-x-0" : "translate-x-full"
         )}
         aria-label="Team templates"
@@ -59,7 +59,7 @@ export function TemplateDrawer({ open, onClose, activeTemplateId, onSelect }: Pr
                   "rounded-xl border p-3 transition-colors",
                   isActive
                     ? "border-violet-500/50 bg-violet-500/[0.08]"
-                    : "border-[#ffffff0a] bg-[var(--v2-elevated)]/60 hover:border-violet-500/25"
+                    : "border-[#ffffff0a] bg-[var(--app-elevated)]/60 hover:border-violet-500/25"
                 )}
               >
                 <div className="flex items-start justify-between gap-2">

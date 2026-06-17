@@ -89,6 +89,8 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         clarification_reason=session.clarification_reason,
         clarification_options=session.clarification_options,
         model_costs=session.model_costs,
+        total_duration_seconds=session.total_duration_seconds,
+        phase_timings=session.phase_timings,
         model_writers=session.model_writers,
         model_critics=session.model_critics,
         writer_names=session.writer_names,
@@ -107,6 +109,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         base_question=session.base_question,
         attachment_files=session.attachment_files,
         web_search_mode=session.web_search_mode,
+        answer_mode=session.answer_mode,
         web_search_performed=session.web_search_performed,
         web_search_query=session.web_search_query,
         web_search_retrieved_at=session.web_search_retrieved_at,
@@ -169,6 +172,7 @@ async def consult(
         writer_roles=payload.writer_roles,
         critic_roles=payload.critic_roles,
         web_search_mode=payload.web_search_mode,
+        answer_mode=payload.answer_mode,
     )
     async with _get_session_maker()() as db:
         await save_session_db(session, db, user_id=user.id if user else None)
@@ -211,6 +215,7 @@ async def consult_stream(
                 writer_roles=payload.writer_roles,
                 critic_roles=payload.critic_roles,
                 web_search_mode=payload.web_search_mode,
+                answer_mode=payload.answer_mode,
                 progress_hook=activity,
             )
             async with _get_session_maker()() as db:

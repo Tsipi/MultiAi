@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import re
+from time import perf_counter
 from urllib.parse import urlparse
 
 import httpx
@@ -26,7 +27,13 @@ CURRENTNESS_RE = re.compile(
     r"schedule|election|president|ceo|version|release)\b",
     re.IGNORECASE,
 )
-IMPERATIVE_SEARCH_RE = re.compile(r"^\s*(?:please\s+)?(?:search|browse)\b", re.IGNORECASE)
+IMPERATIVE_SEARCH_RE = re.compile(
+    r"^\s*(?:please\s+)?(?:"
+    r"browse\s+(?:the\s+web|online|for\b|about\b|this\b|that\b|these\b|those\b)|"
+    r"search\s+(?:the\s+web|online|for\b|about\b|this\b|that\b|these\b|those\b)"
+    r")",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -60,7 +67,11 @@ def build_research_query(question: str) -> str:
     return " ".join(question.strip().split())[:500]
 
 
-async def research_web(question: str, cfg: AppConfig) -> WebResearchResult:
+async def research_web(
+    question: str,
+    cfg: AppConfig,
+    timeout_seconds: float | None = None,
+) -> WebResearchResult:
     """Run one OpenRouter web-plugin request and return its cited evidence."""
     query = build_research_query(question)
     if not cfg.openrouter_api_key:
@@ -94,7 +105,8 @@ async def research_web(question: str, cfg: AppConfig) -> WebResearchResult:
     }
 
     try:
-        async with httpx.AsyncClient(timeout=cfg.web_search_timeout_seconds) as client:
+        started_at = perf_counter()
+        async with httpx.AsyncClient(timeout=timeout_seconds or cfg.web_search_timeout_seconds) as client:
             response = await client.post(
                 url,
                 headers={"Authorization": f"Bearer {cfg.openrouter_api_key}"},
@@ -110,6 +122,7 @@ async def research_web(question: str, cfg: AppConfig) -> WebResearchResult:
             cfg.web_search_model,
             int(usage.get("prompt_tokens", max(1, len(prompt) // 4))),
             int(usage.get("completion_tokens", max(1, len(summary) // 4))),
+            perf_counter() - started_at,
         )
         return WebResearchResult(
             performed=True,

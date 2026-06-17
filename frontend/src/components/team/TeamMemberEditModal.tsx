@@ -42,7 +42,7 @@ export function TeamMemberEditModal({ open, member, leadRole, onClose, onSave }:
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md max-h-[85vh] overflow-x-hidden overflow-y-auto rounded-2xl border border-[#ffffff12] bg-[var(--v2-elevated)] p-4 shadow-xl sm:p-5"
+        className="w-full max-w-md max-h-[85vh] overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-[var(--app-elevated)] p-4 shadow-xl sm:p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="team-member-edit-title" className="font-display m-0 mb-1 text-base font-semibold">

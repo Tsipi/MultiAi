@@ -13,14 +13,14 @@ type Props = {
 /** Shared light-purple action button used across advanced/main controls. */
 export function ActionGhostButton({ children, icon, disabled, onClick, className }: Props) {
   return (
-    <Button
+    <Button    
       type="button"
       size="sm"
       variant="outline"
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "border border-violet-300/45 bg-violet-500/12 font-display text-violet-700 shadow-none",
+        "border bg-violet-500/12 font-display text-violet-700 shadow-none",
         "hover:bg-violet-500/20 hover:text-violet-800 dark:text-violet-200",
         className
       )}

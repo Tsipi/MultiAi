@@ -62,9 +62,9 @@ export function StripCard({
         if (!loading) onEdit?.(member);
       }}
       className={cn(
-        "relative flex min-h-[104px] w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-[#ffffff10] bg-[var(--v2-surface)] py-2.5 pl-3 pr-8",
+        "relative flex min-h-[104px] w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-border bg-[var(--app-surface)] py-2.5 pl-3 pr-8",
         "outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50",
-        hot && "v2-agent-pulse border-violet-500/45"
+        hot && "agent-pulse border-violet-500/45"
       )}
     >
       {canRemove && (
@@ -83,7 +83,7 @@ export function StripCard({
           <X className="h-3.5 w-3.5" />
         </Button>
       )}
-      <img src={member.avatar} alt="" className="h-11 w-11 rounded-full object-cover border border-[#ffffff12]" />
+      <img src={member.avatar} alt="" className="h-11 w-11 rounded-full object-cover border border-border" />
       <div className="min-w-0 flex-1">
         <p className="font-display text-sm font-semibold leading-tight truncate m-0">{member.name}</p>
         <div className="mt-0.5 flex items-center gap-1.5 min-w-0">
@@ -106,8 +106,8 @@ export function BenchCard({ hot, loading }: { hot: boolean; loading: boolean }) 
   return (
     <div
       className={cn(
-        "flex min-h-[104px] w-full min-w-0 items-center gap-3 rounded-xl border border-[#ffffff10] bg-[var(--v2-surface)] px-3 py-2.5",
-        hot && loading && "v2-agent-pulse border-violet-500/45"
+        "flex min-h-[104px] w-full min-w-0 items-center gap-3 rounded-xl border border-border bg-[var(--app-surface)] px-3 py-2.5",
+        hot && loading && "agent-pulse border-violet-500/45"
       )}
     >
       <div

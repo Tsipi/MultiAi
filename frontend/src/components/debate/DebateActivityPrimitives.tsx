@@ -58,8 +58,11 @@ export function DebateChatBubble({
           <div className="relative h-9 w-9 shrink-0">
             <img
               className="h-9 w-9 rounded-full border border-border object-cover"
-              src={avatar}
+              src={avatar || DEBATE_SYSTEM_AVATAR}
               alt={label}
+              onError={(event) => {
+                event.currentTarget.src = DEBATE_SYSTEM_AVATAR;
+              }}
             />
             {modelId && modelId !== "system" ? (
               <span className="absolute -bottom-0.5 -right-0.5 leading-none" aria-hidden>

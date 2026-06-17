@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { AgentId } from "@/lib/parseActivityMessages";
 import { ModelProviderIcon } from "../primitives/ModelProviderIcon";
+import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 
 // ─── Name color per seat ──────────────────────────────────────────────────────
 
@@ -47,9 +48,12 @@ export function ChatMessage({
       {/* Avatar + model badge */}
       <div className="relative h-9 w-9 shrink-0 mt-0.5">
         <img
-          src={avatar}
+          src={avatar || DEBATE_SYSTEM_AVATAR}
           alt={name}
           className="h-full w-full rounded-full border border-border object-cover block"
+          onError={(event) => {
+            event.currentTarget.src = DEBATE_SYSTEM_AVATAR;
+          }}
         />
         {modelId && (
           <span className="absolute -bottom-0.5 -right-0.5 flex leading-none" aria-hidden>

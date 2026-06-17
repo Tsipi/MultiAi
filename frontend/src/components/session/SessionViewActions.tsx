@@ -10,12 +10,12 @@ type Props = {
 
 export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, onOpenAdvanced }: Props) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--v2-surface)] px-1.5 py-1.5 shadow-sm">
+    <div className="inline-flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-[var(--app-surface)] px-1.5 py-1.5 shadow-sm">
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        className="h-9 rounded-xl border border-violet-300/45 bg-violet-50 px-3 text-xs font-semibold text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+        className="h-9 rounded-xl border border-violet-300/45 bg-violet-50 px-3 text-xs font-semibold text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
         onClick={onNewQuestion}
       >
         + New question
@@ -25,7 +25,7 @@ export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, o
         variant="ghost"
         size="icon"
         disabled={!hasResult}
-        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)] disabled:opacity-40"
+        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800 disabled:opacity-40"
         onClick={onOpenInsights}
         aria-label="Open session insights"
       >
@@ -35,7 +35,7 @@ export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, o
         type="button"
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-[0_2px_10px_rgba(124,58,237,0.16)]"
+        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
         onClick={onOpenAdvanced}
         aria-label="Open advanced setup"
       >

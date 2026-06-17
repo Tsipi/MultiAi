@@ -35,7 +35,7 @@ async def validate_relevance(question: str, answer: str, cfg: AppConfig) -> tupl
     """Validate relevance with lexical + LLM scoring."""
     overlap = _token_overlap(question, answer)
     prompt = VALIDATOR_PROMPT.format(question=question[:700], answer=answer[:900])
-    response = await call_openrouter(prompt, cfg.scorer_model, cfg)
+    response = await call_openrouter(prompt, cfg.validator_model, cfg)
     score_match = re.search(r"SCORE:\s*([0-9]+(?:\.[0-9]+)?)", response)
     reason_match = re.search(r"REASON:\s*(.+)", response)
     llm_score = float(score_match.group(1)) if score_match else 5.0

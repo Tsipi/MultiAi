@@ -8,11 +8,12 @@ const defaults: ConsultPayload = {
   writer: "deepseek/deepseek-chat-v3.2",
   critic_a: "google/gemini-2.5-flash",
   critic_b: "google/gemini-2.5-flash",
-  max_rounds: 3,
+  max_rounds: 2,
   consensus_score: 8,
   role: "",
   question: "",
   web_search_mode: "auto",
+  answer_mode: "balanced",
 };
 
 export function createFreshComposeState() {

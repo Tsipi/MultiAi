@@ -20,7 +20,7 @@ export function ClarificationBox(props: Props) {
   const canSubmit = props.selected && (!usingOther || props.otherText.trim());
 
   return (
-    <div className="rounded-xl border border-violet-500/20 bg-[var(--v2-surface)] p-4 grid gap-3 shadow-sm">
+    <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 grid gap-3 shadow-sm">
       <div>
         <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300 m-0">
           Clarification Needed
@@ -33,10 +33,12 @@ export function ClarificationBox(props: Props) {
 
       <div className="grid gap-1.5">
         {props.options.map((opt) => (
-          <button
+          <Button
             key={opt}
+            type="button"
+            variant="outline"
             className={cn(
-              "text-left w-full rounded-lg border px-3 py-2.5 text-sm transition-colors cursor-pointer",
+              "h-auto w-full justify-start whitespace-normal rounded-lg px-3 py-2.5 text-left text-sm font-normal",
               props.selected === opt
                 ? "border-violet-500/60 bg-violet-500/10 text-foreground font-medium"
                 : "border-border/60 bg-card/80 text-foreground hover:border-violet-400/40 hover:bg-violet-500/5"
@@ -44,7 +46,7 @@ export function ClarificationBox(props: Props) {
             onClick={() => props.onSelect(opt)}
           >
             {opt}
-          </button>
+          </Button>
         ))}
       </div>
 

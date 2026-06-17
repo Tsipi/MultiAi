@@ -32,6 +32,7 @@ class DebateSession:
     domain: str = ""            # writer expert-role prompt (maps to "role" in API)
     attachment_files: list[dict] = field(default_factory=list)
     web_search_mode: str = "auto"
+    answer_mode: str = "balanced"
     web_search_performed: bool = False
     web_search_query: str = ""
     web_search_retrieved_at: str = ""
@@ -75,6 +76,8 @@ class DebateSession:
     model_costs: list[dict] = field(default_factory=list)
     total_cost_usd: float = 0.0
     total_tokens: int = 0
+    total_duration_seconds: float = 0.0
+    phase_timings: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return serializable session dictionary."""

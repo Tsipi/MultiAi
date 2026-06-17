@@ -14,14 +14,14 @@ export function LeadRoleField({ value, onChange, disabled }: Props) {
         label="Lead expert role"
         tip="Persona and guardrails shared across models unless a seat overrides it in Advanced setup."
       />
-      <div className="rounded-2xl border border-[#ffffff10] bg-[var(--v2-surface)] p-1.5 sm:p-2">
+      <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-1.5 sm:p-2">
         <Input
           value={value}
           maxLength={255}
           disabled={disabled}
           placeholder="e.g. You are a creative website app designer."
           onChange={(e) => onChange(e.target.value)}
-          className="h-12 rounded-xl border border-transparent bg-[var(--v2-elevated)] px-4 text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/55"
+          className="h-12 rounded-xl border border-transparent bg-[var(--app-elevated)] px-4 text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/55"
         />
       </div>
     </div>

@@ -22,18 +22,26 @@ import { useAuth } from "./hooks/useAuth";
 import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 
 // ─── Lib / data ───────────────────────────────────────────────────────────────
-import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, type CastSelection } from "./lib/consultHelpers";
+import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, buildFollowupContext, type CastSelection } from "./lib/consultHelpers";
 import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
 import { findFaceByName } from "./data/experts";
-import type { ConsultPayload, ConsultResult } from "./types";
+import type { AnswerMode, ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
 import { SharedRunPage } from "./pages/SharedRunPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+function normalizeAnswerMode(mode?: AnswerMode): AnswerMode {
+  return mode ?? "balanced";
+}
+
+function answerModeLabel(mode: AnswerMode): string {
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+}
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -69,12 +77,14 @@ export default function App() {
 
   // ─── Run engine ────────────────────────────────────────────────────────────
   const [result, setResult] = useState<ConsultResult | null>(null);
+  const [activeRunAnswerMode, setActiveRunAnswerMode] = useState<AnswerMode>(normalizeAnswerMode(form.answer_mode));
+  const [activeRunQuestion, setActiveRunQuestion] = useState("");
   const mainPanelRef = useRef<HTMLDivElement | null>(null);
   const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
 
   const resultSetters = { setResult, setResultsById, setCastBySession, setSelectedId: setSelectedId as (id: string) => void, setHistory, setSessionTitles };
 
-  const { loading, setLoading, activity, setActivity, isResuming, setIsResuming, execute } = useConsultRun({
+  const { loading, setLoading, activity, setActivity, setIsResuming, execute } = useConsultRun({
     onClarificationNeeded: (data, pending) => {
       pendingClarificationRef.current = pending;
       setClarificationPrompt(data.question);
@@ -154,11 +164,13 @@ export default function App() {
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
     setLoading(true);
+    setActiveRunAnswerMode(normalizeAnswerMode(form.answer_mode));
+    setActiveRunQuestion(questionText);
     setResult(null);
     setSelectedId(null);
     navigate("/app/new");
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    setActivity(["Queued request. Your team is assembling the debate..."]);
+    setActivity([`Preparing ${answerModeLabel(normalizeAnswerMode(form.answer_mode))} run. Your team is assembling the debate...`]);
     clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
@@ -188,17 +200,15 @@ export default function App() {
     setRunsSidebarOpen(true);
     setLoading(true);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    setActivity([`Starting follow-up run from session ${displayResult.session_id}`]);
-    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
-    const rootQ = displayResult.root_question || displayResult.source_prompt || displayResult.question;
+    const { rootQuestion, parentPrompt, parentFinalAnswer } = buildFollowupContext(displayResult);
     const followupQuestion = [
-      "Original prompt:", rootQ, "",
-      "Previous final answer:", displayResult.source_final_answer || displayResult.final_answer, "",
+      "Original prompt:", rootQuestion, "",
+      "Previous final answer:", parentFinalAnswer, "",
       "Follow-up instruction:", mergedInstruction,
     ].join("\n");
     const basePayload = mergeTeamIntoPayload(
-      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: displayResult.source_prompt || displayResult.question, source_final_answer: displayResult.source_final_answer || displayResult.final_answer, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
+      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: parentPrompt, source_final_answer: parentFinalAnswer, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
       team, [], ""
     );
     const payload = {
@@ -216,8 +226,17 @@ export default function App() {
       critic_roles: followupChangedSinceOpen
         ? basePayload.critic_roles
         : (displayResult.critic_roles.length ? displayResult.critic_roles : basePayload.critic_roles),
-      root_question: rootQ,
+      answer_mode: followupChangedSinceOpen
+      ? basePayload.answer_mode
+      : (displayResult.answer_mode || basePayload.answer_mode),
+      root_question: rootQuestion,
     };
+    setActiveRunAnswerMode(normalizeAnswerMode(payload.answer_mode));
+    setActiveRunQuestion(mergedInstruction);
+    setActivity([
+      `Preparing ${answerModeLabel(normalizeAnswerMode(payload.answer_mode))} follow-up run from session ${displayResult.session_id}`,
+    ]);
+    if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     try {
       await execute(payload, cast, mergedInstruction);
       setFollowupOpen(false);
@@ -247,6 +266,12 @@ export default function App() {
       title: form.question,
     };
     const nextPayload: ConsultPayload = { ...basePayload, clarification: answer, clarification_question: questionAsked };
+    setActiveRunAnswerMode(normalizeAnswerMode(nextPayload.answer_mode));
+    setActiveRunQuestion(baseTitle);
+    setActivity((prev) => [
+      ...prev,
+      `Resuming ${answerModeLabel(normalizeAnswerMode(nextPayload.answer_mode))} run with your clarification...`,
+    ]);
     try {
       await execute(nextPayload, baseCast, baseTitle);
     } catch (error) {
@@ -329,6 +354,7 @@ export default function App() {
     setSelectedId(null);
     setResult(null);
     setActivity([]);
+    setActiveRunQuestion("");
     clearFollowupState();
   }
 
@@ -336,7 +362,9 @@ export default function App() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
       setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
-      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+      if (displayResult?.role) {
+        setForm((f) => ({ ...f, role: displayResult.role!, answer_mode: displayResult.answer_mode }));
+      }
       if (resolvedTemplateId) setActiveTemplateId(resolvedTemplateId);
     }
     startNewQuestion();
@@ -353,7 +381,9 @@ export default function App() {
     if (selectedId) {
       const baseRole = displayResult?.role || form.role;
       setTeam(castToTeam(panelCast, baseRole, displayResult?.writer_roles, displayResult?.critic_roles));
-      if (displayResult?.role) setForm((f) => ({ ...f, role: displayResult.role! }));
+      if (displayResult?.role) {
+        setForm((f) => ({ ...f, role: displayResult.role!, answer_mode: displayResult.answer_mode }));
+      }
     }
     setAdvancedOpen(true);
   }
@@ -384,6 +414,7 @@ export default function App() {
     team,
     maxRounds: form.max_rounds,
     consensusThreshold: form.consensus_score,
+    answerMode: loading ? activeRunAnswerMode : normalizeAnswerMode(displayResult?.answer_mode || form.answer_mode),
     clarificationPrompt,
     clarificationReason,
     clarificationOptions,
@@ -425,6 +456,8 @@ export default function App() {
 
   if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 
+  const commandBarValue = loading && activeRunQuestion ? activeRunQuestion : form.question;
+
   return (
     <div className="min-h-screen flex flex-col">
       <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startFreshNewRun} onOpenTemplates={() => setTemplatesOpen(true)} />
@@ -454,9 +487,9 @@ export default function App() {
               </div>
             )}
 
-            {!displayResult && !isResuming && (
+            {!displayResult && (
               <CommandBar
-                value={form.question}
+                value={commandBarValue}
                 greetingName={greetingName}
                 team={team}
                 loading={loading}
@@ -472,7 +505,7 @@ export default function App() {
               />
             )}
 
-            <div ref={mainPanelRef} className="v2-consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
+            <div ref={mainPanelRef} className="consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
               <ChatPanel {...panelProps} />
             </div>
 

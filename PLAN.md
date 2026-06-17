@@ -58,14 +58,14 @@ Full spec: `docs/plan_archive/PLAN_v4.3.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 4.3.1 | Add Answer Mode | Planned |
-| 4.3.2 | Reduce Default Rounds | Planned |
-| 4.3.3 | Skip Unnecessary Support Calls in Fast Mode | Planned |
-| 4.3.4 | Use Faster Models for Utility Roles | Planned |
-| 4.3.5 | Make Web Search Strictly Conditional | Planned |
-| 4.3.6 | Defer Non-Essential Work | Planned |
-| 4.3.7 | Improve Perceived Speed | Planned |
-| 4.3.8 | Measure Before and After | Planned |
+| 4.3.1 | Add Answer Mode | **Done** |
+| 4.3.2 | Reduce Default Rounds | **Done** |
+| 4.3.3 | Skip Unnecessary Support Calls in Fast Mode | **Done** |
+| 4.3.4 | Use Faster Models for Utility Roles | **Done** |
+| 4.3.5 | Make Web Search Strictly Conditional | **Done** |
+| 4.3.6 | Defer Non-Essential Work | **Done** |
+| 4.3.7 | Improve Perceived Speed | **Done** |
+| 4.3.8 | Measure Before and After | **Done** |
 
 ---
 

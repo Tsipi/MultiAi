@@ -20,6 +20,7 @@ class ConsultRequest(BaseModel):
     role: str = Field(max_length=255)
     attachments: list[AttachmentPayload] = Field(default_factory=list)
     web_search_mode: str = Field(default="auto", pattern="^(off|auto|on)$")
+    answer_mode: str = Field(default="balanced", pattern="^(fast|balanced|deep)$")
 
     # ── Team ────────────────────────────────────────────────────────────────
     # Preferred: full lists sent by the frontend team builder
@@ -77,6 +78,7 @@ class ConsultResponse(BaseModel):
     base_question: str = ""
     attachment_files: list[dict] = Field(default_factory=list)
     web_search_mode: str = "auto"
+    answer_mode: str = "balanced"
     web_search_performed: bool = False
     web_search_query: str = ""
     web_search_retrieved_at: str = ""
@@ -119,3 +121,5 @@ class ConsultResponse(BaseModel):
     model_costs: list[dict] = []
     total_cost_usd: float = 0.0
     total_tokens: int = 0
+    total_duration_seconds: float = 0.0
+    phase_timings: list[dict] = []

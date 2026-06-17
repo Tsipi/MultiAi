@@ -163,6 +163,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     base_question: String(raw.base_question ?? ""),
     attachment_files: normalizeAttachmentFiles(raw.attachment_files),
     web_search_mode: raw.web_search_mode === "off" || raw.web_search_mode === "on" ? raw.web_search_mode : "auto",
+    answer_mode: normalizeAnswerMode(raw.answer_mode),
     web_search_performed: toBoolean(raw.web_search_performed),
     web_search_query: String(raw.web_search_query ?? ""),
     web_search_retrieved_at: String(raw.web_search_retrieved_at ?? ""),
@@ -206,6 +207,8 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     model_costs: Array.isArray(raw.model_costs) ? raw.model_costs : [],
     total_cost_usd: Number(raw.total_cost_usd ?? 0),
     total_tokens: Number(raw.total_tokens ?? 0),
+    total_duration_seconds: Number(raw.total_duration_seconds ?? 0),
+    phase_timings: normalizePhaseTimings(raw.phase_timings),
 
     // ── Sharing ─────────────────────────────────────────────────────────
     visibility: raw.visibility === "public" ? "public" : "private",
@@ -244,6 +247,25 @@ function normalizeWebSearchSources(raw: unknown): ConsultResult["web_search_sour
         ...(source.content != null ? { content: String(source.content) } : {}),
       }];
     });
+}
+
+function normalizePhaseTimings(raw: unknown): ConsultResult["phase_timings"] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const row = item as Record<string, unknown>;
+    const phase = String(row.phase ?? "").trim();
+    if (!phase) return [];
+    return [{
+      ...row,
+      phase,
+      duration_seconds: Number(row.duration_seconds ?? 0),
+    }];
+  });
+}
+
+function normalizeAnswerMode(value: unknown): ConsultResult["answer_mode"] {
+  return value === "fast" || value === "deep" ? value : "balanced";
 }
 
 function isSafeHttpUrl(value: string): boolean {

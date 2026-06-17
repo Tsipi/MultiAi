@@ -19,6 +19,8 @@ def test_current_question_activates_auto_mode():
 
 def test_stable_question_skips_auto_mode():
     assert not should_search("Explain how binary search works", "auto")
+    assert not should_search("Search algorithm complexity explained", "auto")
+    assert not should_search("Compare tree search and binary search", "auto")
 
 
 def test_modes_override_detection():

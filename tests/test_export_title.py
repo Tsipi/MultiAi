@@ -24,3 +24,9 @@ def test_normalize_falls_back_for_short_output():
     """Very short output uses question words."""
     out = normalize_export_title("ab", "alpha beta gamma delta epsilon")
     assert out == "alpha beta gamma delta epsilon"
+
+
+def test_normalize_falls_back_for_short_followup_instruction():
+    """Short follow-up instructions still get a useful title."""
+    out = normalize_export_title("", "and in Jerusalem")
+    assert out == "jerusalem follow-up answer"

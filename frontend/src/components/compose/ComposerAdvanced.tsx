@@ -33,7 +33,7 @@ export function ComposerAdvanced(props: Props) {
           maxLength={255}
           placeholder="e.g. You are a creative website app designer."
           onChange={(e) => set("role", e.target.value)}
-          className="bg-[var(--v2-elevated)] border-[#ffffff10] text-foreground"
+          className="bg-[var(--app-elevated)] border-border text-foreground"
         />
       </div>
       <div className="grid gap-1.5">

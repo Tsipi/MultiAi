@@ -42,13 +42,18 @@ def normalize_export_title(raw: str, fallback_question: str) -> str:
 def _fallback_from_question(question: str) -> str:
     """Pick 3-5 words from the question when model output is unusable."""
     words: list[str] = []
+    stop_words = {"and", "the", "for", "with", "that", "this", "from", "into", "about"}
     for part in (question or "").lower().split():
         token = re.sub(r"[^a-z0-9-]+", "", part)
         if len(token) < 3:
+            continue
+        if token in stop_words:
             continue
         words.append(token)
         if len(words) >= 6:
             break
     if len(words) >= 3:
         return " ".join(words[:6])
-    return "consensus team answer"
+    if words:
+        return " ".join([*words, "follow-up", "answer"][:4])
+    return "saved team answer"

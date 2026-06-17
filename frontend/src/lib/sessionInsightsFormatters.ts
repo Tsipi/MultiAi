@@ -23,3 +23,10 @@ export function fmtUsd(n: unknown) {
   if (v < 0.01) return `$${v.toFixed(6)}`;
   return `$${v.toFixed(4)}`;
 }
+
+export function fmtSeconds(n: unknown) {
+  const v = Number(n ?? 0);
+  if (!Number.isFinite(v) || v <= 0) return "0s";
+  if (v < 10) return `${v.toFixed(1)}s`;
+  return `${Math.round(v)}s`;
+}

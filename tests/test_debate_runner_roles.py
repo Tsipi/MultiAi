@@ -85,3 +85,57 @@ def test_run_rounds_falls_back_to_shared_role(monkeypatch):
     ))
 
     assert all("Role context: Shared Expert" in prompt for prompt in prompts[:3])
+
+
+def test_fast_mode_skips_writer_rewrite_and_summary(monkeypatch):
+    """Fast mode keeps one scorer pass but skips rewrite and summarizer support calls."""
+    prompts: list[str] = []
+    score_calls = 0
+    summary_calls = 0
+
+    async def fake_call(prompt, *_args, **_kwargs):
+        prompts.append(prompt)
+        if "fully revised and improved answer" in prompt:
+            return "2. A fully revised and improved answer\nCritic revised answer"
+        return "Opening answer"
+
+    async def fake_score(*_args, **_kwargs):
+        nonlocal score_calls
+        score_calls += 1
+        return 7.5, "fast agreement"
+
+    async def fake_summary(*_args, **_kwargs):
+        nonlocal summary_calls
+        summary_calls += 1
+        return "Summary."
+
+    async def report(_message):
+        return None
+
+    monkeypatch.setattr("backend.consensus.debate_runner.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.debate_runner.score_consensus", fake_score)
+    monkeypatch.setattr("backend.consensus.debate_runner.summarize_round", fake_summary)
+
+    session = DebateSession(session_id="fast", intent_scope="general question")
+    answer, rolling = asyncio.run(run_rounds(
+        session,
+        "How should I decide?",
+        "Shared Expert",
+        ["writer-model"],
+        ["critic-model"],
+        [],
+        [],
+        1,
+        8,
+        AppConfig(),
+        report,
+        fast_mode=True,
+    ))
+
+    assert score_calls == 1
+    assert summary_calls == 0
+    assert len(prompts) == 2
+    assert all("Provide your refined answer" not in prompt for prompt in prompts)
+    assert answer == "[Critic 1 revised answer]\nCritic revised answer"
+    assert session.rounds[0].summary == "Summary skipped in fast mode."
+    assert "Fast mode used critic revisions directly" in rolling

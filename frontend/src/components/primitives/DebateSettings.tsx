@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { DebateOptionsTable } from "./DebateOptionsTable";
 import { SlidersHorizontal, UserPlus } from "lucide-react";
 import { InfoTip } from "./InfoTip";
+import { AnswerModeControl } from "./AnswerModeControl";
 import { WebResearchControl } from "./WebResearchControl";
+import { recommendedRoundsForAnswerMode } from "@/lib/answerMode";
 
 type Props = {
   value: ConsultPayload;
@@ -18,6 +20,9 @@ type Props = {
 export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
   const set = <K extends keyof ConsultPayload>(key: K, val: ConsultPayload[K]) =>
     onChange({ ...value, [key]: val });
+
+  const setAnswerMode = (mode: NonNullable<ConsultPayload["answer_mode"]>) =>
+    onChange({ ...value, answer_mode: mode, max_rounds: recommendedRoundsForAnswerMode(mode) });
 
   const updateMember = (idx: number, next: TeamMember) =>
     onTeamChange(team.map((m, i) => (i === idx ? next : m)));
@@ -46,7 +51,7 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
         ))}
       </div>
       <div className="flex justify-start">
-        <Button size="sm" className="v2-primary-cta h-10 border-0 px-4 shadow-none font-display" onClick={addMember}>
+        <Button size="sm" className="primary-cta h-10 border-0 px-4 shadow-none font-display" onClick={addMember}>
           <UserPlus className="mr-1.5 h-4 w-4" />
           Add another team member
         </Button>
@@ -65,6 +70,10 @@ export function DebateSettings({ value, team, onChange, onTeamChange }: Props) {
           />
         </div>
       </section>
+      <AnswerModeControl
+        value={value.answer_mode ?? "balanced"}
+        onChange={setAnswerMode}
+      />
       <WebResearchControl
         value={value.web_search_mode ?? "auto"}
         onChange={(mode) => set("web_search_mode", mode)}
