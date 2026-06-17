@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 
 type ChatPanelProps = React.ComponentProps<typeof ChatPanel>;
 
+const rowButtonFocusClass =
+  "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0";
+
 function answerModeForResult(result: ConsultResult | null | undefined, fallback: AnswerMode): AnswerMode {
   return result?.answer_mode ?? fallback;
 }
@@ -110,15 +113,12 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
       )}
     >
       {!compact && (
-        <button
-          className="w-full flex items-center justify-between bg-transparent border-0 shadow-none cursor-default p-0 mb-0"
-          aria-expanded={true}
-        >
+        <div className="w-full flex items-center justify-between bg-transparent border-0 shadow-none p-0 mb-0">
           <h2 className={cn("flex items-center gap-2.5 font-display", panelHeadingClass)}>
             <span className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex-shrink-0 opacity-95" />
             Consensus
           </h2>
-        </button>
+        </div>
       )}
 
       {!hasContent && (
@@ -315,15 +315,18 @@ function AccordionItem({
     return (
       <div
         className={cn(
-          "rounded-xl border bg-[var(--v2-elevated)]/55 overflow-visible transition-colors",
-          isSelected ? "border-violet-500/45 bg-violet-500/[0.08]" : "border-[#ffffff06]",
+          "sidebar-answer-card rounded-xl border overflow-hidden transition-all duration-150 ease-out",
+          isSelected && "sidebar-answer-card-selected",
           child && "ml-2 sm:ml-3"
         )}
       >
         <div className="flex items-stretch gap-1">
           <button
             type="button"
-            className="min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent hover:bg-muted/30 text-left transition-colors cursor-pointer border-0 shadow-none rounded-xl"
+            className={cn(
+              "min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent text-left transition-colors cursor-pointer border-0 shadow-none rounded-xl",
+              rowButtonFocusClass
+            )}
             onClick={onToggle}
             aria-current={isSelected ? "true" : undefined}
           >
@@ -346,15 +349,17 @@ function AccordionItem({
               )}
             </div>
           </button>
-          <button
+          <Button
             type="button"
-            className="flex items-center justify-center w-9 shrink-0 rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground transition-colors"
+            variant="ghost"
+            size="icon"
+            className="h-auto w-9 shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground"
             onClick={() => onDelete(session.id)}
             aria-label="Delete session"
             title="Delete this run"
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -365,7 +370,10 @@ function AccordionItem({
       <div className="flex items-stretch gap-1">
         <button
           type="button"
-          className="min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent hover:bg-muted/35 transition-colors cursor-pointer border-0 shadow-none text-left rounded-xl"
+          className={cn(
+            "min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent hover:bg-muted/35 transition-colors cursor-pointer border-0 shadow-none text-left rounded-xl",
+            rowButtonFocusClass
+          )}
           onClick={onToggle}
           aria-expanded={isExpanded}
         >
@@ -394,9 +402,11 @@ function AccordionItem({
             )}
           </div>
         </button>
-        <button
+        <Button
           type="button"
-          className="flex items-center justify-center w-9 shrink-0 rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+          variant="ghost"
+          size="icon"
+          className="h-auto w-9 shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(session.id);
@@ -405,7 +415,7 @@ function AccordionItem({
           title="Delete this run"
         >
           <Trash2 className="w-3 h-3" />
-        </button>
+        </Button>
       </div>
 
       {isExpanded && (

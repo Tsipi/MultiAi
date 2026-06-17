@@ -12,6 +12,7 @@ import { ScoreBadge } from "../primitives/ScoreBadge";
 import { ChatMessage, SystemMessage, SkeletonMessage } from "./ChatMessage";
 import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";
+import { Button } from "@/components/ui/button";
 
 type Person = { name: string; avatar: string; model?: string };
 type Cast = { writer: Person; critics: Person[] };
@@ -254,16 +255,18 @@ export function ChatroomDebateView({
 
         {userScrolled && loading && (
           <div className="flex justify-center py-1.5 border-t border-border/40">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setUserScrolled(false);
                 bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
               }}
-              className="text-[0.7rem] font-medium px-3 py-1 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400 hover:bg-violet-500/25 transition-colors"
+              className="h-auto rounded-full bg-violet-500/15 px-3 py-1 text-[0.7rem] font-medium text-violet-600 hover:bg-violet-500/25 dark:text-violet-400"
             >
               Jump to live
-            </button>
+            </Button>
           </div>
         )}
       </div>

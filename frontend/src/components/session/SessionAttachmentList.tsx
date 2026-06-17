@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import type { AttachmentFileRef } from "@/types";
+import { Button } from "@/components/ui/button";
 
 type Props = { files: AttachmentFileRef[] };
 
@@ -14,11 +15,12 @@ export function SessionAttachmentList({ files }: Props) {
       <ul className="m-0 list-none space-y-1.5 p-0">
         {files.map((f, i) => (
           <li key={`${f.name}-${i}`}>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => f.data && window.open(f.data, "_blank", "noopener,noreferrer")}
               disabled={!f.data}
-              className="inline-flex w-full items-center gap-2 rounded-lg border border-violet-400/25 bg-violet-500/[0.07] px-2.5 py-1.5 text-left text-xs text-foreground hover:bg-violet-500/[0.12] disabled:cursor-default disabled:opacity-75"
+              className="h-auto w-full justify-start gap-2 whitespace-normal rounded-lg border-violet-400/25 bg-violet-500/[0.07] px-2.5 py-1.5 text-left text-xs font-normal text-foreground hover:bg-violet-500/[0.12] disabled:cursor-default disabled:opacity-75"
               title={f.data ? `Open ${f.name}` : `${f.name} (no preview available)`}
             >
               <FileText className="h-3.5 w-3.5 shrink-0 text-violet-700 dark:text-violet-300" />
@@ -26,7 +28,7 @@ export function SessionAttachmentList({ files }: Props) {
               <span className="min-w-0 truncate underline decoration-violet-400/60 underline-offset-2">
                 {f.name}
               </span>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

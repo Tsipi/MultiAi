@@ -124,7 +124,7 @@ export function SessionPromptBlock({
               {effectiveClarificationQuestion}
             </p>
             {effectiveClarificationResponse && (
-              <div className="rounded-lg border border-violet-400/30 bg-violet-500/5 p-2">
+              <div className="clarification-answer-card rounded-lg border p-2">
                 <p className="m-0 mb-1 text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
                   Your answer
                 </p>
@@ -224,7 +224,7 @@ export function SessionPromptBlock({
           )}
           <p className="m-0 mb-3 whitespace-pre-wrap text-sm font-medium text-foreground">{effectiveClarificationQuestion}</p>
           {effectiveClarificationResponse && (
-            <div className="rounded-lg border border-violet-400/30 bg-violet-500/5 p-2">
+            <div className="clarification-answer-card rounded-lg border p-2">
               <p className="m-0 mb-1 text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
                 Your answer
               </p>
