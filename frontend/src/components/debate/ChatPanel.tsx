@@ -187,7 +187,7 @@ export function ChatPanel(props: Props) {
                 ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
 
               return {
-                name: storedName || castMember?.name || modelLabel || crit.label,
+                name: storedName || castMember?.name || modelLabel || "Critic",
                 role: "Critic",
                 model: modelId,
                 avatar: castMember?.avatar ?? DEBATE_SYSTEM_AVATAR,
@@ -427,12 +427,12 @@ export function ChatPanel(props: Props) {
                         const modelId = result.model_critics?.[ci] ?? castMember?.model ?? "";
                         const modelLabel = MODEL_OPTIONS.find((o) => o.id === modelId)?.label
                           ?? (modelId.includes("/") ? modelId.split("/").pop()! : modelId);
-                        const label = storedName || castMember?.name || modelLabel || crit.label;
+                        const label = storedName || castMember?.name || modelLabel || "Critic";
                         const avatar = castMember?.avatar ?? DEBATE_SYSTEM_AVATAR;
                         const criticMemberName = castMember?.name ?? storedName ?? "";
                         const criticTemplMember = activeTemplate?.members.find((m) => m.name === criticMemberName);
                         const criticTitle = criticTemplMember ? criticTemplMember.role.split(" — ")[0].split(" - ")[0].trim() : "";
-                        const criticSublabel = criticTitle ? `Critic ${ci + 1} · ${criticTitle}` : `Critic ${ci + 1}`;
+                        const criticSublabel = criticTitle || "Critic";
                         // Director's Cut: writer right, critics alternate left / right
                         const criticAlign: "left" | "right" = ci % 2 === 0 ? "left" : "right";
                         return (

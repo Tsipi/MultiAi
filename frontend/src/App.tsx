@@ -133,7 +133,7 @@ export default function App() {
         const modelLabel =
           MODEL_OPTIONS.find((o) => o.id === model)?.label ??
           (model.includes("/") ? model.split("/").pop()! : model);
-        const name = res.critic_names?.[i] || modelLabel || `Critic ${i + 1}`;
+        const name = res.critic_names?.[i] || modelLabel || "Critic";
         return { name, avatar: findFaceByName(name).avatar, model };
       });
       return { writer, critics };

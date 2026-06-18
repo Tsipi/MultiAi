@@ -9,7 +9,7 @@ import { DEBATE_SYSTEM_AVATAR } from "./DebateActivityPrimitives";
 import { ChannelHeader } from "./ChannelHeader";
 import { RoundDivider } from "./RoundDivider";
 import { ScoreBadge } from "../primitives/ScoreBadge";
-import { ChatMessage, SystemMessage, SkeletonMessage } from "./ChatMessage";
+import { ChatMessage, SystemMessage } from "./ChatMessage";
 import { TypingRow } from "./TypingRow";
 import { ConsensusReachedBanner } from "./ConsensusReachedBanner";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ function resolvePerson(
       const member = cast.critics[idx];
       base = member
         ? { name: member.name, avatar: member.avatar || DEBATE_SYSTEM_AVATAR, role: "Critic", model: member.model }
-        : { name: `Critic ${idx + 1}`, avatar: DEBATE_SYSTEM_AVATAR, role: "Critic" };
+        : { name: "Critic", avatar: DEBATE_SYSTEM_AVATAR, role: "Critic" };
     } else {
       base = { name: "System", avatar: DEBATE_SYSTEM_AVATAR, role: "System" };
     }
@@ -76,6 +76,34 @@ function resolveTypingPerson(speaker: AgentId | null, cast: Cast): Person | null
     return critic ? { ...critic, avatar: critic.avatar || DEBATE_SYSTEM_AVATAR } : null;
   }
   return null;
+}
+
+function replaceSeatLabels(text: string, cast: Cast): string {
+  let next = text;
+  cast.critics.forEach((critic, index) => {
+    const name = critic.name || "Critic";
+    const numbered = new RegExp(`\\bCritic ${index + 1}\\b`, "g");
+    const alpha = new RegExp(`\\bCritic ${String.fromCharCode(65 + index)}\\b`, "g");
+    next = next.replace(numbered, name);
+    next = next.replace(alpha, name);
+  });
+
+  next = next.replace(/\bWriter rewrites\b/g, `${cast.writer.name} rewrites`);
+  next = next.replace(/\bWriter is drafting\b/g, `${cast.writer.name} is drafting`);
+  next = next.replace(/\bWriter proposed\b/g, `${cast.writer.name} proposed`);
+  next = next.replace(/\bWriter draft:/g, `${cast.writer.name}'s draft:`);
+  next = next.replace(/\bWriter draft focused\b/g, `${cast.writer.name}'s draft focused`);
+  return next;
+}
+
+function typingAction(stageLabel: string): string {
+  const stage = stageLabel.toLowerCase();
+  if (stage.includes("draft")) return "is drafting";
+  if (stage.includes("critique") || stage.includes("review")) return "is reviewing";
+  if (stage.includes("score")) return "is scoring";
+  if (stage.includes("research")) return "is researching";
+  if (stage.includes("synth")) return "is synthesizing";
+  return "is typing";
 }
 
 export function ChatroomDebateView({
@@ -198,10 +226,10 @@ export function ChatroomDebateView({
           )}
         >
           {state.messages.length === 0 && loading && (
-            <div className="flex flex-col gap-1 pt-2 pb-1">
-              <SkeletonMessage lines={["w-4/5", "w-3/5", "w-2/3"]} delay="0ms" />
-              <SkeletonMessage lines={["w-3/5", "w-4/5"]}            delay="180ms" />
-              <SkeletonMessage lines={["w-2/3", "w-1/2"]}            delay="360ms" />
+            <div className="flex items-center justify-center px-3 py-8">
+              <div className="rounded-md border border-border/50 bg-muted/35 px-3 py-2 text-xs font-medium text-muted-foreground">
+                Team is getting started
+              </div>
             </div>
           )}
 
@@ -218,10 +246,10 @@ export function ChatroomDebateView({
                       const prevScore = accumulatedScore;
                       const extracted = extractScoreFromMessage(msg.text);
                       if (extracted) accumulatedScore = extracted.consensus;
-                      return <ScoreBadge key={msg.id} text={msg.text} previousScore={prevScore} />;
+                      return <ScoreBadge key={msg.id} text={replaceSeatLabels(msg.text, cast)} previousScore={prevScore} />;
                     }
                     if (msg.type === "system") {
-                      return <SystemMessage key={msg.id} text={msg.text} isNew={isNew} />;
+                      return <SystemMessage key={msg.id} text={replaceSeatLabels(msg.text, cast)} isNew={isNew} />;
                     }
                     const person = resolvePerson(msg.speaker, cast, activeTemplate);
                     return (
@@ -231,7 +259,7 @@ export function ChatroomDebateView({
                         name={person.name}
                         sublabel={person.sublabel}
                         avatar={person.avatar}
-                        text={msg.text}
+                        text={replaceSeatLabels(msg.text, cast)}
                         modelId={person.model}
                         isNew={isNew}
                         align={speakerAlign(msg.speaker)}
@@ -247,8 +275,13 @@ export function ChatroomDebateView({
             <ConsensusReachedBanner round={state.consensusRound} score={state.latestScore} />
           )}
 
-          {typingPerson && <TypingRow label={typingPerson.name} avatar={typingPerson.avatar} />}
-          {typingPerson && <SkeletonMessage lines={["w-3/5", "w-2/5"]} delay="0ms" />}
+          {typingPerson && (
+            <TypingRow
+              label={typingPerson.name}
+              avatar={typingPerson.avatar}
+              action={typingAction(state.currentStage)}
+            />
+          )}
 
           <div ref={bottomRef} className="h-px w-full shrink-0" aria-hidden />
         </div>
