@@ -1,240 +1,174 @@
 # Version 4.4 - Live Debate Experience Polish
 
-**Scope:** Improve the live debate section so it feels like a polished AI team room instead of a raw backend activity log.  
+**Scope:** Polish the current live debate panel only where it clearly improves the running app.  
 **Status:** Planning only. Do not implement until explicitly approved.  
-**Depends on:** Current `ChatroomDebateView`, `parseActivityMessages`, and streaming activity events.
+**Depends on:** v4.3 answer modes, timing metadata, `ChannelHeader`, `ChatroomDebateView`, `TypingRow`, `ScoreBadge`, and `parseActivityMessages`.
 
 ---
 
-## Current Problem
+## What v4.3 Already Delivered
 
-The live debate view currently mixes backend progress lines and agent activity as chat messages. This makes the UI feel noisy:
+The screenshot shows that the app already has the main live debate experience:
 
-- Repeated **System** messages take too much visual space.
-- Important agent activity is buried between status logs.
-- The user cannot quickly see the current stage.
-- Typing rows and skeletons make the lower part feel unfinished.
-- The section feels closer to a debug feed than a deliberate "team working live" experience.
+- Team/template name in the debate header.
+- Live badge.
+- Current stage, answer mode, elapsed time, round count, and score.
+- Team avatars.
+- Agent messages with name, role/specialty, avatar, and provider badge.
+- Scorer card and round structure.
 
-The goal is not to remove transparency. The goal is to separate system state from agent conversation.
-
----
-
-## Product Direction
-
-The live debate should feel like a compact AI team room:
-
-- A clear header says which team is running and whether it is live.
-- A status bar shows the current phase.
-- System events appear as compact timeline/status notes.
-- Writer/Critic/Scorer messages remain chat-like and visually prominent.
-- Typing indicators are subtle and elegant.
+v4.4 should not rebuild these pieces. It should remove the remaining friction that users can actually feel.
 
 ---
 
-## Phase 4.4.1 - Add Live Debate Status Bar
+## Current Remaining Problems Worth Fixing Now
 
-**Goal:** Give users a quick answer to "what is happening right now?"
+- Routine progress messages can still add noise inside the debate feed.
+- Setup, web-search, clarification-resume, and completion messages can repeat or distract from the agent conversation.
+- User-facing critic text still says generic labels like `Critic 1` and `Critic 2` even though the UI knows the actual people, such as Erika and Sandy.
+- Loading/typing can feel too placeholder-like because a skeleton block appears after the typing row.
+- Older or unusual debate activity text can still be shown less cleanly than the current happy path.
+- The same team avatars appear in many UI locations; this is mostly normal browser behavior, but repeated uncached downloads should be checked once.
 
-### Suggested UI
+---
 
-```text
-Tourist Planner Team      Live
-Round 1 of 3 · Writer drafting · Score pending
-```
+## Phase 4.4.1 - Compact Routine Progress Messages
 
-Optional phase rail:
+**Goal:** Keep the live feed focused on the agents while still showing useful system state.
 
-```text
-Research → Draft → Critique → Score → Final
-```
+### What this means
+
+Agent chat should stay as normal messages. Routine app progress, such as "preparing", "web research skipped", or "completed", should be shown as small status notes or grouped into one note when possible.
 
 ### Tasks
 
-- [ ] Create `LiveDebateStatusBar`
-- [ ] Show team/template name and live badge
-- [ ] Show current round and max rounds
-- [ ] Show current stage: preparing, researching, drafting, critiquing, scoring, synthesizing, complete
-- [ ] Show latest score when available
-- [ ] Keep styling aligned with current violet/emerald design language
+- [ ] Classify activity items as either agent messages or routine progress notes.
+- [ ] Group setup/resume messages into one compact note when several arrive together.
+- [ ] Show web research skipped/failed/used at most once in the live feed.
+- [ ] Keep important status visible: research started, sources found, consensus reached, errors, completed.
+- [ ] Keep unknown activity text visible as a compact note instead of hiding it.
 
 ---
 
-## Phase 4.4.2 - Separate System Events From Agent Chat
+## Phase 4.4.2 - Remove Generic Critic Labels From User-Facing Copy
 
-**Goal:** Stop rendering backend progress lines as large "System" chat messages.
+**Goal:** Make debate output read like named teammates are participating, not anonymous critic slots.
 
-### Recommendation
+### What this means
 
-System events should become compact status/timeline items, not full chat bubbles.
-
-Examples:
+The live feed message header already shows the real team member name. The live feed message body should match it. For example, instead of:
 
 ```text
-✓ Web research skipped for this question
-✓ Writer is drafting
-✓ Consensus threshold reached at Round 2
+Round 1: Critic 1 feedback: Vague spatial claims. Critic 1 also flagged...
+Writer rewrites based on Critic 1, and Critic 2.
+```
+
+show:
+
+```text
+Round 1: Erika feedback: Vague spatial claims. Erika also flagged...
+Josh rewrites based on Erika and Sandy.
 ```
 
 ### Tasks
 
-- [ ] Add `SystemEventTimeline`
-- [ ] Classify backend activity lines as system events vs agent events
-- [ ] Render system events with small text, muted background, and lightweight icons
-- [ ] Collapse repeated or low-value system events
-- [ ] Avoid large system avatars for ordinary progress messages
+- [ ] Replace generic critic labels in live activity text with the actual critic names where the frontend has the cast mapping.
+- [ ] Replace writer activity wording with the actual writer name where available.
+- [ ] Keep the visual header color/person mapping unchanged: name color, avatar, role, and provider badge still come from the speaker seat.
+- [ ] Preserve generic labels only as a fallback when a saved run does not have enough cast data.
+- [ ] Make sure fast-mode critic revision lines and normal writer-rewrite lines use the same naming style.
+- [ ] Remove `Critic 1` / `Critic 2` from Full Debate / Director's Cut participant sublabels; use the role specialty alone, such as `Local travel expert`, or `Critic` only when no specialty exists.
+- [ ] Remove `Critic 1` / `Critic 2` from Full Debate critique section labels/cards when the teammate name is already shown.
+- [ ] Keep the underlying Full Debate critique content faithful; this task changes display labels, not the actual critique text.
 
 ---
 
-## Phase 4.4.3 - Improve Agent Message Feed
+## Phase 4.4.3 - Simplify Typing And Loading States
 
-**Goal:** Make Writer/Critic/Scorer content feel like real team chat.
+**Goal:** Make the panel feel live, not like a loading placeholder.
 
-### Agent message style
+### What this means
 
-Each agent message should include:
-
-- Avatar
-- Name
-- Role / team-specific specialty
-- Model/provider badge
-- Chat bubble content
+The compact row such as "Jue is typing" is useful. The extra skeleton message underneath it is less useful because it looks like fake content and adds visual noise.
 
 ### Tasks
 
-- [ ] Keep agent messages visually larger than system notes
-- [ ] Use different accent treatment for Writer, Critics, Scorer, and Summarizer
-- [ ] Preserve copy/share controls only on meaningful answer messages
-- [ ] Improve spacing between messages
-- [ ] Ensure avatars and provider badges align consistently
+- [ ] Remove the skeleton block that appears immediately after `TypingRow`.
+- [ ] Replace the initial multi-skeleton loading area with one compact "team is getting started" state.
+- [ ] Keep active-agent typing labels.
+- [ ] Use simple stage-aware wording where available: drafting, reviewing, scoring, researching, synthesizing.
+- [ ] Ensure typing disappears cleanly when the next real event arrives.
 
 ---
 
-## Phase 4.4.4 - Polish Typing State
+## Phase 4.4.4 - Preserve Compatibility For Saved And Larger Debates
 
-**Goal:** Make typing feel intentional, not like placeholder loading noise.
+**Goal:** Make sure live and saved debates render cleanly without expanding this into a major parser project.
 
-### Suggested behavior
+### What this means
 
-```text
-Josh is drafting...
-```
-
-with small animated dots, but without a large skeleton block unless content is truly loading.
+The app currently recognizes current labels like `Critic 1`, `Critic 2`, and so on. Some older saved activity may use labels like `Critic A` / `Critic B`. If those appear, they should still render as critic messages instead of becoming generic system notes.
 
 ### Tasks
 
-- [ ] Replace large skeleton area with compact typing row
-- [ ] Show the active agent name and action
-- [ ] Use stage-specific verbs: drafting, reviewing, scoring, synthesizing
-- [ ] Keep the typing row sticky to the bottom only while loading
-- [ ] Ensure it disappears cleanly when the next real event arrives
+- [ ] Preserve current support for numbered critics, especially teams with 3+ critics.
+- [ ] Add simple compatibility for old `Critic A` / `Critic B` labels if needed.
+- [ ] Check that scorer and final synthesis messages still render in the right style.
+- [ ] Check that follow-up/resume activity does not duplicate setup messages.
 
 ---
 
-## Phase 4.4.5 - Group And De-Duplicate Progress Events
+## Phase 4.4.5 - Avatar Fetch And Render Audit
 
-**Goal:** Prevent the feed from feeling repetitive.
+**Goal:** Confirm the repeated avatar entries in DevTools are normal, and fix only if they cause real extra network transfer or UI jank.
 
-### Examples
+### What this means
 
-Instead of:
-
-```text
-System: Resuming with your clarification...
-System: Live web research skipped for this question.
-System: Your Writer and both Critics are in session...
-```
-
-Show:
-
-```text
-Preparing resumed run · Web research skipped · Team assembled
-```
+The same avatar can appear in several places: compose roster, template picker, live header, message feed, typing row, final answer, and saved runs. Seeing the same image name more than once in DevTools can be normal, especially in development mode or when DevTools disables cache. It is only a problem if the browser repeatedly downloads the same bytes instead of serving them from memory/disk cache.
 
 ### Tasks
 
-- [ ] Identify repeated low-value messages
-- [ ] Group setup messages into a single compact setup row
-- [ ] Group web research status into the run header or timeline
-- [ ] Keep major events visible: research started, sources found, consensus reached, errors
-- [ ] Add tests for activity parsing and grouping
+- [ ] Check DevTools with browser cache enabled and confirm whether repeated avatar rows are served from cache.
+- [ ] Check whether the same avatars are being unnecessarily remounted during live updates.
+- [ ] If real repeat downloads are happening, add the smallest fix: stable keys, avoid unnecessary remounts, or add appropriate image loading/cache hints.
+- [ ] Do not optimize avatars further if the repeated entries are cached and have no visible cost.
 
 ---
 
-## Phase 4.4.6 - Improve Stage Detection
+## Phase 4.4.6 - Minimal Verification
 
-**Goal:** Make the UI derive a reliable current stage from backend activity.
-
-### Suggested stages
-
-- `queued`
-- `clarifying`
-- `researching`
-- `drafting`
-- `critiquing`
-- `scoring`
-- `summarizing`
-- `synthesizing`
-- `complete`
-- `error`
+**Goal:** Verify the changed behavior without over-investing before the mobile phase.
 
 ### Tasks
 
-- [ ] Extend `parseActivityMessages`
-- [ ] Add `currentStage` to `ChatroomState`
-- [ ] Add focused tests for stage detection
-- [ ] Keep backward compatibility with old activity strings
-- [ ] Use stage data in `LiveDebateStatusBar` and typing row
-
----
-
-## Phase 4.4.7 - Better Visual Hierarchy
-
-**Goal:** Make the live debate section easier to scan.
-
-### Tasks
-
-- [ ] Reduce vertical space consumed by system notes
-- [ ] Keep agent chat bubbles at comfortable reading width
-- [ ] Add subtle dividers between rounds
-- [ ] Make the header sticky within the debate panel
-- [ ] Preserve mobile responsiveness
-- [ ] Ensure dark mode colors remain readable
-
----
-
-## Phase 4.4.8 - Empty, Error, And Resume States
-
-**Goal:** Make edge cases feel designed.
-
-### Tasks
-
-- [ ] Empty state before activity starts: "Your team will appear here when the run starts"
-- [ ] Error state with clear retry guidance
-- [ ] Resume state after clarification: compact note instead of repeated system bubbles
-- [ ] Search skipped/failed state shown once, not repeatedly
-- [ ] Completed state that transitions smoothly into the final answer
+- [ ] Manually verify one Fast or Balanced live run.
+- [ ] Manually verify one follow-up run.
+- [ ] Manually verify one saved/replayed run if the parser compatibility task changes rendering.
+- [ ] Add only targeted tests for parsing changes that are easy to break, such as grouped progress messages or old critic labels.
+- [ ] Skip full mobile QA in this version; mobile layout belongs to v5.0.
 
 ---
 
 ## Suggested Implementation Order
 
-1. Extend `parseActivityMessages` with `currentStage` and system-event grouping.
-2. Add `LiveDebateStatusBar`.
-3. Add `SystemEventTimeline`.
-4. Update `ChatroomDebateView` to render system notes separately from agent chat.
-5. Polish typing row.
-6. Add tests for parsing/grouping/stage detection.
-7. Tune spacing and mobile layout.
+1. Compact/group routine progress messages.
+2. Remove generic critic labels from live activity copy and Full Debate display labels.
+3. Remove skeleton noise from typing/loading states.
+4. Add only the compatibility parsing needed for saved/larger debates.
+5. Audit avatar fetch behavior and fix only if real repeat downloads are confirmed.
+6. Do minimal manual verification and targeted tests.
 
 ---
 
 ## Acceptance Criteria
 
-- System progress no longer appears as repeated large "System" chat bubbles.
-- The current run stage is visible at a glance.
-- Agent messages are visually distinct from status events.
-- Clarification resume and web-search skipped messages do not dominate the feed.
-- The live debate section feels polished, not debug-like.
-- Existing streaming behavior remains compatible with saved/current runs.
+- The current v4.3 live header remains intact.
+- Agent messages remain the main content of the live debate feed.
+- Routine setup/search/resume/completion messages are compact and not repetitive.
+- Live feed message text uses teammate names instead of generic `Critic 1` / `Critic 2` labels when cast data is available.
+- Full Debate / Director's Cut does not show user-facing `Critic 1` / `Critic 2` labels; it keeps teammate names, avatars, and role specialties.
+- Full Debate / Director's Cut critique content remains faithful; only display labels are cleaned up.
+- Typing/loading feels intentional without fake message blocks.
+- Saved/current debates still render correctly, including 3+ critics.
+- Avatar network behavior is understood; no avatar optimization is done unless there is real repeated transfer or visible cost.
+- Mobile-specific polish is deferred to v5.0.

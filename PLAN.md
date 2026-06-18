@@ -1,7 +1,7 @@
 # PLAN.md
 
-**Active version:** v4.3 - Reduce Run Latency  
-**Previous:** `docs/plan_archive/PLAN_v4.2.md` (completed)
+**Active version:** v4.4 - Live Debate Experience Polish  
+**Previous:** `docs/plan_archive/PLAN_v4.3.md` (completed)
 
 ---
 
@@ -13,8 +13,8 @@
 | v4.1 | Persistence & Auth | PostgreSQL, Alembic, fastapi-users, login UI | **Complete** |
 | v4.1.1 | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | **Complete** |
 | v4.2 | Sharing, Export, Roles, and Live Web Research | Public sharing, full debate export, per-agent roles, live web research | **Complete** |
-| **v4.3** | Reduce Run Latency | Fast/Balanced/Deep mode, fewer unnecessary calls, timing instrumentation | **Planning** |
-| v4.4 | Live Debate Experience Polish | Status bar, system-event grouping, better live chat hierarchy | Planned |
+| **v4.3** | Reduce Run Latency | Fast/Balanced/Deep mode, fewer unnecessary calls, timing instrumentation | **Complete** |
+| **v4.4** | Live Debate Experience Polish | Compact progress notes, named teammate copy, typing polish, avatar audit | **Planning** |
 | v5.0 | Mobile UX | Responsive app shell, mobile compose, mobile sessions, mobile run experience | Planned |
 | v6.0 | New Login, Auth, Admin, and User Settings | Product-ready account UX, admin area, regular user settings, permission hardening | Planned |
 | v7.0 | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
@@ -75,14 +75,12 @@ Full spec: `docs/plan_archive/PLAN_v4.4.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 4.4.1 | Add Live Debate Status Bar | Planned |
-| 4.4.2 | Separate System Events From Agent Chat | Planned |
-| 4.4.3 | Improve Agent Message Feed | Planned |
-| 4.4.4 | Polish Typing State | Planned |
-| 4.4.5 | Group And De-Duplicate Progress Events | Planned |
-| 4.4.6 | Improve Stage Detection | Planned |
-| 4.4.7 | Better Visual Hierarchy | Planned |
-| 4.4.8 | Empty, Error, And Resume States | Planned |
+| 4.4.1 | Compact Routine Progress Messages | Planned |
+| 4.4.2 | Remove Generic Critic Labels From User-Facing Copy | Planned |
+| 4.4.3 | Simplify Typing And Loading States | Planned |
+| 4.4.4 | Preserve Compatibility For Saved And Larger Debates | Planned |
+| 4.4.5 | Avatar Fetch And Render Audit | Planned |
+| 4.4.6 | Minimal Verification | Planned |
 
 ---
 
