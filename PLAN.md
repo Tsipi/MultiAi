@@ -14,10 +14,11 @@
 | v4.1.1 | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | **Complete** |
 | v4.2 | Sharing, Export, Roles, and Live Web Research | Public sharing, full debate export, per-agent roles, live web research | **Complete** |
 | **v4.3** | Reduce Run Latency | Fast/Balanced/Deep mode, fewer unnecessary calls, timing instrumentation | **Complete** |
-| **v4.4** | Live Debate Experience Polish | Compact progress notes, named teammate copy, typing polish, avatar audit | **Planning** |
-| v5.0 | Mobile UX | Responsive app shell, mobile compose, mobile sessions, mobile run experience | Planned |
-| v6.0 | New Login, Auth, Admin, and User Settings | Product-ready account UX, admin area, regular user settings, permission hardening | Planned |
+| **v4.4** | Live Debate Experience Polish | Compact progress notes, named teammate copy, typing polish, clearer repair/error notes | **Planning** |
+| v5.0 | New Login, Auth, Admin, and User Settings | Product-ready account UX, admin area, regular user settings, permission hardening | Planned |
+| v6.0 | Mobile UX | Responsive app shell, mobile compose, mobile sessions, mobile run experience | Planned |
 | v7.0 | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
+| Marketing | TeamStoa Brand, Launch, And Growth | In-app rebrand, landing page, content, analytics, Product Hunt, pricing | Planned |
 
 ---
 
@@ -75,12 +76,13 @@ Full spec: `docs/plan_archive/PLAN_v4.4.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 4.4.1 | Compact Routine Progress Messages | Planned |
-| 4.4.2 | Remove Generic Critic Labels From User-Facing Copy | Planned |
-| 4.4.3 | Simplify Typing And Loading States | Planned |
-| 4.4.4 | Preserve Compatibility For Saved And Larger Debates | Planned |
-| 4.4.5 | Avatar Fetch And Render Audit | Planned |
-| 4.4.6 | Minimal Verification | Planned |
+| 4.4.1 | Compact Routine Progress Messages | **Done** |
+| 4.4.2 | Remove Generic Critic Labels From User-Facing Copy | **Done** |
+| 4.4.3 | Simplify Typing And Loading States | **Done** |
+| 4.4.4 | Preserve Compatibility For Saved And Larger Debates | **Done** |
+| 4.4.5 | Avatar Fetch And Render Audit | **Done** |
+| 4.4.6 | Minimal Verification | Manual check pending |
+| 4.4.7 | Clear Repair And Provider-Limit Notes | **Done** |
 
 ---
 
@@ -90,12 +92,13 @@ Full spec: `docs/plan_archive/PLAN_v5.0.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 5.0.1 | Mobile Information Architecture | Planned |
-| 5.0.2 | Responsive App Shell | Planned |
-| 5.0.3 | Mobile Compose Experience | Planned |
-| 5.0.4 | Mobile Live Debate And Final Answer | Planned |
-| 5.0.5 | Mobile Session History | Planned |
-| 5.0.6 | Mobile QA And Accessibility | Planned |
+| 5.0.1 | Auth Audit And Role Model | Planned |
+| 5.0.2 | New Login And Registration UX | Planned |
+| 5.0.3 | Regular User Settings | Planned |
+| 5.0.4 | Admin Area | Planned |
+| 5.0.5 | Usage Quotas And Billing Preparation | Planned |
+| 5.0.6 | Permissions And API Hardening | Planned |
+| 5.0.7 | Deployment And Operations | Planned |
 
 ---
 
@@ -105,12 +108,13 @@ Full spec: `docs/plan_archive/PLAN_v6.0.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 6.0.1 | Auth Audit And Role Model | Planned |
-| 6.0.2 | New Login And Registration UX | Planned |
-| 6.0.3 | Regular User Settings | Planned |
-| 6.0.4 | Admin Area | Planned |
-| 6.0.5 | Permissions And API Hardening | Planned |
-| 6.0.6 | Deployment And Operations | Planned |
+| 6.0.1 | Mobile Information Architecture | Planned |
+| 6.0.2 | Responsive App Shell | Planned |
+| 6.0.3 | Mobile Compose Experience | Planned |
+| 6.0.4 | Mobile Live Debate And Final Answer | Planned |
+| 6.0.5 | Mobile Session History | Planned |
+| 6.0.6 | Mobile QA And Accessibility | Planned |
+
 
 ---
 
@@ -173,6 +177,7 @@ Full spec: `docs/plan_archive/PLAN_v4.0.md`
 | **v4.2** | Sharing, Export, Roles, and Live Web Research | `docs/plan_archive/PLAN_v4.2.md` |
 | **v4.3** | Reduce Run Latency | `docs/plan_archive/PLAN_v4.3.md` |
 | **v4.4** | Live Debate Experience Polish | `docs/plan_archive/PLAN_v4.4.md` |
-| v5.0 | Mobile UX | `docs/plan_archive/PLAN_v5.0.md` |
-| v6.0 | New Login, Auth, Admin, and User Settings | `docs/plan_archive/PLAN_v6.0.md` |
+| v5.0 | New Login, Auth, Admin, and User Settings | `docs/plan_archive/PLAN_v5.0.md` |
+| v6.0 | Mobile UX | `docs/plan_archive/PLAN_v6.0.md` |
 | v7.0 | Next.js + SEO | `docs/plan_archive/PLAN_v7.0.md` |
+| Marketing | TeamStoa Brand, Launch, And Growth | `docs/local_only/PLAN_Marketing.md` |

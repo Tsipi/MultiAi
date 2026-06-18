@@ -1,106 +1,149 @@
-# Version 6.0 - New Login, Auth, Admin, And User Settings
+# Version 5.0 - Mobile UX
 
-**Scope:** Upgrade the account experience after the current fastapi-users foundation: login polish, stronger auth flows, admin capabilities, and regular user settings.  
+**Scope:** Make the app comfortable and complete on phone and narrow tablet viewports.  
 **Status:** Planning only. Do not implement until explicitly approved.  
-**Depends on:** Existing v4.1/v4.1.1 auth and persistence work.
+**Depends on:** v4.3 latency work and v4.4 live debate polish should be stable enough that mobile layouts are not chasing moving targets.
+
+---
+
+## Ordering note
+
+**Recommendation: Do v6.0 (Login/Auth polish) before v5.0 (Mobile).**
+
+Reasons:
+- Marketing for TeamStoa is starting imminently. Users who sign up through marketing need working password reset, email verification, and polished token-expiry handling — missing these causes immediate churn and no mobile polish compensates.
+- The login/register screens carry the TeamStoa brand and must be redesigned anyway as part of the rebrand. Doing auth first means mobile login screens are polished once, not patched twice.
+- The admin area (v6.0.4) is needed before you onboard real users — you need to see who signed up and manage them.
+- v6.0.2 explicitly includes "make login/register fully mobile-safe." If v5.0 runs first, login mobile-safety would have to be revisited in v6.0 anyway.
+
+If mobile is urgently needed before v6.0 is complete, extract only 6.0.1 and 6.0.2 (auth audit + login UX polish including password reset) as a mini-sprint, then proceed with v5.0.
 
 ---
 
 ## Goal
 
-MultiAi already has a basic login/auth foundation. v6.0 should turn that foundation into a product-ready account system with a clear distinction between regular users and admins.
+TeamStoa should feel like a real mobile workspace, not a desktop dashboard squeezed onto a small screen. The primary workflows must remain reachable:
+
+- Start a new run
+- Configure the team and debate settings
+- Attach files
+- Watch the live debate
+- Read the final answer
+- Reopen saved sessions
+- Share and export results
+- Log out and manage account access
 
 ---
 
-## Phase 6.0.1 - Auth Audit And Role Model
+## Phase 5.0.1 - Mobile Information Architecture
 
-**Goal:** Confirm what exists today and define the target account model before changing UI or permissions.
+**Goal:** Decide what becomes primary navigation on narrow screens.
 
 ### Tasks
 
-- [ ] Audit current login, registration, JWT, logout, and `/api/users/me` behavior
-- [ ] Confirm whether `is_superuser` is enough for admin access or whether explicit roles are needed
-- [ ] Verify all session routes are correctly scoped by logged-in user
-- [ ] Decide whether anonymous sessions are still allowed
-- [ ] Document admin, regular user, and public/shared viewer permissions
+- [ ] Define mobile breakpoints for phone (≤640px), narrow tablet (641–1024px), and desktop (>1024px)
+- [ ] Choose the primary mobile structure — recommendation: bottom navigation bar (Sessions, New Run, Settings) plus a slide-in compose drawer, matching patterns users already know from Slack/Discord
+- [ ] Map desktop areas to mobile destinations: sessions, compose, live debate, final answer, account/settings
+- [ ] Decide whether the left sidebar collapses to a bottom sheet or a full-screen sessions view
+- [ ] Make sure saved sessions remain easy to open without blocking the compose flow
+- [ ] Preserve shared-run read-only pages on mobile without requiring login
+- [ ] Define which panels (AdvancedDrawer, InsightsDrawer, TemplateDrawer) stack as full-screen sheets on mobile vs remain side panels
 
 ---
 
-## Phase 6.0.2 - New Login And Registration UX
+## Phase 5.0.2 - Responsive App Shell
 
-**Goal:** Make the entry flow feel polished, reliable, and production-ready.
+**Goal:** Replace desktop-only layout assumptions with mobile-safe structure.
 
 ### Tasks
 
-- [ ] Redesign login/register screens with clear error, loading, and success states
-- [ ] Add password reset or define the chosen recovery flow
-- [ ] Add email verification if required for production
-- [ ] Improve token expiry handling and expired-session messaging
-- [ ] Make login/register fully mobile-safe
+- [ ] Collapse the sidebar into a mobile drawer or a dedicated sessions tab in the bottom nav
+- [ ] Keep "New Run", logout, and account access reachable without opening additional menus
+- [ ] Ensure the main app panel fills the full viewport width with no horizontal overflow
+- [ ] Add safe-area inset spacing (`env(safe-area-inset-*)`) for notched iOS and Android browser chrome
+- [ ] Verify dark mode and light mode on narrow screens, including the bottom nav and drawers
+- [ ] Update `TopNav` to hide desktop-only items below the mobile breakpoint without breaking the layout
+- [ ] Verify `Sidebar` / `ConsensusRunsSidebar` never renders at full desktop width on a phone
 
 ---
 
-## Phase 6.0.3 - Regular User Settings
+## Phase 5.0.3 - Mobile Compose Experience
 
-**Goal:** Give users a place to manage their account and personal defaults.
+**Goal:** Make prompt entry, attachments, and run controls usable with thumbs and virtual keyboards.
 
 ### Tasks
 
-- [ ] Add a user settings page or drawer
-- [ ] Show account identity and basic profile information
-- [ ] Add password change or recovery entry point
-- [ ] Add default run preferences where appropriate: answer mode, web research mode, default team/template
-- [ ] Add data/privacy controls such as export my data or delete account if in scope
+- [ ] Make the compose bar keyboard-safe on iOS and Android: input must scroll into view when the virtual keyboard opens, viewport must not shrink the text area unusably
+- [ ] Keep attachment controls visible without crowding the prompt input (consider a single attachment icon that opens a sheet)
+- [ ] Move advanced settings (`AdvancedDrawer`, debate mode, web search, model counts) into a full-screen bottom sheet on mobile
+- [ ] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are readable and editable by touch
+- [ ] Prevent text, buttons, template chips, and agent avatars from overflowing their containers
+- [ ] Add a "Quick templates" horizontal scroll strip as the primary template entry point on mobile (replaces the drawer shortcut row that is hard to tap on small screens)
+- [ ] Minimum tap target for all interactive elements: 44×44 px (WCAG 2.5.5)
 
 ---
 
-## Phase 6.0.4 - Admin Area
+## Phase 5.0.4 - Mobile Live Debate And Final Answer
 
-**Goal:** Give admins a controlled surface for operational visibility and safe management.
+**Goal:** Make the run experience readable and interactive while the debate is live.
 
 ### Tasks
 
-- [ ] Add admin-only routing and navigation
-- [ ] Add user list with search/filter
-- [ ] Add user detail view with account status and recent usage
-- [ ] Add run/session visibility appropriate for admins
-- [ ] Add safe admin actions with confirmations and audit-friendly behavior
+- [ ] Ensure `ChatroomDebateView` / `ChatPanel` has a stable, scrollable layout within a full-height mobile viewport
+- [ ] Keep the status bar / progress indicator visible without consuming too much height — consider collapsing it to a thin progress strip on mobile
+- [ ] Make agent message bubbles, round dividers, and system timeline items readable at phone width (font size, padding, avatar size)
+- [ ] Implement native Web Share API (`navigator.share`) for sharing the final answer link on mobile, falling back to copy-link if unsupported
+- [ ] Add a clear visual transition from live debate to final answer (scroll-to-top or reveal animation)
+- [ ] Keep copy, share, and export controls reachable after completion without requiring scroll — floating or sticky action row
+- [ ] Typing indicators (`TypingRow`) must not overflow the mobile viewport
 
 ---
 
-## Phase 6.0.5 - Permissions And API Hardening
+## Phase 5.0.5 - Mobile Session History
 
-**Goal:** Ensure frontend affordances and backend authorization agree.
+**Goal:** Make saved runs and threads easy to browse on small screens.
 
 ### Tasks
 
-- [ ] Add backend admin dependencies/guards for every admin route
-- [ ] Return consistent 401/403 errors and frontend messages
-- [ ] Prevent regular users from reading or mutating other users' private sessions
-- [ ] Keep public shared runs accessible without login
-- [ ] Add tests for regular user, admin, anonymous, and public shared access
+- [ ] Add mobile session search by text or template name (not just a future maybe — the sidebar is too dense at 2–3 runs to be useful without filtering at scale)
+- [ ] Preserve thread grouping and follow-up context with clear indentation or thread indicator
+- [ ] Make share, unshare, and delete actions accessible via a long-press or swipe gesture, not hover menus
+- [ ] Add empty, loading, and error states for the mobile session view
+- [ ] Confirm pull-to-refresh or manual refresh works predictably
+- [ ] Back navigation from a session view returns to the session list without losing scroll position
 
 ---
 
-## Phase 6.0.6 - Deployment And Operations
+## Phase 5.0.6 - PWA, Performance, And Accessibility
 
-**Goal:** Make account management safe in production.
+**Goal:** Catch layout and interaction problems and add baseline PWA capabilities.
 
 ### Tasks
 
-- [ ] Document required Railway variables for auth and JWT behavior
-- [ ] Replace development admin credentials with a safe production admin creation flow
-- [ ] Add seed/admin scripts only where they are safe and idempotent
-- [ ] Add admin action logging if destructive account actions are introduced
-- [ ] Update user-facing and engineering docs after implementation
+- [ ] Test all core workflows at 375px (iPhone SE), 390px (iPhone 14 standard), and 768px (iPad mini portrait)
+- [ ] Test virtual keyboard behavior for prompt entry, login forms, and team edit forms on both iOS Safari and Android Chrome
+- [ ] Verify all tap targets meet 44×44 px minimum
+- [ ] Verify visible focus states work for keyboard users (do not rely on hover-only focus rings)
+- [ ] Add a `manifest.json` and service worker for basic PWA installability — users can "Add to Home Screen" to get a native-app-like entry point
+- [ ] Define an offline fallback page (the app is live-API-dependent, but a graceful offline screen is better than a blank page)
+- [ ] Set a mobile performance budget: target LCP ≤ 2.5s and TBT ≤ 200ms on a mid-range device over 4G
+- [ ] Add focused visual regression checks for the app shell, compose area, and live debate view at mobile widths
+
+---
+
+## Removed / consolidated items
+
+- "Add mobile session search/filter if the sidebar becomes too dense" — the "if" has been removed. Search is a concrete task in 5.0.5.
+- "Add safe-area spacing for mobile browsers" was formerly only in 5.0.2; it is now explicitly required for every affected component.
 
 ---
 
 ## Acceptance Criteria
 
-- Login/register/logout feel polished on desktop and mobile.
-- Regular users can manage their own account settings.
-- Admin users have a separate, protected admin surface.
-- Backend authorization prevents privilege escalation even if frontend routes are bypassed.
-- Public shared runs still work without login.
-- Tests cover auth state, user scoping, and admin-only behavior.
+- Users can complete a full run from a phone: log in, compose, configure, run, read, save/share/export.
+- No primary action is hidden behind hover-only UI or requires desktop-style mouse interaction.
+- No horizontal page scrolling appears at 375px or wider.
+- The live debate and final answer remain readable without layout overlap or font-size regression.
+- Session history, logout, and account entry points are reachable on mobile without more than two taps.
+- The app is installable as a PWA and shows a graceful offline page when there is no network.
+- Tap targets are ≥ 44×44 px throughout.
