@@ -49,62 +49,53 @@ Added public sharing, full-debate export, per-agent writer/critic roles, and liv
 
 Full spec: `docs/plan_archive/PLAN_v4.2.md`
 
----
-
-## Current
-
 ### v4.3 - Reduce Run Latency
-**Theme:** Make runs faster without removing the core multi-agent value.
-
-| Phase | Goal |
-|-------|------|
-| 4.3.1 | Add Answer Mode - done |
-| 4.3.2 | Reduce Default Rounds - done |
-| 4.3.3 | Skip Unnecessary Support Calls in Fast Mode - done |
-| 4.3.4 | Use Faster Models for Utility Roles - done |
-| 4.3.5 | Make Web Search Strictly Conditional - done |
-| 4.3.6 | Defer Non-Essential Work - done |
-| 4.3.7 | Improve Perceived Speed - done |
-| 4.3.8 | Measure Before and After - done |
+Added Fast/Balanced/Deep answer modes, reduced default run latency, skipped unnecessary fast-mode support calls, tightened web-search behavior, deferred non-essential work, and exposed timing/cost metadata.
 
 Full spec: `docs/plan_archive/PLAN_v4.3.md`
 
 ---
 
-## Planned
+## Current
 
 ### v4.4 - Live Debate Experience Polish
 **Theme:** Make the live debate section feel like a polished AI team room instead of a raw backend activity log.
 
+The original v4.4 draft was narrowed after v4.3 shipped the live header, stage badge, answer mode, elapsed time, round count, score, avatars, and agent message styling. Current v4.4 focuses on the remaining rough edges users can feel.
+
 | Phase | Goal |
 |-------|------|
-| 4.4.1 | Add Live Debate Status Bar |
-| 4.4.2 | Separate System Events From Agent Chat |
-| 4.4.3 | Improve Agent Message Feed |
-| 4.4.4 | Polish Typing State |
-| 4.4.5 | Group And De-Duplicate Progress Events |
-| 4.4.6 | Improve Stage Detection |
-| 4.4.7 | Better Visual Hierarchy |
-| 4.4.8 | Empty, Error, And Resume States |
+| 4.4.1 | Compact Routine Progress Messages - done |
+| 4.4.2 | Remove Generic Critic Labels From User-Facing Copy - done |
+| 4.4.3 | Simplify Typing And Loading States - done |
+| 4.4.4 | Preserve Compatibility For Saved And Larger Debates - done |
+| 4.4.5 | Avatar Fetch And Render Audit - done |
+| 4.4.6 | Minimal Verification - manual check pending |
+| 4.4.7 | Clear Repair And Provider-Limit Notes - done |
 
 Full spec: `docs/plan_archive/PLAN_v4.4.md`
 
-### v5.0 - Mobile UX
-**Theme:** Responsive app shell, mobile compose, mobile sessions, and mobile run experience.
+---
 
-| Phase | Goal |
-|-------|------|
-| 5.0.1 | Mobile Information Architecture |
-| 5.0.2 | Responsive App Shell |
-| 5.0.3 | Mobile Compose Experience |
-| 5.0.4 | Mobile Live Debate And Final Answer |
-| 5.0.5 | Mobile Session History |
-| 5.0.6 | Mobile QA And Accessibility |
+## Planned
+
+### v5.0 - New Login, Auth, Admin, And User Settings
+**Theme:** Product-ready account UX, regular user settings, admin area, and permission hardening.
+
+| Phase | Goal | Status |
+|-------|------|--------|
+| 5.0.1 | Auth Audit And Role Model | Planned |
+| 5.0.2 | New Login And Registration UX | Planned |
+| 5.0.3 | Regular User Settings | Planned |
+| 5.0.4 | Admin Area | Planned |
+| 5.0.5 | Usage Quotas And Billing Preparation | Planned |
+| 5.0.6 | Permissions And API Hardening | Planned |
+| 5.0.7 | Deployment And Operations | Planned |
 
 Full spec: `docs/plan_archive/PLAN_v5.0.md`
 
-### v6.0 - New Login, Auth, Admin, And User Settings
-**Theme:** Product-ready account UX, regular user settings, admin area, and permission hardening.
+### v6.0 - Mobile UX
+**Theme:** Responsive app shell, mobile compose, mobile sessions, and mobile run experience.
 
 | Phase | Goal |
 |-------|------|
