@@ -1,7 +1,7 @@
 # Version 4.4 - Live Debate Experience Polish
 
 **Scope:** Polish the current live debate panel only where it clearly improves the running app.  
-**Status:** Planning only. Do not implement until explicitly approved.  
+**Status:** Implementation checkpoint ready for manual verification.  
 **Depends on:** v4.3 answer modes, timing metadata, `ChannelHeader`, `ChatroomDebateView`, `TypingRow`, `ScoreBadge`, and `parseActivityMessages`.
 
 ---
@@ -29,6 +29,8 @@ v4.4 should not rebuild these pieces. It should remove the remaining friction th
 - Loading/typing can feel too placeholder-like because a skeleton block appears after the typing row.
 - Older or unusual debate activity text can still be shown less cleanly than the current happy path.
 - The same team avatars appear in many UI locations; this is mostly normal browser behavior, but repeated uncached downloads should be checked once.
+- Repair/validation notes such as "Relevance failed, running one repair round" sound alarming and too internal.
+- OpenRouter 402 credit/token-limit errors expose raw provider text instead of explaining the user action clearly.
 
 ---
 
@@ -42,11 +44,11 @@ Agent chat should stay as normal messages. Routine app progress, such as "prepar
 
 ### Tasks
 
-- [ ] Classify activity items as either agent messages or routine progress notes.
-- [ ] Group setup/resume messages into one compact note when several arrive together.
-- [ ] Show web research skipped/failed/used at most once in the live feed.
-- [ ] Keep important status visible: research started, sources found, consensus reached, errors, completed.
-- [ ] Keep unknown activity text visible as a compact note instead of hiding it.
+- [x] Classify activity items as either agent messages or routine progress notes.
+- [x] Group setup/resume messages into one compact note when several arrive together.
+- [x] Show web research skipped/failed/used at most once in the live feed.
+- [x] Keep important status visible: research started, sources found, consensus reached, errors, completed.
+- [x] Keep unknown activity text visible as a compact note instead of hiding it.
 
 ---
 
@@ -72,14 +74,14 @@ Josh rewrites based on Erika and Sandy.
 
 ### Tasks
 
-- [ ] Replace generic critic labels in live activity text with the actual critic names where the frontend has the cast mapping.
-- [ ] Replace writer activity wording with the actual writer name where available.
-- [ ] Keep the visual header color/person mapping unchanged: name color, avatar, role, and provider badge still come from the speaker seat.
-- [ ] Preserve generic labels only as a fallback when a saved run does not have enough cast data.
-- [ ] Make sure fast-mode critic revision lines and normal writer-rewrite lines use the same naming style.
-- [ ] Remove `Critic 1` / `Critic 2` from Full Debate / Director's Cut participant sublabels; use the role specialty alone, such as `Local travel expert`, or `Critic` only when no specialty exists.
-- [ ] Remove `Critic 1` / `Critic 2` from Full Debate critique section labels/cards when the teammate name is already shown.
-- [ ] Keep the underlying Full Debate critique content faithful; this task changes display labels, not the actual critique text.
+- [x] Replace generic critic labels in live activity text with the actual critic names where the frontend has the cast mapping.
+- [x] Replace writer activity wording with the actual writer name where available.
+- [x] Keep the visual header color/person mapping unchanged: name color, avatar, role, and provider badge still come from the speaker seat.
+- [x] Preserve generic labels only as a fallback when a saved run does not have enough cast data.
+- [x] Make sure fast-mode critic revision lines and normal writer-rewrite lines use the same naming style.
+- [x] Remove `Critic 1` / `Critic 2` from Full Debate / Director's Cut participant sublabels; use the role specialty alone, such as `Local travel expert`, or `Critic` only when no specialty exists.
+- [x] Remove `Critic 1` / `Critic 2` from Full Debate critique section labels/cards when the teammate name is already shown.
+- [x] Keep the underlying Full Debate critique content faithful; this task changes display labels, not the actual critique text.
 
 ---
 
@@ -93,11 +95,11 @@ The compact row such as "Jue is typing" is useful. The extra skeleton message un
 
 ### Tasks
 
-- [ ] Remove the skeleton block that appears immediately after `TypingRow`.
-- [ ] Replace the initial multi-skeleton loading area with one compact "team is getting started" state.
-- [ ] Keep active-agent typing labels.
-- [ ] Use simple stage-aware wording where available: drafting, reviewing, scoring, researching, synthesizing.
-- [ ] Ensure typing disappears cleanly when the next real event arrives.
+- [x] Remove the skeleton block that appears immediately after `TypingRow`.
+- [x] Replace the initial multi-skeleton loading area with one compact "team is getting started" state.
+- [x] Keep active-agent typing labels.
+- [x] Use simple stage-aware wording where available: drafting, reviewing, scoring, researching, synthesizing.
+- [x] Ensure typing disappears cleanly when the next real event arrives.
 
 ---
 
@@ -111,10 +113,10 @@ The app currently recognizes current labels like `Critic 1`, `Critic 2`, and so 
 
 ### Tasks
 
-- [ ] Preserve current support for numbered critics, especially teams with 3+ critics.
-- [ ] Add simple compatibility for old `Critic A` / `Critic B` labels if needed.
-- [ ] Check that scorer and final synthesis messages still render in the right style.
-- [ ] Check that follow-up/resume activity does not duplicate setup messages.
+- [x] Preserve current support for numbered critics, especially teams with 3+ critics.
+- [x] Add simple compatibility for old `Critic A` / `Critic B` labels if needed.
+- [x] Check that scorer and final synthesis messages still render in the right style.
+- [x] Check that follow-up/resume activity does not duplicate setup messages.
 
 ---
 
@@ -128,10 +130,10 @@ The same avatar can appear in several places: compose roster, template picker, l
 
 ### Tasks
 
-- [ ] Check DevTools with browser cache enabled and confirm whether repeated avatar rows are served from cache.
-- [ ] Check whether the same avatars are being unnecessarily remounted during live updates.
-- [ ] If real repeat downloads are happening, add the smallest fix: stable keys, avoid unnecessary remounts, or add appropriate image loading/cache hints.
-- [ ] Do not optimize avatars further if the repeated entries are cached and have no visible cost.
+- [x] Check local Vite asset headers and source usage to explain repeated avatar rows in development.
+- [x] Check whether the same avatars are being unnecessarily remounted during live updates.
+- [x] If real repeat downloads are happening, add the smallest fix: stable keys, avoid unnecessary remounts, or add appropriate image loading/cache hints.
+- [x] Do not optimize avatars further if the repeated entries are cached and have no visible cost.
 
 ---
 
@@ -144,8 +146,37 @@ The same avatar can appear in several places: compose roster, template picker, l
 - [ ] Manually verify one Fast or Balanced live run.
 - [ ] Manually verify one follow-up run.
 - [ ] Manually verify one saved/replayed run if the parser compatibility task changes rendering.
-- [ ] Add only targeted tests for parsing changes that are easy to break, such as grouped progress messages or old critic labels.
-- [ ] Skip full mobile QA in this version; mobile layout belongs to v5.0.
+- [x] Add only targeted tests for parsing changes that are easy to break, such as grouped progress messages or old critic labels.
+- [x] Skip full mobile QA in this version; mobile layout belongs to v5.0.
+
+---
+
+## Phase 4.4.7 - Clear Repair And Provider-Limit Notes
+
+**Goal:** Make validation/repair and provider-limit messages understandable without exposing raw internal language.
+
+### What this means
+
+When the app needs one extra repair pass after consensus, the note should sound like normal quality control, not a failure. Suggested copy:
+
+```text
+Quality check: adding one final pass to better match your request.
+```
+
+When OpenRouter returns a 402 because the key cannot afford the requested token budget, the user should see a short action-oriented note. Suggested copy:
+
+```text
+OpenRouter credit/token limit reached. Add credits or increase the key's token limit in OpenRouter, then retry this run.
+```
+
+### Tasks
+
+- [x] Rephrase relevance repair activity from "failed" language to quality-check language.
+- [x] Keep repair notes compact in the live feed and avoid rendering them as a large System chat row.
+- [x] Detect OpenRouter 402 credit/token-limit errors and replace raw provider JSON with a concise user-facing message.
+- [x] Mention both likely fixes: add OpenRouter credits or increase the key's total token limit.
+- [x] Keep technical details available in logs/debug paths if needed, but not as the main final answer text.
+- [x] Add one targeted backend test or formatter test for OpenRouter 402 message cleanup if the implementation adds a helper.
 
 ---
 
@@ -156,7 +187,8 @@ The same avatar can appear in several places: compose roster, template picker, l
 3. Remove skeleton noise from typing/loading states.
 4. Add only the compatibility parsing needed for saved/larger debates.
 5. Audit avatar fetch behavior and fix only if real repeat downloads are confirmed.
-6. Do minimal manual verification and targeted tests.
+6. Polish validation/repair and provider-limit messages.
+7. Do minimal manual verification and targeted tests.
 
 ---
 
@@ -171,4 +203,6 @@ The same avatar can appear in several places: compose roster, template picker, l
 - Typing/loading feels intentional without fake message blocks.
 - Saved/current debates still render correctly, including 3+ critics.
 - Avatar network behavior is understood; no avatar optimization is done unless there is real repeated transfer or visible cost.
+- Repair notes use calm quality-check wording, not alarming failure language.
+- OpenRouter 402 credit/token-limit errors tell the user to add credits or increase the key token limit.
 - Mobile-specific polish is deferred to v5.0.

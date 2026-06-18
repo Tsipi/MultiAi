@@ -238,7 +238,7 @@ class ConsensusEngine:
                     relevance_score=rel_score,
                 )
             if not is_ok:
-                await report("Relevance failed, running one repair round")
+                await report("Quality check: adding one final pass to better match your request.")
                 phase_started = perf_counter()
                 repair = f"The answer drifted from user intent. Rewrite it to answer exactly: {question_with_context}"
                 refined = WRITER_REFINEMENT.format(
@@ -263,8 +263,10 @@ class ConsensusEngine:
                         )
             await report("Completed successfully")
         except LLMCallError as exc:
-            await report(f"Stopped due to LLM error: {exc}")
-            session.final_answer = f"Stopped early due to LLM error: {exc}"
+            user_message = _user_facing_llm_error(exc)
+            log.warning("session stopped due to LLM error: %s", exc)
+            await report(user_message)
+            session.final_answer = user_message
         _apply_usage(session, usage_token)
         finalize_timings(session)
         return session
@@ -299,6 +301,22 @@ def _build_followup_synthesis_context(
     if root_question and root_question != source_prompt:
         parts.append(f"Original root question:\n{root_question[:600]}")
     return "\n\n".join(parts)
+
+
+def _user_facing_llm_error(exc: LLMCallError) -> str:
+    """Translate provider errors into concise user-facing guidance."""
+    raw = str(exc)
+    lowered = raw.lower()
+    if "http 402" in lowered and "openrouter" in lowered:
+        if any(token in lowered for token in ("more credits", "max_tokens", "total limit", "token limit")):
+            return (
+                "OpenRouter credit/token limit reached. Add credits or increase the key's "
+                "total token limit in OpenRouter, then retry this run."
+            )
+        return "OpenRouter billing limit reached. Check your OpenRouter credits and key limits, then retry this run."
+    if "openrouter_api_key is missing" in lowered:
+        return "OpenRouter API key is missing. Add your OpenRouter API key, then retry this run."
+    return "The AI provider stopped this run before completion. Please retry, or choose a different model if it happens again."
 
 
 def _apply_usage(session: DebateSession, token: object) -> None:

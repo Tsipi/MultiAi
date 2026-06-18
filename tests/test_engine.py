@@ -4,7 +4,8 @@ import asyncio
 from pathlib import Path
 
 from backend.config import AppConfig
-from backend.consensus.engine import ConsensusEngine
+from backend.consensus.engine import ConsensusEngine, _user_facing_llm_error
+from backend.consensus.llm_clients import LLMCallError
 from backend.consensus.models import DebateRound
 from backend.consensus.web_research import WebResearchResult
 
@@ -134,6 +135,61 @@ def test_fast_mode_runs_validation_for_obviously_off_topic_answer(monkeypatch, t
     )
 
     assert validate_calls == 1
+
+
+def test_repair_activity_uses_quality_check_language(monkeypatch, tmp_path: Path):
+    """Repair pass should sound like quality control, not an alarming failure."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    activity: list[str] = []
+    validate_calls = 0
+
+    async def fake_assess(*_args, **_kwargs):
+        class Assessment:
+            is_ambiguous = False
+            reason = ""
+            clarification_question = ""
+            clarification_options = []
+            intent_scope = "clear"
+
+        return Assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft answer", "critique", 8.0, "ok", "summary"))
+        return "draft answer", ""
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        nonlocal validate_calls
+        validate_calls += 1
+        return validate_calls > 1, 5.0 if validate_calls == 1 else 8.0, "needs focus"
+
+    async def report(message: str):
+        activity.append(message)
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    asyncio.run(
+        engine.consult(
+            question="How should I decide?",
+            domain="",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            answer_mode="balanced",
+            progress_hook=report,
+        )
+    )
+
+    assert "Quality check: adding one final pass to better match your request." in activity
+    assert all("Relevance failed" not in message for message in activity)
 
 
 def test_fast_mode_uses_shorter_web_search_timeout(monkeypatch, tmp_path: Path):
@@ -276,3 +332,21 @@ def test_followup_final_synthesis_keeps_parent_answer_and_clarification(monkeypa
     assert "Previous final answer to revise or extend:" in final_prompt
     assert "User clarification:" in final_prompt
     assert "Verona" in final_prompt
+
+
+def test_user_facing_llm_error_for_openrouter_credit_limit():
+    """OpenRouter 402 token/credit errors should be actionable and concise."""
+    raw = (
+        'HTTP 402 from OpenRouter for model anthropic/claude-sonnet-4.6: {"error":'
+        '{"message":"This request requires more credits, or fewer max_tokens. You requested up to '
+        '65536 tokens, but can only afford 63995. To increase, visit https://openrouter.ai/workspaces/default/keys/key"}}'
+    )
+
+    message = _user_facing_llm_error(LLMCallError(raw))
+
+    assert message == (
+        "OpenRouter credit/token limit reached. Add credits or increase the key's "
+        "total token limit in OpenRouter, then retry this run."
+    )
+    assert "https://openrouter.ai" not in message
+    assert "65536" not in message

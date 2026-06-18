@@ -39,17 +39,24 @@ const RE_SCORE_LINE    = /consensus ([\d.]+)(?:[,\s]+relevance ([\d.]+))?/i;
 const RE_THRESHOLD     = /consensus threshold reached at round (\d+)/i;
 const RE_WRITER_TYPING = /writer (is drafting|rewrites)/i;
 const RE_CRITIC_NUM    = /\bcritic (\d+)\b/i;
+const RE_CRITIC_ALPHA  = /\bcritic ([a-f])\b/i;
 const RE_SCORER        = /^Round \d+: consensus/i;
 const RE_SYNTH         = /synthesizing final answer/i;
 const RE_COMPLETE      = /completed successfully/i;
 const RE_QUEUED        = /queued request/i;
-const RE_RESEARCH      = /(searching the live web|live web research)/i;
-const RE_PREP          = /(assembling|preparing|starting follow-up|resuming|in session)/i;
+const RE_RESEARCH      = /(searching the live web|live web research|web research skipped|search skipped|sources found)/i;
+const RE_PREP          = /(assembling|preparing|starting follow-up|resuming|in session|quality check)/i;
 const RE_ERROR         = /stream error/i;
+const RE_ROUTINE       = /(assembling|preparing|starting follow-up|resuming|in session|web research skipped|search skipped|quality check)/i;
 
 function toCriticId(n: number): AgentId | null {
   if (n >= 1 && n <= 6) return `critic${n}` as AgentId;
   return null;
+}
+
+function toCriticIdFromAlpha(letter: string): AgentId | null {
+  const n = letter.toLowerCase().charCodeAt(0) - 96;
+  return toCriticId(n);
 }
 
 function detectSpeaker(text: string): AgentId {
@@ -58,6 +65,8 @@ function detectSpeaker(text: string): AgentId {
   if (RE_WRITER_TYPING.test(text)) return "writer";
   const cm = text.match(RE_CRITIC_NUM);
   if (cm) return toCriticId(parseInt(cm[1], 10)) ?? "system";
+  const alpha = text.match(RE_CRITIC_ALPHA);
+  if (alpha) return toCriticIdFromAlpha(alpha[1]) ?? "system";
   if (RE_ROUND_NUM.test(text))     return "writer";
   return "system";
 }
@@ -69,6 +78,8 @@ function detectActiveSpeaker(text: string): AgentId | null {
   if (RE_WRITER_TYPING.test(text)) return "writer";
   const cm = text.match(RE_CRITIC_NUM);
   if (cm) return toCriticId(parseInt(cm[1], 10));
+  const alpha = text.match(RE_CRITIC_ALPHA);
+  if (alpha) return toCriticIdFromAlpha(alpha[1]);
   if (RE_ROUND_NUM.test(text))     return "writer";
   return "system";
 }
@@ -79,10 +90,46 @@ function messageType(text: string): "message" | "score_announcement" | "system" 
     RE_COMPLETE.test(text) ||
     RE_QUEUED.test(text) ||
     RE_SYNTH.test(text) ||
-    RE_THRESHOLD.test(text)
+    RE_THRESHOLD.test(text) ||
+    RE_RESEARCH.test(text) ||
+    RE_PREP.test(text) ||
+    RE_ERROR.test(text)
   )
     return "system";
   return "message";
+}
+
+function compactSystemText(text: string): string {
+  if (/resuming/i.test(text)) return "Resuming with clarification";
+  if (/web research skipped|search skipped/i.test(text)) return "Web research skipped";
+  if (/searching the live web|live web research/i.test(text)) return "Researching live web";
+  if (/sources found/i.test(text)) return text.replace(/\.$/, "");
+  if (/quality check/i.test(text)) return "Quality check: adding one final pass";
+  if (/in session/i.test(text)) return "Team assembled";
+  if (/assembling|preparing/i.test(text)) return "Preparing run";
+  if (RE_COMPLETE.test(text)) return "Run completed";
+  return text.replace(/\.$/, "");
+}
+
+function appendMessage(messages: ChatroomMessage[], next: ChatroomMessage) {
+  if (next.type !== "system") {
+    messages.push(next);
+    return;
+  }
+
+  const compact = compactSystemText(next.text);
+  const isRoutine = RE_ROUTINE.test(next.text);
+  const previous = messages[messages.length - 1];
+
+  if (isRoutine && previous?.type === "system" && previous.round === next.round) {
+    const parts = previous.text.split(" · ");
+    if (!parts.includes(compact)) {
+      previous.text = [...parts, compact].join(" · ");
+    }
+    return;
+  }
+
+  messages.push({ ...next, text: compact });
 }
 
 function detectStage(text: string): string {
@@ -92,7 +139,7 @@ function detectStage(text: string): string {
   if (RE_THRESHOLD.test(text)) return "Consensus reached";
   if (RE_SCORER.test(text) || RE_SCORE_LINE.test(text)) return "Scoring";
   if (RE_WRITER_TYPING.test(text)) return "Drafting";
-  if (RE_CRITIC_NUM.test(text)) return "Critiquing";
+  if (RE_CRITIC_NUM.test(text) || RE_CRITIC_ALPHA.test(text)) return "Critiquing";
   if (RE_RESEARCH.test(text)) return "Researching";
   if (RE_PREP.test(text) || RE_QUEUED.test(text)) return "Preparing";
   if (RE_ROUND_NUM.test(text)) return "Drafting";
@@ -139,7 +186,7 @@ export function parseActivityMessages(activity: string[]): ChatroomState {
     // Skip the queued line from the visible feed
     if (RE_QUEUED.test(text)) continue;
 
-    messages.push({
+    appendMessage(messages, {
       id: i,
       speaker: detectSpeaker(text),
       text,
