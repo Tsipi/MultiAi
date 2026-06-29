@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { LogOut, PanelLeftClose, PanelRight, Settings } from "lucide-react";
 import { AnswersPanel, type AnswersPanelProps } from "../session/AnswersPanel";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
   { open, onOpenChange, userEmail, onLogout, ...answersProps },
   ref
 ) {
+  const navigate = useNavigate();
   const initial = userEmail ? userEmail[0].toUpperCase() : null;
   return (
     <aside
@@ -76,10 +78,10 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
                   type="button"
                   variant="ghost"
                   size="icon"
-                  disabled
-                  className="h-6 w-6 shrink-0 text-muted-foreground/40 cursor-not-allowed"
-                  aria-label="Settings (coming soon)"
-                  title="Settings — coming in v4.3"
+                  onClick={() => navigate("/settings")}
+                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                  aria-label="Settings"
+                  title="Settings"
                 >
                   <Settings className="h-3.5 w-3.5" />
                 </Button>

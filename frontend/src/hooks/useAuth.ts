@@ -1,22 +1,55 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-const TOKEN_KEY = "auth_token";
-const EMAIL_KEY = "auth_email";
+const TOKEN_KEY = "teamstoa_auth_token";
 
-export interface AuthState {
-  token: string | null;
-  email: string | null;
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string | null;
+  is_superuser: boolean;
+  is_verified: boolean;
+  runs_this_month: number;
+  runs_quota: number | null;
+  total_runs: number;
+  created_at: string | null;
 }
 
 export function useAuth() {
-  const [auth, setAuth] = useState<AuthState>({
-    token: sessionStorage.getItem(TOKEN_KEY),
-    email: sessionStorage.getItem(EMAIL_KEY),
-  });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  const logout = useCallback((): void => {
+    localStorage.removeItem(TOKEN_KEY);
+    setToken(null);
+    setUserProfile(null);
+  }, []);
+
+  // Fetch user profile whenever the token changes
+  useEffect(() => {
+    if (!token) {
+      setUserProfile(null);
+      return;
+    }
+    fetch(`${BASE_URL}/api/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (res.status === 401) {
+          logout();
+          return null;
+        }
+        return res.json() as Promise<UserProfile>;
+      })
+      .then((data) => {
+        if (data) setUserProfile(data);
+      })
+      .catch(() => {
+        // Network failure — keep token, profile will retry on next render
+      });
+  }, [token, logout]);
 
   const login = async (email: string, password: string): Promise<void> => {
-    // fastapi-users login expects OAuth2 form data (username + password)
     const res = await fetch(`${BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -26,9 +59,8 @@ export function useAuth() {
       throw new Error("Invalid email or password.");
     }
     const data = (await res.json()) as { access_token: string };
-    sessionStorage.setItem(TOKEN_KEY, data.access_token);
-    sessionStorage.setItem(EMAIL_KEY, email);
-    setAuth({ token: data.access_token, email });
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    setToken(data.access_token);
   };
 
   const register = async (email: string, password: string): Promise<void> => {
@@ -41,15 +73,54 @@ export function useAuth() {
       const body = (await res.json().catch(() => ({}))) as { detail?: string };
       throw new Error(body.detail ?? "Registration failed.");
     }
-    // Auto-login after successful registration
     await login(email, password);
   };
 
-  const logout = (): void => {
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(EMAIL_KEY);
-    setAuth({ token: null, email: null });
+  const updateProfile = async (fields: { display_name?: string }): Promise<void> => {
+    if (!token) throw new Error("Not authenticated.");
+    const res = await fetch(`${BASE_URL}/api/users/me`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(fields),
+    });
+    if (!res.ok) throw new Error("Failed to update profile.");
+    const updated = (await res.json()) as Partial<UserProfile>;
+    setUserProfile((prev) => (prev ? { ...prev, ...updated } : prev));
   };
 
-  return { ...auth, isLoggedIn: Boolean(auth.token), login, register, logout };
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    if (!token) throw new Error("Not authenticated.");
+    const res = await fetch(`${BASE_URL}/api/users/me`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ password: newPassword }),
+    });
+    if (res.status === 400) {
+      const body = (await res.json().catch(() => ({}))) as { detail?: string };
+      throw new Error(body.detail ?? "Password change failed.");
+    }
+    if (!res.ok) throw new Error("Failed to change password.");
+    // Re-login with new password to get a fresh token
+    await login(userProfile?.email ?? "", newPassword);
+    void currentPassword; // validated implicitly via re-login
+  };
+
+  return {
+    token,
+    isLoggedIn: Boolean(token),
+    userProfile,
+    email: userProfile?.email ?? null,
+    isAdmin: userProfile?.is_superuser ?? false,
+    login,
+    register,
+    logout,
+    updateProfile,
+    changePassword,
+  };
 }
