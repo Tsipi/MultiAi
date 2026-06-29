@@ -3,6 +3,10 @@
 Run once from the project root:
     uv run python -m backend.scripts.seed_admin
 
+Credentials are read from environment variables:
+    ADMIN_EMAIL    (default: admin@teamstoa.com)
+    ADMIN_PASSWORD (required — no default for security)
+
 Safe to run multiple times — skips existing sessions and won't create a
 duplicate admin user.
 """
@@ -11,6 +15,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
+import sys
 
 from fastapi_users.password import PasswordHelper
 from sqlalchemy import select
@@ -28,8 +34,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
-ADMIN_EMAIL = "admin@localhost"
-ADMIN_PASSWORD = "admin1234"
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@teamstoa.com")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+
+if not ADMIN_PASSWORD:
+    _log.error("ADMIN_PASSWORD env var is required. Set it before running this script.")
+    sys.exit(1)
 
 CFG = AppConfig()
 _pwd = PasswordHelper()

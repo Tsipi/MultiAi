@@ -3,18 +3,25 @@
 import asyncio
 import json
 import logging
+from contextlib import asynccontextmanager
 from dataclasses import asdict
+from datetime import datetime, timezone
+from typing import AsyncIterator
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from sqlalchemy import func as sqlfunc, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.api.admin import router as admin_router
 from backend.api.auth import (
     UserCreate,
     UserRead,
     UserUpdate,
     auth_backend,
+    current_active_user,
     fastapi_users_instance,
     optional_current_user,
 )
@@ -27,15 +34,22 @@ from backend.consensus.engine import ConsensusEngine
 from backend.consensus.costs import load_live_prices
 from backend.consensus.export_title import build_export_title_prompt, normalize_export_title
 from backend.consensus.llm_clients import call_openrouter
-from backend.storage.database import _get_session_maker
-from backend.storage.db_models import User
+from backend.storage.database import _get_session_maker, get_async_session
+from backend.storage.db_models import Run, User
 from backend.storage.db_session_store import save_session as save_session_db
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
-app = FastAPI(title="Multi-LLM Consensus API")
-
 CFG = AppConfig()
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    await load_live_prices(CFG.openrouter_api_key, CFG.openrouter_base_url)
+    yield
+
+
+app = FastAPI(title="TeamStoa API", lifespan=_lifespan)
 _origins = [o.strip() for o in CFG.allowed_origins.split(",") if o.strip()]
 
 app.add_middleware(
@@ -47,7 +61,7 @@ app.add_middleware(
 )
 ENGINE = ConsensusEngine(CFG)
 
-# ── Auth routers (register, login, logout, /users/me) ────────────────────────
+# ── Auth routers ──────────────────────────────────────────────────────────────
 app.include_router(
     fastapi_users_instance.get_auth_router(auth_backend),
     prefix="/api/auth",
@@ -59,22 +73,82 @@ app.include_router(
     tags=["auth"],
 )
 app.include_router(
+    fastapi_users_instance.get_reset_password_router(),
+    prefix="/api/auth",
+    tags=["auth"],
+)
+app.include_router(
+    fastapi_users_instance.get_verify_router(UserRead),
+    prefix="/api/auth",
+    tags=["auth"],
+)
+app.include_router(
     fastapi_users_instance.get_users_router(UserRead, UserUpdate),
     prefix="/api/users",
     tags=["users"],
 )
-
 app.include_router(sessions_router)
 app.include_router(shared_router)
+app.include_router(admin_router)
 
 
-@app.on_event("startup")
-async def _startup() -> None:
-    await load_live_prices(CFG.openrouter_api_key, CFG.openrouter_base_url)
+# ── Extended /api/me — user profile + usage ───────────────────────────────────
 
+@app.get("/api/me")
+async def me(
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Return the current user's profile, usage info, and run stats."""
+    total_runs = await db.scalar(select(sqlfunc.count()).where(Run.user_id == user.id)) or 0
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "display_name": user.display_name,
+        "is_superuser": user.is_superuser,
+        "is_verified": user.is_verified,
+        "runs_this_month": user.runs_this_month,
+        "runs_quota": None if user.is_superuser else CFG.free_tier_quota,
+        "total_runs": total_runs,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
+
+
+# ── Quota helpers ─────────────────────────────────────────────────────────────
+
+async def _check_and_increment_quota(user: User) -> None:
+    """Raise 429 if user is over quota; otherwise increment their monthly counter."""
+    if user.is_superuser:
+        return
+    async with _get_session_maker()() as db:
+        result = await db.execute(select(User).where(User.id == user.id))
+        fresh = result.scalar_one_or_none()
+        if fresh is None:
+            return
+        now = datetime.now(timezone.utc)
+        reset_needed = (
+            fresh.runs_reset_at is None
+            or fresh.runs_reset_at.year != now.year
+            or fresh.runs_reset_at.month != now.month
+        )
+        if reset_needed:
+            fresh.runs_this_month = 0
+            fresh.runs_reset_at = now
+        if fresh.runs_this_month >= CFG.free_tier_quota:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    f"You have used all {CFG.free_tier_quota} runs for this month. "
+                    "Upgrade to Pro for unlimited runs."
+                ),
+            )
+        fresh.runs_this_month += 1
+        await db.commit()
+
+
+# ── Response builder ──────────────────────────────────────────────────────────
 
 def _to_response(session: DebateSession) -> ConsultResponse:
-    """Convert session object to API response schema."""
     return ConsultResponse(
         session_id=session.session_id,
         question=session.question,
@@ -132,7 +206,6 @@ async def health() -> dict:
 
 @app.post("/api/title")
 async def generate_title(payload: TitleRequest) -> dict:
-    """Generate a short (3-6 word) lowercase title from task + role."""
     q = payload.question[:2000]
     r = (payload.role or "")[:600]
     prompt = build_export_title_prompt(q, r)
@@ -149,7 +222,8 @@ async def consult(
     payload: ConsultRequest,
     user: User | None = Depends(optional_current_user),
 ) -> ConsultResponse:
-    """Run consensus session and return final result plus rounds."""
+    if user:
+        await _check_and_increment_quota(user)
     session = await ENGINE.consult(
         question=payload.question,
         domain=payload.role,
@@ -185,6 +259,9 @@ async def consult_stream(
     user: User | None = Depends(optional_current_user),
 ) -> StreamingResponse:
     """Stream activity events and final payload as NDJSON."""
+    if user:
+        await _check_and_increment_quota(user)
+
     queue: asyncio.Queue[dict] = asyncio.Queue()
     user_id = user.id if user else None
 

@@ -20,6 +20,11 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 
     __tablename__ = "users"
 
+    display_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    runs_this_month: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    runs_reset_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, server_default="now()")
+
 
 class Run(Base):
     """One debate session — maps 1:1 with a DebateSession."""

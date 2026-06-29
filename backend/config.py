@@ -38,6 +38,18 @@ class AppConfig:
     web_research_context_chars: int = int(os.getenv("WEB_RESEARCH_CONTEXT_CHARS", "12000"))
     jwt_secret: str = os.getenv("JWT_SECRET", "change-me-in-production")
     sessions_dir: Path = Path("sessions")
+    # App public URL — used in password-reset / verification email links
+    app_url: str = os.getenv("APP_URL", "http://localhost:5173")
+    # Email provider: "log" (dev, prints to console) | "resend" | "smtp"
+    email_provider: str = os.getenv("EMAIL_PROVIDER", "log")
+    email_from: str = os.getenv("EMAIL_FROM", "TeamStoa <noreply@teamstoa.com>")
+    resend_api_key: str = os.getenv("RESEND_API_KEY", "")
+    smtp_host: str = os.getenv("SMTP_HOST", "")
+    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username: str = os.getenv("SMTP_USERNAME", "")
+    smtp_password: str = os.getenv("SMTP_PASSWORD", "")
+    # Usage quota (runs per calendar month, free tier only; superusers are exempt)
+    free_tier_quota: int = int(os.getenv("FREE_TIER_QUOTA", "20"))
     max_rounds_default: int = 2
     consensus_default: int = 8
     min_relevance_score: float = 7.0
