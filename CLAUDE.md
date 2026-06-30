@@ -119,9 +119,14 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `backend/consensus/model_registry.py` | Model registry |
 | `backend/consensus/export_title.py` | Short session title generation |
 | `backend/config.py` | All constants and env var loading (`AppConfig`) |
-| `backend/api/app.py` | FastAPI app — routes, CORS, engine singleton |
+| `backend/api/app.py` | FastAPI app — routes, CORS, lifespan, quota enforcement, `/api/me` |
+| `backend/api/auth.py` | fastapi-users setup — JWT backend, UserManager, email hooks, schemas |
+| `backend/api/admin.py` | Admin-only router (`/api/admin/*`) — user list, disable/enable, stats, resend-verification |
 | `backend/api/schemas.py` | Pydantic request/response models (`ConsultRequest`, `ConsultResponse`) |
 | `backend/api/sessions.py` | Sessions sub-router (`/api/sessions/*`) |
+| `backend/services/email.py` | Email dispatch (log / Resend / SMTP) — password reset and verification emails |
+| `backend/scripts/seed_admin.py` | One-time bootstrap: creates admin user (reads `ADMIN_EMAIL`/`ADMIN_PASSWORD` env vars) + migrates JSON sessions to DB |
+| `backend/storage/db_models.py` | SQLAlchemy ORM models (`User`, `Run`, `TeamConfig`, `Output`, `File`) |
 | `backend/storage/session_store.py` | Stateless JSON session persistence |
 
 **Frontend**
@@ -142,6 +147,12 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `frontend/src/lib/utils.ts` | `cn()` — clsx + tailwind-merge |
 | `frontend/src/data/experts.ts` | Team member presets and `createDefaultTeam()` |
 | `frontend/src/data/models.ts` | Model options list |
+| `frontend/src/hooks/useAuth.ts` | Auth state — JWT in localStorage, `/api/me` profile fetch, login/register/logout/updateProfile/changePassword |
+| `frontend/src/pages/LoginPage.tsx` | Login + register form (TeamStoa branded) |
+| `frontend/src/pages/ForgotPasswordPage.tsx` | Request password-reset email |
+| `frontend/src/pages/ResetPasswordPage.tsx` | Set new password via token from email |
+| `frontend/src/pages/SettingsPage.tsx` | User settings — display name, usage quota, change password |
+| `frontend/src/pages/AdminPage.tsx` | Admin dashboard — user list, stats, disable/enable, resend verification |
 | `frontend/src/services/api.ts` | Backend fetch wrapper |
 | `frontend/src/services/attachments.ts` | File/attachment handling |
 | `frontend/src/services/pdf/exporter.ts` | Export (markdown/PDF) |

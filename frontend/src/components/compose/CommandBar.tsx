@@ -24,6 +24,8 @@ type Props = {
   onOpenAdvanced: () => void;
   activeTemplateId: string | null;
   onSelectTemplate: (template: TeamTemplate) => void;
+  quotaUsed?: number | null;
+  quotaTotal?: number | null;
 };
 
 export function CommandBar({
@@ -40,6 +42,8 @@ export function CommandBar({
   onOpenAdvanced,
   activeTemplateId,
   onSelectTemplate,
+  quotaUsed,
+  quotaTotal,
 }: Props) {
   const busy = Boolean(disabled || loading);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -129,7 +133,13 @@ export function CommandBar({
             {/* Card footer: hint left · send button right */}
             <div className="flex items-center justify-between px-4 py-2.5">
               <span className="text-[11px] text-muted-foreground/40 select-none">
-                Enter to run · Shift+Enter new line
+                {quotaTotal != null && quotaUsed != null ? (
+                  <span className={quotaUsed >= quotaTotal ? "text-amber-400/80" : ""}>
+                    {quotaUsed} / {quotaTotal} runs this month
+                  </span>
+                ) : (
+                  "Enter to run · Shift+Enter new line"
+                )}
               </span>
               <Button
                 type="button"

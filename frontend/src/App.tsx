@@ -32,6 +32,10 @@ import type { AnswerMode, ConsultPayload, ConsultResult } from "./types";
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
 import { SharedRunPage } from "./pages/SharedRunPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { AdminPage } from "./pages/AdminPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -45,7 +49,7 @@ function answerModeLabel(mode: AnswerMode): string {
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
-  const { isLoggedIn, email, logout, login, register } = useAuth();
+  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword } = useAuth();
 
   // Derive a display name from the email local-part (e.g. "tsipi@..." → "Tsipi")
   const greetingName = email
@@ -449,18 +453,41 @@ export default function App() {
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
+  // Public routes — no auth needed
   const sharedSlugMatch = location.pathname.match(/^\/shared\/(.+)$/);
-  if (sharedSlugMatch) {
-    return <SharedRunPage slug={sharedSlugMatch[1]} />;
-  }
+  if (sharedSlugMatch) return <SharedRunPage slug={sharedSlugMatch[1]} />;
+  if (location.pathname === "/forgot-password") return <ForgotPasswordPage />;
+  if (location.pathname === "/reset-password") return <ResetPasswordPage />;
 
   if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
+
+  // Protected routes — require login
+  if (location.pathname === "/settings" && userProfile) {
+    return (
+      <SettingsPage
+        userProfile={userProfile}
+        onUpdateProfile={updateProfile}
+        onChangePassword={changePassword}
+        onLogout={logout}
+      />
+    );
+  }
+  if (location.pathname === "/admin" && isAdmin && token) {
+    return <AdminPage token={token} />;
+  }
 
   const commandBarValue = loading && activeRunQuestion ? activeRunQuestion : form.question;
 
   return (
     <div className="min-h-screen flex flex-col">
-      <TopNav dark={dark} onToggleDark={toggleDark} onNewRun={startFreshNewRun} onOpenTemplates={() => setTemplatesOpen(true)} />
+      <TopNav
+        dark={dark}
+        onToggleDark={toggleDark}
+        onNewRun={startFreshNewRun}
+        onOpenTemplates={() => setTemplatesOpen(true)}
+        userProfile={userProfile}
+        onLogout={logout}
+      />
 
       <div className="flex min-h-0 flex-1 w-full flex-col md:flex-row">
         <ConsensusRunsSidebar
@@ -502,6 +529,8 @@ export default function App() {
                 onOpenAdvanced={() => setAdvancedOpen(true)}
                 activeTemplateId={activeTemplateId}
                 onSelectTemplate={handleSelectTemplate}
+                quotaUsed={userProfile?.runs_this_month ?? null}
+                quotaTotal={userProfile?.runs_quota ?? null}
               />
             )}
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -6,6 +7,7 @@ type Props = {
 };
 
 export function LoginPage({ onLogin, onRegister }: Props) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,21 +34,22 @@ export function LoginPage({ onLogin, onRegister }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-sm">
+
         {/* Brand */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 font-bold text-white text-sm shadow-md">
-            M
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 font-bold text-white text-sm shadow-md select-none">
+            T
           </div>
           <div>
-            <div className="font-bold text-lg tracking-tight text-foreground">MultiAI</div>
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Command your AI team</div>
+            <div className="font-bold text-lg tracking-tight text-foreground">TeamStoa</div>
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Your AI decision council</div>
           </div>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-border] bg-[var(--app-surface)] p-6 shadow-xl">
+        <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-6 shadow-xl">
           <h1 className="text-lg font-semibold text-foreground mb-1">
-            {mode === "login" ? "Welcome back" : "Create account"}
+            {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
             {mode === "login"
@@ -71,9 +74,20 @@ export function LoginPage({ onLogin, onRegister }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Password
+                </label>
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/forgot-password")}
+                    className="text-xs text-violet-400 hover:text-violet-300 transition"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 required
@@ -124,6 +138,10 @@ export function LoginPage({ onLogin, onRegister }: Props) {
             )}
           </div>
         </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+          © {new Date().getFullYear()} TeamStoa. All rights reserved.
+        </p>
       </div>
     </div>
   );

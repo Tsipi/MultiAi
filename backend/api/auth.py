@@ -1,11 +1,11 @@
-"""fastapi-users auth setup — register, login, JWT, current user."""
+"""fastapi-users auth setup — register, login, JWT, password reset, email verification."""
 
 from __future__ import annotations
 
 import logging
 import uuid
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, schemas
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
@@ -21,41 +21,66 @@ _cfg = AppConfig()
 JWT_LIFETIME_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
 
-# ── Pydantic schemas exposed to FastAPI routes ───────────────────────────────
+# ── Pydantic schemas ──────────────────────────────────────────────────────────
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+    display_name: str | None = None
+    runs_this_month: int = 0
 
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    display_name: str | None = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    pass
+    display_name: str | None = None
 
 
-# ── Database adapter ─────────────────────────────────────────────────────────
+# ── Database adapter ──────────────────────────────────────────────────────────
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)
 
 
-# ── User manager (business logic: registration, password reset, etc.) ────────
+# ── User manager ──────────────────────────────────────────────────────────────
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = _cfg.jwt_secret
     verification_token_secret = _cfg.jwt_secret
 
-    async def on_after_register(self, user: User, request=None) -> None:
+    async def on_after_register(self, user: User, request: Request | None = None) -> None:
         _log.info("New user registered: %s", user.email)
+
+    async def on_after_forgot_password(
+        self, user: User, token: str, request: Request | None = None
+    ) -> None:
+        from backend.services.email import send_password_reset_email
+        try:
+            await send_password_reset_email(user.email, token, _cfg)
+        except Exception:
+            _log.exception("Failed to send password reset email to %s", user.email)
+
+    async def on_after_reset_password(self, user: User, request: Request | None = None) -> None:
+        _log.info("Password reset for user: %s", user.email)
+
+    async def on_after_request_verify(
+        self, user: User, token: str, request: Request | None = None
+    ) -> None:
+        from backend.services.email import send_verification_email
+        try:
+            await send_verification_email(user.email, token, _cfg)
+        except Exception:
+            _log.exception("Failed to send verification email to %s", user.email)
+
+    async def on_after_verify(self, user: User, request: Request | None = None) -> None:
+        _log.info("User verified: %s", user.email)
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
 
 
-# ── JWT authentication backend ───────────────────────────────────────────────
+# ── JWT authentication backend ────────────────────────────────────────────────
 
 _bearer_transport = BearerTransport(tokenUrl="/api/auth/login")
 
@@ -70,12 +95,9 @@ auth_backend = AuthenticationBackend(
     get_strategy=_get_jwt_strategy,
 )
 
-# ── Main FastAPIUsers instance ───────────────────────────────────────────────
+# ── FastAPIUsers instance ─────────────────────────────────────────────────────
 
 fastapi_users_instance = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
 
-# Dependency injected into routes that need the logged-in user
 current_active_user = fastapi_users_instance.current_user(active=True)
-
-# Same but returns None instead of 401 when no token is present
 optional_current_user = fastapi_users_instance.current_user(active=True, optional=True)

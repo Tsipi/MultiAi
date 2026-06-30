@@ -92,13 +92,19 @@ Full spec: `docs/plan_archive/PLAN_v5.0.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 5.0.1 | Auth Audit And Role Model | Planned |
-| 5.0.2 | New Login And Registration UX | Planned |
-| 5.0.3 | Regular User Settings | Planned |
-| 5.0.4 | Admin Area | Planned |
-| 5.0.5 | Usage Quotas And Billing Preparation | Planned |
-| 5.0.6 | Permissions And API Hardening | Planned |
-| 5.0.7 | Deployment And Operations | Planned |
+| 5.0.1 | Auth Audit And Role Model | **Done** |
+| 5.0.2 | New Login And Registration UX | **Done** |
+| 5.0.3 | Regular User Settings | **Done** |
+| 5.0.4 | Admin Area | **Done** |
+| 5.0.5 | Usage Quotas And Billing Preparation | **Done** |
+| 5.0.6 | Permissions And API Hardening | **Done** |
+| 5.0.7 | Deployment And Operations | **Done** |
+
+---
+
+## v5.1 fixes subphase
+
+Full spec: `docs/plan_archive/PLAN_v5.1.md`
 
 ---
 
