@@ -51,10 +51,9 @@ export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword } = useAuth();
 
-  // Derive a display name from the email local-part (e.g. "tsipi@..." → "Tsipi")
-  const greetingName = email
-    ? (() => { const local = email.split("@")[0]; return local.charAt(0).toUpperCase() + local.slice(1); })()
-    : "there";
+  const emailLocal = email?.split("@")[0];
+  const greetingName = userProfile?.display_name
+    ?? (emailLocal ? emailLocal.charAt(0).toUpperCase() + emailLocal.slice(1) : "there");
 
   // ─── Routing ───────────────────────────────────────────────────────────────
   const navigate = useNavigate();
