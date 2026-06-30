@@ -1,54 +1,41 @@
-# Version 5.1 - Fixing - New Login, Auth, Admin, And User Settings
+# Version 5.1 - Auth And Settings Polish
 
-**Scope:** Fix some issues and complete Version 5.0 uncompleted itmes 
-**Status:** TODO  
-**Depends on:** Existing v5.0
+**Scope:** Fix issues and complete actionable deferred items from v5.0.  
+**Status:** In Progress  
+**Depends on:** v5.0 complete
 
 ---
+
 ## Phase 5.1.0 - Login Fixes
 
-- [ ] When user set a Display Name on the Setting page - it should be visible as the greetingName
-- 
-
-
----
-
-## Phase 5.1.1 - deffered item from Auth Audit And Role Model
-
-- [ ] Document admin, regular user, and public/shared-viewer permission matrix — decisions are in code; formal doc deferred
-- [ ] add avisibility icon or an Eye to view/hide the passwords inside input on the Setting page
-- [ ] setting page should be visible in the main content area and replace the whole main section. 
+- [X] Display Name saved in Settings is now used as the greetingName in the compose bar
+- [X] Add TeamStoaIcon component and update branding across pages
 
 ---
 
-## Phase 5.1.2 - deffered item from TeamStoa Rebrand And Login/Registration UX
+## Phase 5.1.1 - Settings Polish
 
-- [ ] Add Google OAuth (social login) — deferred; fastapi-users supports it but requires Google Console credentials
----
-
-## Phase 5.1.3 - deffered item from Regular User Settings
-
-- [ ] Add Google account connection/disconnection — deferred (no OAuth yet)
-- [ ] Add default run preferences: answer mode, web research mode, default team template — deferred to v5.1
-- [ ] Add data and privacy controls: "Export my data", "Delete my account" — deferred to v5.1
-- [ ] Add notification preferences — deferred (no email notifications yet)
+- [ ] Add a password visibility toggle (eye icon) on all password inputs — Settings and Login pages
+- [ ] Settings page renders inside the main app shell (sidebar + TopNav stay visible) instead of replacing the whole screen
+- [ ] Document admin / regular user / public-viewer permission matrix as a short `.md` file
 
 ---
 
-## Phase 5.1.4 - deffered item from Admin Area
+## Phase 5.1.2 - Regular User Settings
 
-- [ ] Reset password link for a user from admin — deferred
-- [ ] Add an "impersonate / view as" capability — deferred (complex, security-sensitive)
-- [ ] Add run/session visibility for admins — deferred
+- [ ] Add default run preferences: answer mode, web research mode, default team template — stored on the user record, applied when the compose form initializes
+- [ ] Add data and privacy controls: "Export my data" (download sessions as JSON/ZIP) and "Delete my account" (permanent, with confirmation)
 
 ---
 
-## Phase 5.1.6 - deffered item from Permissions And API Hardening
+## Phase 5.1.3 - Admin Improvements
 
-- [ ] Add rate limiting at the API level for auth endpoints — deferred; needs `slowapi` added to requirements
-- [ ] Add tests for auth/admin/quota/scoping — deferred to v5.1
+- [ ] Admin can trigger a password-reset email for any user (button in the user list → calls existing `UserManager.forgot_password()` flow; admin never sees the token)
+- [ ] Admin can browse any user's sessions from the admin panel (read-only)
 
+---
 
-## Phase 5.2.0 - deffered item Acceptance Criteria
+## Phase 5.1.4 - API Hardening And Tests
 
-- [ ] Tests cover auth state, user scoping, admin-only behavior, and quota enforcement. 
+- [ ] Add rate limiting on auth endpoints (`/auth/login`, `/auth/register`, `/auth/forgot-password`) — needs `slowapi` added to `requirements.txt`
+- [ ] Add automated tests covering: auth state, user session scoping, admin-only behavior, and quota enforcement

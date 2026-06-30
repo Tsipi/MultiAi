@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Moon, Plus, Settings, Shield, Sun, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { UserProfile } from "@/hooks/useAuth";
+import { TemplateShortcutRow } from "../team";
+import { TeamStoaIcon } from "./TeamStoaIcon";
 
 type Props = {
   dark: boolean;
@@ -16,10 +18,10 @@ type Props = {
 function BrandMark() {
   return (
     <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 font-display text-[13px] font-bold text-white shadow-md select-none"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-700 to-violet-400 font-display text-[13px] font-bold text-white shadow-md select-none"
       aria-hidden
     >
-      T
+      <TeamStoaIcon className="h-8 w-8" />
     </div>
   );
 }
@@ -118,7 +120,7 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProf
           <BrandMark />
           <div className="flex min-w-0 flex-col gap-0">
             <span className="font-display truncate font-bold text-base sm:text-lg tracking-tight text-foreground select-none">
-              TeamStoa
+              Team<span className="font-display font-bold text-base sm:text-lg tracking-tight text-foreground text-violet-700">Stoa</span>
             </span>
             <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:block truncate">
               Your AI decision council

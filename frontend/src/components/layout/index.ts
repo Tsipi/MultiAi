@@ -2,3 +2,4 @@
 export { TopNav } from "./TopNav";
 export { ConsensusRunsSidebar, RUNS_SIDEBAR_STORAGE_KEY } from "./ConsensusRunsSidebar";
 export { Sidebar } from "./Sidebar";
+export { TeamStoaIcon } from "./TeamStoaIcon";
