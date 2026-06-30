@@ -1,3 +1,4 @@
+import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -62,11 +63,14 @@ export function ResetPasswordPage() {
 
         {/* Brand */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 font-bold text-white text-sm shadow-md select-none">
-            T
-          </div>
+          <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-700 to-violet-400 font-display text-[13px] font-bold text-white shadow-md select-none"
+                aria-hidden
+              >
+                <TeamStoaIcon className="h-8 w-8" />
+              </div>
           <div>
-            <div className="font-bold text-lg tracking-tight text-foreground">TeamStoa</div>
+            <div className="font-bold text-lg tracking-tight text-foreground">Team<span className="font-display font-bold text-base sm:text-lg tracking-tight text-foreground text-violet-700">Stoa</span></div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Your AI decision council</div>
           </div>
         </div>

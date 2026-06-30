@@ -8,7 +8,7 @@
 ## Phase 5.1.0 - Login Fixes
 
 - [ ] When user set a Display Name on the Setting page - it should be visible as the greetingName
-- 
+- [X] add TeamStoaIcon component and update branding in multiple pages
 
 
 ---
@@ -17,7 +17,7 @@
 
 - [ ] Document admin, regular user, and public/shared-viewer permission matrix — decisions are in code; formal doc deferred
 - [ ] add avisibility icon or an Eye to view/hide the passwords inside input on the Setting page
-- [ ] setting page should be visible in the main content area and replace the whole main section. 
+- [ ] setting page should be visible in the main content area and replace the whole main section.
 
 ---
 
