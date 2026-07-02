@@ -24,6 +24,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     runs_this_month: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     runs_reset_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, server_default="now()")
+    pref_answer_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    pref_web_research_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    pref_team_template: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class Run(Base):

@@ -3,15 +3,22 @@
 import asyncio
 import json
 import logging
+import time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import AsyncIterator
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from sqlalchemy import delete as sql_delete
 from sqlalchemy import func as sqlfunc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,6 +49,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 
 CFG = AppConfig()
 
+limiter = Limiter(key_func=get_remote_address)
+
+# In-memory store for auth-specific rate limiting (stricter than the global limit)
+_auth_windows: dict[str, list[float]] = defaultdict(list)
+_AUTH_RATE_LIMIT = 10   # max requests
+_AUTH_WINDOW_SECS = 60  # per minute
+_AUTH_PATHS = {"/api/auth/login", "/api/auth/register", "/api/auth/forgot-password"}
+
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -50,8 +65,11 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="TeamStoa API", lifespan=_lifespan)
-_origins = [o.strip() for o in CFG.allowed_origins.split(",") if o.strip()]
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
+_origins = [o.strip() for o in CFG.allowed_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
@@ -59,6 +77,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _auth_rate_limit(request: Request, call_next):
+    """Stricter per-IP rate limit on auth mutation endpoints."""
+    if request.url.path in _AUTH_PATHS and request.method == "POST":
+        ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        cutoff = now - _AUTH_WINDOW_SECS
+        _auth_windows[ip] = [t for t in _auth_windows[ip] if t > cutoff]
+        if len(_auth_windows[ip]) >= _AUTH_RATE_LIMIT:
+            return JSONResponse(
+                {"detail": "Too many requests. Please wait a minute before trying again."},
+                status_code=429,
+            )
+        _auth_windows[ip].append(now)
+    return await call_next(request)
 ENGINE = ConsensusEngine(CFG)
 
 # ── Auth routers ──────────────────────────────────────────────────────────────
@@ -111,7 +146,99 @@ async def me(
         "runs_quota": None if user.is_superuser else CFG.free_tier_quota,
         "total_runs": total_runs,
         "created_at": user.created_at.isoformat() if user.created_at else None,
+        "pref_answer_mode": user.pref_answer_mode,
+        "pref_web_research_mode": user.pref_web_research_mode,
+        "pref_team_template": user.pref_team_template,
     }
+
+
+# ── Preferences ──────────────────────────────────────────────────────────────
+
+class PreferencesUpdate(BaseModel):
+    pref_answer_mode: str | None = None
+    pref_web_research_mode: str | None = None
+    pref_team_template: str | None = None
+
+
+@app.patch("/api/me/preferences")
+async def update_preferences(
+    body: PreferencesUpdate,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> dict:
+    result = await db.execute(select(User).where(User.id == user.id))
+    u = result.scalar_one()
+    if body.pref_answer_mode is not None:
+        u.pref_answer_mode = body.pref_answer_mode or None
+    if body.pref_web_research_mode is not None:
+        u.pref_web_research_mode = body.pref_web_research_mode or None
+    if body.pref_team_template is not None:
+        u.pref_team_template = body.pref_team_template or None
+    await db.commit()
+    return {
+        "pref_answer_mode": u.pref_answer_mode,
+        "pref_web_research_mode": u.pref_web_research_mode,
+        "pref_team_template": u.pref_team_template,
+    }
+
+
+# ── Account data export / deletion ───────────────────────────────────────────
+
+@app.get("/api/account/export")
+async def export_account_data(
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> JSONResponse:
+    """Download all sessions and account metadata as a JSON file."""
+    from sqlalchemy.orm import selectinload
+    runs = (
+        await db.execute(
+            select(Run)
+            .where(Run.user_id == user.id)
+            .options(selectinload(Run.output))
+            .order_by(Run.created_at)
+        )
+    ).scalars().all()
+    data = {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "user": {
+            "email": user.email,
+            "display_name": user.display_name,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+        },
+        "sessions": [
+            {
+                "session_id": r.session_id,
+                "title": r.title,
+                "prompt": r.prompt,
+                "created_at": r.created_at.isoformat(),
+                "visibility": r.visibility,
+                "is_followup": r.is_followup,
+                "data": r.output.full_session_json if r.output else None,
+            }
+            for r in runs
+        ],
+    }
+    filename = f"teamstoa-export-{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+    return JSONResponse(
+        content=data,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.delete("/api/account")
+async def delete_account(
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> dict:
+    """Permanently delete the current user and all their data."""
+    # Delete runs explicitly so cascade handles outputs/team_configs/files
+    runs = (await db.execute(select(Run).where(Run.user_id == user.id))).scalars().all()
+    for run in runs:
+        await db.delete(run)
+    await db.delete(user)
+    await db.commit()
+    return {"detail": "Account and all associated data have been deleted."}
 
 
 # ── Quota helpers ─────────────────────────────────────────────────────────────
@@ -125,7 +252,7 @@ async def _check_and_increment_quota(user: User) -> None:
         fresh = result.scalar_one_or_none()
         if fresh is None:
             return
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         reset_needed = (
             fresh.runs_reset_at is None
             or fresh.runs_reset_at.year != now.year

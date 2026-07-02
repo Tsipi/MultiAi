@@ -49,7 +49,7 @@ function answerModeLabel(mode: AnswerMode): string {
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
-  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword } = useAuth();
+  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword, savePreferences } = useAuth();
 
   const emailLocal = email?.split("@")[0];
   const greetingName = userProfile?.display_name
@@ -450,6 +450,23 @@ export default function App() {
     onShareToggle: handleShareToggle,
   };
 
+  // ─── Apply saved preferences once per login session ───────────────────────
+  const prefsAppliedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!userProfile || prefsAppliedForRef.current === userProfile.id) return;
+    prefsAppliedForRef.current = userProfile.id;
+    if (userProfile.pref_answer_mode) {
+      setForm((f) => ({ ...f, answer_mode: userProfile.pref_answer_mode as AnswerMode }));
+    }
+    if (userProfile.pref_web_research_mode) {
+      setForm((f) => ({ ...f, web_search_mode: userProfile.pref_web_research_mode as typeof f.web_search_mode }));
+    }
+    if (userProfile.pref_team_template) {
+      const tpl = TEAM_TEMPLATES.find((t) => t.id === userProfile.pref_team_template);
+      if (tpl) { setTeam(tpl.members); setActiveTemplateId(tpl.id); }
+    }
+  }, [userProfile]);
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   // Public routes — no auth needed
@@ -460,21 +477,8 @@ export default function App() {
 
   if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 
-  // Protected routes — require login
-  if (location.pathname === "/settings" && userProfile) {
-    return (
-      <SettingsPage
-        userProfile={userProfile}
-        onUpdateProfile={updateProfile}
-        onChangePassword={changePassword}
-        onLogout={logout}
-      />
-    );
-  }
-  if (location.pathname === "/admin" && isAdmin && token) {
-    return <AdminPage token={token} />;
-  }
-
+  const isSettingsRoute = location.pathname === "/settings" && Boolean(userProfile);
+  const isAdminRoute = location.pathname === "/admin" && isAdmin && Boolean(token);
   const commandBarValue = loading && activeRunQuestion ? activeRunQuestion : form.question;
 
   return (
@@ -505,61 +509,74 @@ export default function App() {
         />
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-14 sm:gap-6 sm:px-4 sm:py-6 sm:pb-16">
+          {isSettingsRoute && userProfile && token ? (
+            <SettingsPage
+              userProfile={userProfile}
+              token={token}
+              onUpdateProfile={updateProfile}
+              onChangePassword={changePassword}
+              onSavePreferences={savePreferences}
+              onLogout={logout}
+            />
+          ) : isAdminRoute && token ? (
+            <AdminPage token={token} />
+          ) : (
+            <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-14 sm:gap-6 sm:px-4 sm:py-6 sm:pb-16">
 
-            {toast && (
-              <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 text-foreground px-3 py-2.5 text-sm" role="status">
-                {toast}
+              {toast && (
+                <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 text-foreground px-3 py-2.5 text-sm" role="status">
+                  {toast}
+                </div>
+              )}
+
+              {!displayResult && (
+                <CommandBar
+                  value={commandBarValue}
+                  greetingName={greetingName}
+                  team={team}
+                  loading={loading}
+                  disabled={loading}
+                  attachments={attachments}
+                  onAttachmentsChange={setAttachments}
+                  onChange={(question) => setForm((f) => ({ ...f, question }))}
+                  onSubmit={() => runConsult()}
+                  onAddTeamMember={addTeamMember}
+                  onOpenAdvanced={() => setAdvancedOpen(true)}
+                  activeTemplateId={activeTemplateId}
+                  onSelectTemplate={handleSelectTemplate}
+                  quotaUsed={userProfile?.runs_this_month ?? null}
+                  quotaTotal={userProfile?.runs_quota ?? null}
+                />
+              )}
+
+              <div ref={mainPanelRef} className="consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
+                <ChatPanel {...panelProps} />
               </div>
-            )}
 
-            {!displayResult && (
-              <CommandBar
-                value={commandBarValue}
-                greetingName={greetingName}
+              <AdvancedDrawer
+                open={advancedOpen}
+                onOpenChange={setAdvancedOpen}
+                form={form}
                 team={team}
-                loading={loading}
-                disabled={loading}
                 attachments={attachments}
+                loading={loading}
+                canSubmit={Boolean(form.question.trim())}
+                onFormChange={setForm}
+                onTeamChange={setTeam}
                 onAttachmentsChange={setAttachments}
-                onChange={(question) => setForm((f) => ({ ...f, question }))}
                 onSubmit={() => runConsult()}
-                onAddTeamMember={addTeamMember}
-                onOpenAdvanced={() => setAdvancedOpen(true)}
-                activeTemplateId={activeTemplateId}
-                onSelectTemplate={handleSelectTemplate}
-                quotaUsed={userProfile?.runs_this_month ?? null}
-                quotaTotal={userProfile?.runs_quota ?? null}
               />
-            )}
 
-            <div ref={mainPanelRef} className="consensus-shell scroll-mt-24 rounded-2xl border border-violet-500/15 p-3 sm:p-4">
-              <ChatPanel {...panelProps} />
+              <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
+
+              <TemplateDrawer
+                open={templatesOpen}
+                onClose={() => setTemplatesOpen(false)}
+                activeTemplateId={activeTemplateId}
+                onSelect={handleSelectTemplate}
+              />
             </div>
-
-            <AdvancedDrawer
-              open={advancedOpen}
-              onOpenChange={setAdvancedOpen}
-              form={form}
-              team={team}
-              attachments={attachments}
-              loading={loading}
-              canSubmit={Boolean(form.question.trim())}
-              onFormChange={setForm}
-              onTeamChange={setTeam}
-              onAttachmentsChange={setAttachments}
-              onSubmit={() => runConsult()}
-            />
-
-            <InsightsDrawer open={insightsOpen} onOpenChange={setInsightsOpen} result={displayResult} />
-
-            <TemplateDrawer
-              open={templatesOpen}
-              onClose={() => setTemplatesOpen(false)}
-              activeTemplateId={activeTemplateId}
-              onSelect={handleSelectTemplate}
-            />
-          </div>
+          )}
         </main>
       </div>
     </div>

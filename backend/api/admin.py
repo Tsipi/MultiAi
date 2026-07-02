@@ -127,6 +127,52 @@ async def admin_enable_user(
     return {"id": str(user.id), "is_active": True}
 
 
+@router.post("/users/{user_id}/send-reset-password")
+async def admin_send_reset_password(
+    user_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    admin: User = Depends(_require_admin),
+    user_manager=Depends(get_user_manager),
+) -> dict:
+    """Trigger a password-reset email for a specific user."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+    await user_manager.forgot_password(user, request)
+    _log.info("Admin %s triggered password reset for %s", admin.email, user.email)
+    return {"detail": "Password reset email sent."}
+
+
+@router.get("/users/{user_id}/sessions")
+async def admin_user_sessions(
+    user_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    _: User = Depends(_require_admin),
+) -> list[dict]:
+    """Return the 50 most recent sessions for a specific user."""
+    from backend.storage.db_models import Run
+    runs = (
+        await db.execute(
+            select(Run)
+            .where(Run.user_id == user_id)
+            .order_by(Run.created_at.desc())
+            .limit(50)
+        )
+    ).scalars().all()
+    return [
+        {
+            "session_id": r.session_id,
+            "title": r.title or r.prompt[:60],
+            "created_at": r.created_at.isoformat(),
+            "visibility": r.visibility,
+            "is_followup": r.is_followup,
+        }
+        for r in runs
+    ]
+
+
 @router.post("/users/{user_id}/resend-verification")
 async def admin_resend_verification(
     user_id: str,

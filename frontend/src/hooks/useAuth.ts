@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-const TOKEN_KEY = "teamstoa_auth_token";
+import { clearAuthToken, getAuthToken, setAuthToken } from "@/lib/authToken";
 
-export interface UserProfile {
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+
+export interface UserPreferences {
+  pref_answer_mode: string | null;
+  pref_web_research_mode: string | null;
+  pref_team_template: string | null;
+}
+
+export interface UserProfile extends UserPreferences {
   id: string;
   email: string;
   display_name: string | null;
@@ -16,11 +23,11 @@ export interface UserProfile {
 }
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(() => getAuthToken());
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const logout = useCallback((): void => {
-    localStorage.removeItem(TOKEN_KEY);
+    clearAuthToken();
     setToken(null);
     setUserProfile(null);
   }, []);
@@ -59,7 +66,7 @@ export function useAuth() {
       throw new Error("Invalid email or password.");
     }
     const data = (await res.json()) as { access_token: string };
-    localStorage.setItem(TOKEN_KEY, data.access_token);
+    setAuthToken(data.access_token);
     setToken(data.access_token);
   };
 
@@ -111,6 +118,21 @@ export function useAuth() {
     void currentPassword; // validated implicitly via re-login
   };
 
+  const savePreferences = async (prefs: Partial<UserPreferences>): Promise<void> => {
+    if (!token) throw new Error("Not authenticated.");
+    const res = await fetch(`${BASE_URL}/api/me/preferences`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(prefs),
+    });
+    if (!res.ok) throw new Error("Failed to save preferences.");
+    const updated = (await res.json()) as Partial<UserPreferences>;
+    setUserProfile((prev) => (prev ? { ...prev, ...updated } : prev));
+  };
+
   return {
     token,
     isLoggedIn: Boolean(token),
@@ -122,5 +144,6 @@ export function useAuth() {
     logout,
     updateProfile,
     changePassword,
+    savePreferences,
   };
 }

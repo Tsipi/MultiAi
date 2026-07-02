@@ -1,4 +1,5 @@
 import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -92,14 +93,13 @@ export function LoginPage({ onLogin, onRegister }: Props) {
                   </button>
                 )}
               </div>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="rounded-lg border border-input bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition"
+                className="rounded-lg border border-input bg-[var(--bg)] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition w-full"
               />
             </div>
 
