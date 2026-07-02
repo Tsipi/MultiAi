@@ -1,9 +1,10 @@
 import { AttachmentFileRef, ConsultPayload, ConsultResult, StreamHandlers } from "../types";
+import { getAuthToken } from "../lib/authToken";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 function authHeaders(): Record<string, string> {
-  const token = sessionStorage.getItem("auth_token");
+  const token = getAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

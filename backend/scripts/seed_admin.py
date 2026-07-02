@@ -4,7 +4,7 @@ Run once from the project root:
     uv run python -m backend.scripts.seed_admin
 
 Credentials are read from environment variables:
-    ADMIN_EMAIL    (default: admin@teamstoa.com)
+    ADMIN_EMAIL    (default: admin@localhost)
     ADMIN_PASSWORD (required — no default for security)
 
 Safe to run multiple times — skips existing sessions and won't create a
@@ -34,7 +34,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@teamstoa.com")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@localhost")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
 if not ADMIN_PASSWORD:
