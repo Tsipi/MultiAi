@@ -11,3 +11,4 @@ alembic
 asyncpg
 fastapi-users[sqlalchemy]
 bcrypt
+slowapi
