@@ -20,7 +20,7 @@ export function ComposerAdvanced(props: Props) {
     <div className="grid gap-4">
       <V2SectionHeader
         eyebrow="Your AI team"
-        subtitle="Build your dream team: add up to 6 Writers and 6 Critics, each with their own model, name, and area of focus. They'll debate your question round by round until they reach a consensus."
+        subtitle="Build your dream team: add Writers and Critics, each with their own model, name, and area of focus. They'll debate your question round by round until they reach a consensus."
         tip="Double-click any roster card to edit name, seat, model, and strengths."
       />
       <div className="grid gap-1.5">
