@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MobileFollowupSheet } from "@/components/layout/MobileFollowupSheet";
 import { AnswerMode, ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
 import { ClarificationBox } from "../session/ClarificationBox";
@@ -60,6 +61,7 @@ type Props = {
   onOpenInsights?: () => void;
   onOpenAdvanced?: () => void;
   onShareToggle?: () => void | Promise<void>;
+  onCloseFollowup?: () => void;
 };
 
 export function ChatPanel(props: Props) {
@@ -84,12 +86,21 @@ export function ChatPanel(props: Props) {
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
   const showPreviousFullDebate = showFullDiscussion && !loading && (result?.full_discussion.length ?? 0) > 0;
 
-  // Scroll to the follow-up composer whenever it opens
+  // Scroll to the follow-up composer whenever it opens (desktop inline form)
   useEffect(() => {
     if (props.followupOpen) {
       followupRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [props.followupOpen]);
+
+  // Scroll to top when the debate finishes so PinnedAnswer is immediately visible
+  const prevLoadingRef = useRef(false);
+  useEffect(() => {
+    if (prevLoadingRef.current && !loading && result) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    prevLoadingRef.current = loading;
+  }, [loading, result]);
 
   // Scroll to the clarification box when it appears mid-session (e.g. after a follow-up)
   useEffect(() => {
@@ -257,6 +268,17 @@ export function ChatPanel(props: Props) {
   }
 
   return (
+    <>
+    <MobileFollowupSheet
+      isOpen={props.followupOpen}
+      onClose={props.onCloseFollowup ?? (() => {})}
+      followupInstruction={props.followupInstruction}
+      followupConstraints={props.followupConstraints}
+      onFollowupInstructionChange={props.onFollowupInstructionChange}
+      onFollowupConstraintsChange={props.onFollowupConstraintsChange}
+      onSubmit={props.onSubmitFollowup}
+      loading={loading}
+    />
     <section className="grid gap-4">
       {/* Main content: Question, answer, discussion */}
       <div className="grid gap-4">
@@ -324,7 +346,7 @@ export function ChatPanel(props: Props) {
               includeFullDebate={includeFullDebate}
               onIncludeFullDebateChange={setIncludeFullDebate}
             />
-            <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground">
+            <div className="flex min-w-0 flex-wrap items-center justify-start gap-x-3 gap-y-1 px-1 text-xs text-muted-foreground sm:justify-end">
               {result.full_discussion.length > 0 && (
                 <span>
                   {result.full_discussion.length} round
@@ -478,6 +500,7 @@ export function ChatPanel(props: Props) {
         )}
       </div>
     </section>
+    </>
   );
 }
 

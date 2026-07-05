@@ -5,7 +5,7 @@ export function useDarkMode(): [boolean, () => void] {
     if (typeof window === "undefined") return false;
     const stored = localStorage.getItem("theme");
     if (stored) return stored === "dark";
-    return true;
+    return false;
   });
 
   useEffect(() => {

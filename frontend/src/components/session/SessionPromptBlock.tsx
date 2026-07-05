@@ -135,9 +135,9 @@ export function SessionPromptBlock({
         </div>
       ) : null}
 
-      {/* Follow-up compose area (open when user clicks Ask follow-up) */}
+      {/* Follow-up compose area — desktop only; mobile uses MobileFollowupSheet */}
       {followupOpen && (
-        <div className="rounded-lg border border-violet-500/15 bg-card/50 p-3 space-y-3">
+        <div className="hidden md:block rounded-lg border border-violet-500/15 bg-card/50 p-3 space-y-3">
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">
               Follow-up task or question
@@ -264,8 +264,9 @@ export function SessionPromptBlock({
         </div>
       ) : null}
 
+      {/* Follow-up compose area — desktop only; mobile uses MobileFollowupSheet */}
       {followupOpen && (
-        <div className="rounded-lg border border-violet-500/15 bg-card/50 p-3 space-y-3">
+        <div className="hidden md:block rounded-lg border border-violet-500/15 bg-card/50 p-3 space-y-3">
           <div>
             <label className="block text-sm font-semibold text-foreground mb-2">
               Follow-up task or question
@@ -329,28 +330,28 @@ export function SessionPromptBlock({
   return (
     <section className="grid gap-2">
       {isSavedAnswer ? (
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="flex flex-col gap-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
                 Viewing saved answer
               </h2>
               {teamTemplateName && <TemplateNameChip name={teamTemplateName} />}
             </div>
             <p className="text-sm text-muted-foreground">
-              This answer is from a previous run{result.session_id ? <> (session <span className="font-mono">{result.session_id}</span>)</> : ""}.
+              This answer is from a previous run{result.session_id ? <> (session <span className="font-mono text-xs">{result.session_id}</span>)</> : ""}.
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end shrink-0">
-            {onStartNewSession && (
+          {onStartNewSession && (
+            <div className="flex shrink-0 items-center">
               <SessionViewActions
                 hasResult={true}
                 onNewQuestion={onStartNewSession}
                 onOpenInsights={onOpenInsights ?? (() => {})}
                 onOpenAdvanced={onOpenAdvanced ?? (() => {})}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       ) : null}
 

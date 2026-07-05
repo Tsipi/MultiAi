@@ -114,7 +114,7 @@ function UserMenu({ userProfile, onLogout }: { userProfile: UserProfile; onLogou
 
 export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProfile, onLogout }: Props) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--app-surface)]/92 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-[#ffffff08] bg-[var(--app-surface)]/92 backdrop-blur-xl pt-safe">
       <div className="flex h-14 w-full max-w-[1600px] mx-auto items-center justify-between gap-3 px-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <BrandMark />

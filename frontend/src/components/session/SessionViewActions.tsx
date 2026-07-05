@@ -15,7 +15,7 @@ export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, o
         type="button"
         variant="ghost"
         size="sm"
-        className="h-9 rounded-xl border border-violet-300/45 bg-violet-50 px-3 text-xs font-semibold text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
+        className="min-h-[44px] rounded-xl border border-violet-300/45 bg-violet-50 px-3 text-xs font-semibold text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
         onClick={onNewQuestion}
       >
         + New question
@@ -25,7 +25,7 @@ export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, o
         variant="ghost"
         size="icon"
         disabled={!hasResult}
-        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800 disabled:opacity-40"
+        className="min-h-[44px] min-w-[44px] rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800 disabled:opacity-40"
         onClick={onOpenInsights}
         aria-label="Open session insights"
       >
@@ -35,7 +35,7 @@ export function SessionViewActions({ hasResult, onNewQuestion, onOpenInsights, o
         type="button"
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
+        className="min-h-[44px] min-w-[44px] rounded-xl border border-violet-300/45 bg-violet-50 text-violet-700 hover:border-violet-400/70 hover:bg-violet-100 hover:shadow-md hover:text-violet-800"
         onClick={onOpenAdvanced}
         aria-label="Open advanced setup"
       >

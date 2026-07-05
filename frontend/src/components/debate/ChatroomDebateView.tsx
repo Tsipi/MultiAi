@@ -221,7 +221,7 @@ export function ChatroomDebateView({
           onScroll={handleScroll}
           className={cn(
             "flex-1 overflow-y-auto px-2 py-2 space-y-0.5",
-            prominent ? "max-h-[min(56vh,560px)]" : "max-h-[min(48vh,480px)]",
+            prominent ? "max-h-[min(56dvh,560px)]" : "max-h-[min(48dvh,480px)]",
             "min-h-[120px]"
           )}
         >

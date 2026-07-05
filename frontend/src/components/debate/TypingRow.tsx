@@ -13,7 +13,7 @@ export function TypingRow({ label, avatar, action = "is typing" }: Props) {
           event.currentTarget.src = DEBATE_SYSTEM_AVATAR;
         }}
       />
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
         <span className="font-medium">{label}</span>
         <span>{action}</span>
         <span className="flex items-center gap-0.5 ml-0.5">
