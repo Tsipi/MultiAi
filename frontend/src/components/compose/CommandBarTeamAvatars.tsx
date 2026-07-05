@@ -16,12 +16,19 @@ function shortRole(role: string): string {
   return role.split(" —")[0].split(" - ")[0].trim();
 }
 
-/** Roster preview: avatars with model badges; double-click opens Advanced setup; + adds a critic. */
+/**
+ * Roster preview: avatars with model badges.
+ * Mobile  — inline "+" circle at the end of the scrollable avatar row; no external buttons.
+ * Desktop — separate "+ Add member" text button beside the avatar row.
+ * Tapping/clicking anywhere on the avatar strip opens the Advanced setup.
+ */
 export function CommandBarTeamAvatars({ team, disabled, showRoles, onAddTeamMember, onOpenAdvanced }: Props) {
   return (
-    <div className="flex max-w-[min(100%,320px)] shrink-0 items-center justify-end gap-1.5 sm:max-w-none">
-      <div
-        className="min-w-0">
+    // Mobile: full-width row so nothing overflows. Desktop: auto-width right-aligned.
+    <div className="flex w-full items-center gap-1.5 sm:w-auto sm:justify-end">
+
+      {/* ── Scrollable avatar strip ── */}
+      <div className="min-w-0 flex-1 sm:flex-none">
         <div
           className={cn(
             "flex overflow-x-auto scrollbar-hide rounded-xl border border-transparent",
@@ -29,17 +36,23 @@ export function CommandBarTeamAvatars({ team, disabled, showRoles, onAddTeamMemb
             "hover:border-violet-400/35 hover:bg-violet-500/[0.06]",
             "cursor-pointer"
           )}
-          role="group"
+          role="button"
           tabIndex={0}
-          title="Double-click to open Advanced setup"
-          aria-label="Team roster. Double-click to open Advanced setup."
-          onDoubleClick={(e) => {
-            e.preventDefault();
-            onOpenAdvanced();
+          title="Tap to edit team and advanced settings"
+          aria-label="Team roster — tap to open Advanced setup"
+          onClick={(e) => { e.preventDefault(); onOpenAdvanced(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenAdvanced(); }
           }}
         >
           {team.map((m) => (
-            <div key={m.id} className={cn("shrink-0", showRoles ? "flex flex-col items-center gap-0.5 w-14" : "relative h-9 w-9 sm:h-10 sm:w-10")}>
+            <div
+              key={m.id}
+              className={cn(
+                "shrink-0",
+                showRoles ? "flex flex-col items-center gap-0.5 w-14" : "relative h-9 w-9 sm:h-10 sm:w-10"
+              )}
+            >
               <div className="relative h-9 w-9 sm:h-10 sm:w-10 shrink-0">
                 <img
                   src={m.avatar}
@@ -66,19 +79,33 @@ export function CommandBarTeamAvatars({ team, disabled, showRoles, onAddTeamMemb
               )}
             </div>
           ))}
+
+          {/* "+" circle appended inside the scroll row — mobile only */}
+          <button
+            type="button"
+            disabled={disabled}
+            className={cn(
+              "sm:hidden shrink-0 flex h-9 w-9 items-center justify-center rounded-full",
+              "border-2 border-dashed border-violet-400/55 bg-violet-50/60 text-violet-700",
+              "hover:bg-violet-100/80 transition-colors",
+              "dark:bg-violet-950/40 dark:text-violet-400 dark:hover:bg-violet-900/50"
+            )}
+            aria-label="Add team member"
+            onClick={(e) => { e.stopPropagation(); onAddTeamMember(); }}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
         </div>
       </div>
+
+      {/* "+ Add member" text button — desktop only */}
       <Button
         type="button"
         variant="outline"
         disabled={disabled}
-        className="h-8 shrink-0 gap-1 rounded-full border-dashed border-violet-400/55 bg-violet-50/60 px-2.5 text-xs font-medium text-violet-700 shadow-none hover:bg-violet-100/80 dark:bg-violet-950/40 dark:text-violet-400 dark:hover:bg-violet-900/50 sm:h-9 sm:px-3"
+        className="hidden sm:inline-flex h-9 shrink-0 gap-1 rounded-full border-dashed border-violet-400/55 bg-violet-50/60 px-3 text-xs font-medium text-violet-700 shadow-none hover:bg-violet-100/80 dark:bg-violet-950/40 dark:text-violet-400 dark:hover:bg-violet-900/50"
         aria-label="Add team member"
-        onClick={(e) => {
-          e.stopPropagation();
-          onAddTeamMember();
-        }}
-        onDoubleClick={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onAddTeamMember(); }}
       >
         <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
         <span>Add member</span>

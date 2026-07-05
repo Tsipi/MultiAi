@@ -138,7 +138,7 @@ export function CommandBar({
                     {quotaUsed} / {quotaTotal} runs this month
                   </span>
                 ) : (
-                  "Enter to run · Shift+Enter new line"
+                  <span className="hidden sm:inline">Enter to run · Shift+Enter new line</span>
                 )}
               </span>
               <Button

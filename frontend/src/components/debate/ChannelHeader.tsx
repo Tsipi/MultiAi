@@ -139,8 +139,8 @@ export function ChannelHeader({
         )}
       </div>
 
-      {/* Team avatar strip */}
-      <div className="flex items-center -space-x-2">
+      {/* Team avatar strip — hidden on mobile to save space */}
+      <div className="hidden md:flex items-center -space-x-2">
         {team.slice(0, 6).map((m) => (
           <img
             key={m.id}

@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 // ─── Components ───────────────────────────────────────────────────────────────
 import { ConsensusRunsSidebar } from "./components/layout/ConsensusRunsSidebar";
+import { MobileBottomNav } from "./components/layout/MobileBottomNav";
+import { MobileSessionsSheet } from "./components/layout/MobileSessionsSheet";
+import { MobileAccountSheet } from "./components/layout/MobileAccountSheet";
 import { AdvancedDrawer } from "./components/drawers/AdvancedDrawer";
 import { InsightsDrawer } from "./components/drawers/InsightsDrawer";
 import { CommandBar } from "./components/compose/CommandBar";
@@ -65,6 +68,7 @@ export default function App() {
   const { advancedOpen, setAdvancedOpen, insightsOpen, setInsightsOpen, runsSidebarOpen, setRunsSidebarOpen } = usePanelState();
   const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [mobileSheet, setMobileSheet] = useState<"sessions" | "account" | null>(null);
 
   // ─── Compose / team ────────────────────────────────────────────────────────
   const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember, resetCompose } = useComposeForm(setToast);
@@ -82,6 +86,7 @@ export default function App() {
   const [result, setResult] = useState<ConsultResult | null>(null);
   const [activeRunAnswerMode, setActiveRunAnswerMode] = useState<AnswerMode>(normalizeAnswerMode(form.answer_mode));
   const [activeRunQuestion, setActiveRunQuestion] = useState("");
+  const [activeRunTemplateId, setActiveRunTemplateId] = useState<string | null>(null);
   const mainPanelRef = useRef<HTMLDivElement | null>(null);
   const pendingClarificationRef = useRef<{ payload: ConsultPayload; cast: CastSelection; title: string } | null>(null);
 
@@ -177,6 +182,7 @@ export default function App() {
     clearClarification();
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
+    setActiveRunTemplateId(resolvedTemplateId);
     const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag, clarificationQuestion);
     try {
       await execute(payload, cast, questionText);
@@ -198,6 +204,7 @@ export default function App() {
     if (!displayResult || !followupInstruction.trim()) return;
     const cast = panelCast;
     setActiveCast(cast);
+    setActiveRunTemplateId(resolvedTemplateId);
     setFollowupError("");
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
@@ -255,9 +262,11 @@ export default function App() {
     const pending = pendingClarificationRef.current;
     const questionAsked = clarificationPrompt;
     pendingClarificationRef.current = null;
+    const resumeTemplateId = resolvedTemplateId;
     clearFollowupState();
     if (pending?.payload?.is_followup) setIsResuming(true);
     setLoading(true);
+    setActiveRunTemplateId(resumeTemplateId);
     setResult(null);
     setSelectedId(null);
     clearClarification();
@@ -405,7 +414,8 @@ export default function App() {
 
   // ─── Panel props ───────────────────────────────────────────────────────────
 
-  const teamTemplateName = TEAM_TEMPLATES.find((t) => t.id === resolvedTemplateId)?.name;
+  const templateIdForDisplay = loading ? (activeRunTemplateId ?? resolvedTemplateId) : resolvedTemplateId;
+  const teamTemplateName = TEAM_TEMPLATES.find((t) => t.id === templateIdForDisplay)?.name;
 
   const panelProps = {
     teamTemplateName,
@@ -508,7 +518,7 @@ export default function App() {
           onLogout={logout}
         />
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto" id="main-content">
           {isSettingsRoute && userProfile && token ? (
             <SettingsPage
               userProfile={userProfile}
@@ -521,7 +531,7 @@ export default function App() {
           ) : isAdminRoute && token ? (
             <AdminPage token={token} />
           ) : (
-            <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-14 sm:gap-6 sm:px-4 sm:py-6 sm:pb-16">
+            <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-24 sm:gap-6 sm:px-4 sm:py-6 md:pb-16">
 
               {toast && (
                 <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 text-foreground px-3 py-2.5 text-sm" role="status">
@@ -579,6 +589,49 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* ── Mobile navigation (hidden on md+) ─────────────────────────────── */}
+      <MobileBottomNav
+        activeSheet={mobileSheet}
+        onToggleSessions={() => setMobileSheet((s) => (s === "sessions" ? null : "sessions"))}
+        onNewRun={() => {
+          setMobileSheet(null);
+          startFreshNewRun();
+        }}
+        onToggleAccount={() => setMobileSheet((s) => (s === "account" ? null : "account"))}
+        userProfile={userProfile}
+      />
+
+      {mobileSheet === "sessions" && (
+        <MobileSessionsSheet
+          sessions={history}
+          selectedId={selectedId}
+          sessionTitles={sessionTitles}
+          resultsById={resultsById}
+          castBySession={castBySession}
+          chatPanelProps={panelProps}
+          onSelect={(id) => {
+            navigate(`/app/run/${id}`);
+            setMobileSheet(null);
+          }}
+          onDelete={removeSession}
+          onClose={() => setMobileSheet(null)}
+        />
+      )}
+
+      {mobileSheet === "account" && userProfile && (
+        <MobileAccountSheet
+          userProfile={userProfile}
+          dark={dark}
+          isAdmin={isAdmin}
+          onToggleDark={toggleDark}
+          onLogout={() => {
+            setMobileSheet(null);
+            logout();
+          }}
+          onClose={() => setMobileSheet(null)}
+        />
+      )}
     </div>
   );
 }
