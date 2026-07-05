@@ -54,10 +54,17 @@ export function AdvancedDrawer({
       />
       <aside
         className={cn(
-          "absolute right-0 top-0 h-full w-full max-w-[560px] overflow-y-auto overflow-x-hidden border-l border-border",
-          "bg-[var(--app-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]"
+          "overflow-y-auto overflow-x-hidden bg-[var(--app-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]",
+          // Mobile: bottom sheet
+          "max-md:absolute max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-h-[92vh] max-md:rounded-t-2xl max-md:border-t max-md:border-border",
+          // Desktop: right panel
+          "md:absolute md:right-0 md:top-0 md:h-full md:w-full md:max-w-[560px] md:border-l md:border-border"
         )}
       >
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 md:hidden">
+          <div className="h-1 w-10 rounded-full bg-border" />
+        </div>
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-[var(--app-elevated)] px-4 py-3">
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-2 font-display text-sm font-semibold text-foreground">

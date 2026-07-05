@@ -1,14 +1,14 @@
-# Version 5.0 - Mobile UX
+# Version 6.0 - Mobile UX
 
 **Scope:** Make the app comfortable and complete on phone and narrow tablet viewports.  
-**Status:** Planning only. Do not implement until explicitly approved.  
+**Status:** Do not implement until explicitly approved.  
 **Depends on:** v4.3 latency work and v4.4 live debate polish should be stable enough that mobile layouts are not chasing moving targets.
 
 ---
 
 ## Ordering note
 
-**Recommendation: Do v6.0 (Login/Auth polish) before v5.0 (Mobile).**
+**Recommendation: Do v6.0 before v5.0.**
 
 Reasons:
 - Marketing for TeamStoa is starting imminently. Users who sign up through marketing need working password reset, email verification, and polished token-expiry handling — missing these causes immediate churn and no mobile polish compensates.
@@ -16,7 +16,7 @@ Reasons:
 - The admin area (v6.0.4) is needed before you onboard real users — you need to see who signed up and manage them.
 - v6.0.2 explicitly includes "make login/register fully mobile-safe." If v5.0 runs first, login mobile-safety would have to be revisited in v6.0 anyway.
 
-If mobile is urgently needed before v6.0 is complete, extract only 6.0.1 and 6.0.2 (auth audit + login UX polish including password reset) as a mini-sprint, then proceed with v5.0.
+Check mobile auth audit + login UX polish including password reset
 
 ---
 
@@ -35,7 +35,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.1 - Mobile Information Architecture
+## Phase 6.0.1 - Mobile Information Architecture
 
 **Goal:** Decide what becomes primary navigation on narrow screens.
 
@@ -51,7 +51,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.2 - Responsive App Shell
+## Phase 6.0.2 - Responsive App Shell
 
 **Goal:** Replace desktop-only layout assumptions with mobile-safe structure.
 
@@ -67,7 +67,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.3 - Mobile Compose Experience
+## Phase 6.0.3 - Mobile Compose Experience
 
 **Goal:** Make prompt entry, attachments, and run controls usable with thumbs and virtual keyboards.
 
@@ -83,7 +83,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.4 - Mobile Live Debate And Final Answer
+## Phase 6.0.4 - Mobile Live Debate And Final Answer
 
 **Goal:** Make the run experience readable and interactive while the debate is live.
 
@@ -99,7 +99,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.5 - Mobile Session History
+## Phase 6.0.5 - Mobile Session History
 
 **Goal:** Make saved runs and threads easy to browse on small screens.
 
@@ -114,7 +114,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 5.0.6 - PWA, Performance, And Accessibility
+## Phase 6.0.6 - PWA, Performance, And Accessibility
 
 **Goal:** Catch layout and interaction problems and add baseline PWA capabilities.
 

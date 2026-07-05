@@ -23,8 +23,7 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
   return (
     <aside
       className={cn(
-        "flex shrink-0 flex-col bg-[var(--app-surface)] transition-all duration-200 ease-out",
-        "max-md:max-h-[min(46vh,380px)] max-md:w-full max-md:self-stretch max-md:border-b max-md:border-border",
+        "hidden md:flex shrink-0 flex-col bg-[var(--app-surface)] transition-all duration-200 ease-out",
         "md:flex-row md:border-r md:border-border md:sticky md:top-14 md:z-30 md:max-h-none md:h-[calc(100vh-3.5rem)] md:w-auto md:self-start"
       )}
     >

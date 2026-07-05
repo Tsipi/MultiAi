@@ -134,7 +134,7 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProf
             variant="default"
             size="sm"
             onClick={onNewRun}
-            className="gap-1.5 font-display text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
+            className="hidden md:inline-flex gap-1.5 font-display text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
             aria-label="Start a new run"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProf
             variant="ghost"
             size="sm"
             onClick={onOpenTemplates}
-            className="gap-1.5 font-display text-xs font-semibold text-muted-foreground hover:text-foreground"
+            className="hidden md:inline-flex gap-1.5 font-display text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
             <Users className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Templates</span>
@@ -159,7 +159,11 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProf
           >
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          {userProfile && <UserMenu userProfile={userProfile} onLogout={onLogout} />}
+          {userProfile && (
+            <div className="hidden md:block">
+              <UserMenu userProfile={userProfile} onLogout={onLogout} />
+            </div>
+          )}
         </div>
       </div>
     </header>
