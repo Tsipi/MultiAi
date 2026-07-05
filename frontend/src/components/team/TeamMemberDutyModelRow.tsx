@@ -27,7 +27,7 @@ export function TeamMemberDutyModelRow({ member, onUpdate, compact }: Props) {
         </Select>
       </div>
       <div className="grid min-w-0 gap-1">
-        <FieldLabelWithTip compact={compact} label="LLM" tip="Scorer and summarizer always stay Deepseek v3.2." />
+        <FieldLabelWithTip compact={compact} label="LLM" tip="Choose the AI model for this team member." />
         <Select value={member.model} onValueChange={(v) => onUpdate({ ...member, model: v })}>
           <SelectTrigger>
             <span className="flex min-w-0 items-center gap-2">
