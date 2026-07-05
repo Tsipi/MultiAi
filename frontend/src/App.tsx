@@ -520,16 +520,20 @@ export default function App() {
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto" id="main-content">
           {isSettingsRoute && userProfile && token ? (
-            <SettingsPage
-              userProfile={userProfile}
-              token={token}
-              onUpdateProfile={updateProfile}
-              onChangePassword={changePassword}
-              onSavePreferences={savePreferences}
-              onLogout={logout}
-            />
+            <div className="pb-24 md:pb-0">
+              <SettingsPage
+                userProfile={userProfile}
+                token={token}
+                onUpdateProfile={updateProfile}
+                onChangePassword={changePassword}
+                onSavePreferences={savePreferences}
+                onLogout={logout}
+              />
+            </div>
           ) : isAdminRoute && token ? (
-            <AdminPage token={token} />
+            <div className="pb-24 md:pb-0">
+              <AdminPage token={token} />
+            </div>
           ) : (
             <div className="mx-auto grid w-full max-w-[1600px] gap-4 px-3 py-4 pb-24 sm:gap-6 sm:px-4 sm:py-6 md:pb-16">
 

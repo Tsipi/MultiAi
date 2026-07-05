@@ -334,6 +334,22 @@ body {
 }
 
 /* ========================================================================== */
+/* Safe-area utilities (iOS notch / Android nav bar)                           */
+/* ========================================================================== */
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility h-safe-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* ========================================================================== */
 /* Utilities                                                                   */
 /* ========================================================================== */
 

@@ -23,10 +23,11 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-[100] flex h-16 items-stretch bg-[var(--app-surface)]/96 backdrop-blur-xl border-t border-border md:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="fixed bottom-0 left-0 right-0 z-[100] bg-[var(--app-surface)]/96 backdrop-blur-xl border-t border-border md:hidden"
       aria-label="Mobile navigation"
     >
+      {/* Button row — always exactly h-16, never stretched by safe-area padding */}
+      <div className="flex h-16 items-stretch">
       {/* Sessions tab */}
       <button
         type="button"
@@ -85,6 +86,9 @@ export function MobileBottomNav({
         )}
         <span className="text-[10px] font-medium tracking-wide">Account</span>
       </button>
+      </div>
+      {/* Safe-area spacer — fills the gap on notched devices without stretching buttons */}
+      <div className="h-safe-bottom" />
     </nav>
   );
 }

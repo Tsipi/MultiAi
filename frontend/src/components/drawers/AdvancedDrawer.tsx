@@ -45,7 +45,7 @@ export function AdvancedDrawer({
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[90]">
+    <div className="fixed inset-0 z-[110]">
       <button
         type="button"
         className="absolute inset-0 bg-black/45"
@@ -55,8 +55,8 @@ export function AdvancedDrawer({
       <aside
         className={cn(
           "overflow-y-auto overflow-x-hidden bg-[var(--app-surface)] shadow-[0_0_40px_rgba(0,0,0,0.35)]",
-          // Mobile: bottom sheet
-          "max-md:absolute max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-h-[92vh] max-md:rounded-t-2xl max-md:border-t max-md:border-border",
+          // Mobile: bottom sheet — 80vh keeps the drag handle + X visible above Safari's address bar
+          "max-md:absolute max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-h-[80vh] max-md:rounded-t-2xl max-md:border-t max-md:border-border",
           // Desktop: right panel
           "md:absolute md:right-0 md:top-0 md:h-full md:w-full md:max-w-[560px] md:border-l md:border-border"
         )}
@@ -77,7 +77,7 @@ export function AdvancedDrawer({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid min-w-0 gap-4 p-4">
+        <div className="grid min-w-0 gap-4 p-4 pb-8">
           <ComposerAdvanced
             value={form}
             attachments={attachments}

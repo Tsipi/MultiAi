@@ -1,7 +1,7 @@
 # Version 6.0 - Mobile UX
 
 **Scope:** Make the app comfortable and complete on phone and narrow tablet viewports.  
-**Status:** Do not implement until explicitly approved.  
+**Status:** In progress — phases 6.0.1 and 6.0.2 largely complete, 6.0.3 partially complete.  
 **Depends on:** v4.3 latency work and v4.4 live debate polish should be stable enough that mobile layouts are not chasing moving targets.
 
 ---
@@ -35,39 +35,39 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.1 - Mobile Information Architecture
+## Phase 6.0.1 - Mobile Information Architecture — largely done
 
 **Goal:** Decide what becomes primary navigation on narrow screens.
 
 ### Tasks
 
-- [ ] Define mobile breakpoints for phone (≤640px), narrow tablet (641–1024px), and desktop (>1024px)
-- [ ] Choose the primary mobile structure — recommendation: bottom navigation bar (Sessions, New Run, Settings) plus a slide-in compose drawer, matching patterns users already know from Slack/Discord
-- [ ] Map desktop areas to mobile destinations: sessions, compose, live debate, final answer, account/settings
-- [ ] Decide whether the left sidebar collapses to a bottom sheet or a full-screen sessions view
-- [ ] Make sure saved sessions remain easy to open without blocking the compose flow
-- [ ] Preserve shared-run read-only pages on mobile without requiring login
-- [ ] Define which panels (AdvancedDrawer, InsightsDrawer, TemplateDrawer) stack as full-screen sheets on mobile vs remain side panels
+- [x] Define mobile breakpoints for phone (≤640px `sm`) and tablet/desktop (≥768px `md`) — used consistently across all components
+- [x] Choose the primary mobile structure — bottom navigation bar (Sessions tab, center violet FAB, Account tab) matching Slack/Discord patterns
+- [x] Map desktop areas to mobile destinations: sessions→Sessions sheet, compose→main view, live debate→main view, final answer→main view, account/logout→Account sheet
+- [x] Decide whether the left sidebar collapses to a bottom sheet — done: `ConsensusRunsSidebar` is `hidden md:flex`; replaced on mobile by `MobileSessionsSheet`
+- [x] Make sure saved sessions remain easy to open — Sessions tab in bottom nav opens slide-up sheet with full session list
+- [ ] Preserve shared-run read-only pages on mobile without requiring login — `SharedRunPage` exists but not yet mobile-tested
+- [~] Define which panels stack as full-screen sheets on mobile — `AdvancedDrawer` done as bottom sheet; `InsightsDrawer` and `TemplateDrawer` still desktop-only
 
 ---
 
-## Phase 6.0.2 - Responsive App Shell
+## Phase 6.0.2 - Responsive App Shell — largely done
 
 **Goal:** Replace desktop-only layout assumptions with mobile-safe structure.
 
 ### Tasks
 
-- [ ] Collapse the sidebar into a mobile drawer or a dedicated sessions tab in the bottom nav
-- [ ] Keep "New Run", logout, and account access reachable without opening additional menus
-- [ ] Ensure the main app panel fills the full viewport width with no horizontal overflow
-- [ ] Add safe-area inset spacing (`env(safe-area-inset-*)`) for notched iOS and Android browser chrome
-- [ ] Verify dark mode and light mode on narrow screens, including the bottom nav and drawers
-- [ ] Update `TopNav` to hide desktop-only items below the mobile breakpoint without breaking the layout
-- [ ] Verify `Sidebar` / `ConsensusRunsSidebar` never renders at full desktop width on a phone
+- [x] Collapse the sidebar into a dedicated sessions tab in the bottom nav — `MobileSessionsSheet` via `MobileBottomNav`
+- [x] Keep "New Run", logout, and account access reachable — center FAB for new run; Account sheet has logout, dark mode, settings, admin
+- [x] Ensure the main app panel fills the full viewport width — `w-full` layout, `CommandBarTeamAvatars` overflow fixed
+- [x] Add safe-area inset spacing (`env(safe-area-inset-bottom)`) — applied in `MobileBottomNav` and `MobileSessionsSheet`
+- [ ] Verify dark mode and light mode on narrow screens, including the bottom nav and drawers — needs manual device test
+- [x] Update `TopNav` to hide desktop-only items below the mobile breakpoint — "+ New Run", "Templates" → `hidden md:inline-flex`; `UserMenu` → `hidden md:block`
+- [x] Verify `ConsensusRunsSidebar` never renders at full desktop width on a phone — `hidden md:flex` applied
 
 ---
 
-## Phase 6.0.3 - Mobile Compose Experience
+## Phase 6.0.3 - Mobile Compose Experience — in progress, resume here
 
 **Goal:** Make prompt entry, attachments, and run controls usable with thumbs and virtual keyboards.
 
@@ -75,11 +75,11 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 - [ ] Make the compose bar keyboard-safe on iOS and Android: input must scroll into view when the virtual keyboard opens, viewport must not shrink the text area unusably
 - [ ] Keep attachment controls visible without crowding the prompt input (consider a single attachment icon that opens a sheet)
-- [ ] Move advanced settings (`AdvancedDrawer`, debate mode, web search, model counts) into a full-screen bottom sheet on mobile
-- [ ] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are readable and editable by touch
-- [ ] Prevent text, buttons, template chips, and agent avatars from overflowing their containers
-- [ ] Add a "Quick templates" horizontal scroll strip as the primary template entry point on mobile (replaces the drawer shortcut row that is hard to tap on small screens)
-- [ ] Minimum tap target for all interactive elements: 44×44 px (WCAG 2.5.5)
+- [x] Move advanced settings (`AdvancedDrawer`) into a full-screen bottom sheet on mobile — done: `max-md:` classes convert it to a slide-up sheet with drag handle
+- [ ] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are readable and editable by touch — not yet verified; likely needs input sizing and tap-target review
+- [x] Prevent text, buttons, template chips, and agent avatars from overflowing their containers — `CommandBarTeamAvatars` rewritten with `w-full` mobile container and inline `+` circle
+- [x] "Quick templates" horizontal scroll strip as the primary template entry point on mobile — `TemplateShortcutRow` already renders as a scrollable chip row below the compose box
+- [ ] Minimum tap target for all interactive elements: 44×44 px (WCAG 2.5.5) — partially done (Account sheet actions have `min-h-[44px]`); needs full audit of compose area, follow-up buttons, session list rows
 
 ---
 
@@ -96,6 +96,9 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [ ] Add a clear visual transition from live debate to final answer (scroll-to-top or reveal animation)
 - [ ] Keep copy, share, and export controls reachable after completion without requiring scroll — floating or sticky action row
 - [ ] Typing indicators (`TypingRow`) must not overflow the mobile viewport
+- [ ] `PinnedAnswer` card: verify expand/collapse tap target and that `FinalAnswerHeaderRoster` doesn't overflow at 375px
+- [ ] Stats bar (Score · tokens · cost) and `SessionPromptDownloads` buttons: verify layout when stacked on mobile; "Include full debate" checkbox needs ≥44px tap target
+- [ ] Follow-up composer: on mobile, open as a bottom sheet on "Ask follow-up" tap rather than expanding inline
 
 ---
 
