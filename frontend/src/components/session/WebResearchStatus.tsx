@@ -50,7 +50,7 @@ export function WebResearchStatus({ result }: Props) {
       )}
 
       {result.web_search_query && (
-        <p className="m-0 text-xs leading-snug text-muted-foreground">
+        <p className="m-0 break-words text-xs leading-snug text-muted-foreground">
           Search query: <span className="font-medium text-foreground/80">{result.web_search_query}</span>
         </p>
       )}
@@ -62,7 +62,7 @@ export function WebResearchStatus({ result }: Props) {
       )}
 
       {result.web_search_sources.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex min-w-0 flex-wrap gap-1.5">
           {result.web_search_sources.map((source) => (
             <a
               key={source.url}

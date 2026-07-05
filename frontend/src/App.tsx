@@ -458,6 +458,7 @@ export default function App() {
     onOpenAdvanced: openAdvancedWithSessionTeam,
     followupError,
     onShareToggle: handleShareToggle,
+    onCloseFollowup: () => setFollowupOpen(false),
   };
 
   // ─── Apply saved preferences once per login session ───────────────────────
@@ -518,7 +519,7 @@ export default function App() {
           onLogout={logout}
         />
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto" id="main-content">
+        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto" id="main-content">
           {isSettingsRoute && userProfile && token ? (
             <div className="pb-24 md:pb-0">
               <SettingsPage

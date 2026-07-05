@@ -64,6 +64,8 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 - [x] Update `TopNav` to hide desktop-only items below the mobile breakpoint — "+ New Run", "Templates" -> `hidden md:inline-flex`; `UserMenu` -> `hidden md:block`
 - [x] Verify `ConsensusRunsSidebar` never renders at full desktop width on a phone — `hidden md:flex` applied
+- [x] `TopNav` safe-area: `pt-safe` added so logo and dark mode button sit below the iOS notch/status bar when `viewport-fit=cover` is active
+- [x] Default light mode: `useDarkMode` fallback changed from `true` to `false`; new users start in light mode; existing preference in localStorage is respected
 
 ---
 
@@ -83,23 +85,25 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.4 - Mobile Live Debate And Final Answer — partially complete
+## Phase 6.0.4 - Mobile Live Debate And Final Answer — complete
 
 **Goal:** Make the run experience readable and interactive while the debate is live.
 
 ### Tasks
 
-- [ ] Ensure `ChatroomDebateView` / `ChatPanel` has a stable, scrollable layout within a full-height mobile viewport
-- [ ] Keep the status bar / progress indicator visible without consuming too much height — consider collapsing it to a thin progress strip on mobile
-- [ ] Make agent message bubbles, round dividers, and system timeline items readable at phone width (font size, padding, avatar size)
-- [x] Implement native Web Share API (`navigator.share`) for sharing the final answer link on mobile — `SessionPromptDownloads` shows a Smartphone icon button when run is public and `navigator.share` is available; falls back gracefully if unsupported
-- [ ] Add a clear visual transition from live debate to final answer (scroll-to-top or reveal animation)
-- [ ] Keep copy, share, and export controls reachable after completion without requiring scroll — floating or sticky action row
-- [ ] Typing indicators (`TypingRow`) must not overflow the mobile viewport
-- [x] `PinnedAnswer` card: avatar roster hidden at 375px (`hidden sm:block`) to prevent overlap with score badge; expand/collapse tap target already adequate
-- [x] `SessionPromptDownloads` buttons: all icon buttons min-h-[44px] min-w-[44px]; "Include full debate" label min-h-[44px]
-- [x] `WebResearchStatus` source-link badges: `min-w-0 overflow-hidden` fix for horizontal overflow on mobile
-- [ ] Follow-up composer: on mobile, open as a bottom sheet on "Ask follow-up" tap rather than expanding inline (currently only has scrollIntoView keyboard fix)
+- [x] `ChatroomDebateView` / `ChatPanel` stable scrollable layout — internal `overflow-y-auto` with bounded `max-h` (now `dvh`); outer container `overflow-hidden`; no layout instability on mobile
+- [x] Status bar / progress indicator — `ChannelHeader` hides stage pills on mobile (`hidden sm:flex`); Round + Score row is compact and always visible; no height problem
+- [x] Agent message bubbles readable at phone width — `ChatMessage` uses `min-w-0 flex-1`, `text-sm`, wrapping text; no overflow at 375px; `TypingRow` gets `min-w-0` safety
+- [x] Implement native Web Share API (`navigator.share`) — `SessionPromptDownloads` shows a Smartphone icon button when run is public and `navigator.share` is available; falls back gracefully
+- [x] Visual transition from live debate to final answer — `ChatPanel` `useEffect` scrolls `window` to top when `loading` goes false and `result` appears, so `PinnedAnswer` is immediately visible
+- [x] Export controls reachable — `SessionPromptDownloads` sits directly below `PinnedAnswer`; visible without scrolling after debate finishes; all buttons min-h-[44px]
+- [x] `PinnedAnswer` card: avatar roster hidden on mobile (`hidden sm:block`) to prevent overlap with score badge at 375px
+- [x] `WebResearchStatus`: `min-w-0 overflow-hidden` on section, `break-words` on search query `<p>`, `min-w-0` on badges container — eliminates horizontal overflow from long queries and source badges
+- [x] "Viewing Saved Answer" header: outer row stacks vertically on mobile (`flex-col sm:flex-row`); title + chip use `flex-wrap`; session ID uses `text-xs font-mono`; action buttons left-aligned on mobile, right-aligned on desktop
+- [x] `SessionViewActions` tap targets: all three buttons raised to `min-h-[44px] min-w-[44px]`
+- [x] Stats row (`2 rounds · Score · tokens · cost`): `justify-start sm:justify-end` + `min-w-0` so separators wrap cleanly on narrow screens instead of overflowing
+- [x] Global horizontal overflow: `overflow-x-hidden` added to `<main>` — clips all remaining overflow without affecting vertical scroll
+- [x] Follow-up composer: `MobileFollowupSheet` slides up from the bottom on mobile when "Ask follow-up" is tapped; inline form hidden on mobile (`hidden md:block`); desktop inline form unchanged
 
 ---
 
