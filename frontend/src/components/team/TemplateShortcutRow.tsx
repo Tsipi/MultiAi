@@ -30,6 +30,7 @@ function TeamChip({
         type="button"
         onClick={onSelect}
         onMouseEnter={() => {
+          if (!window.matchMedia("(hover: hover)").matches) return;
           if (ref.current) {
             const r = ref.current.getBoundingClientRect();
             setPos({ x: r.left + r.width / 2, y: r.top });
