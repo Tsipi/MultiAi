@@ -116,6 +116,7 @@ A three-pill row rendered inside the drawer, below the "Advanced setup" header a
 - [x] Rewrite `AdvancedDrawer.tsx` — 3-tab pill nav sticky below header, scrollable content, pinned Send button
 - [x] Delete `DebateSettings.tsx` and `ComposerAdvanced.tsx`; remove from index files; empty dead `SettingsBar.tsx`
 - [x] Unify section header styling across drawer: `text-sm font-semibold text-foreground` + violet icon (`Paperclip` for Context files, `Users` for Team members)
+- [x] Move quota indicator out of compose card: removed from `CommandBar` entirely; desktop sidebar footer now shows "X / Y runs this month" progress bar below the user email (`ConsensusRunsSidebar`); mobile users access quota via Account sheet / Settings
 
 ---
 
@@ -125,5 +126,6 @@ A three-pill row rendered inside the drawer, below the "Advanced setup" header a
 - [x] "Send to team" always visible pinned at the bottom, regardless of active tab
 - [x] No content is lost — every field from the current drawer is reachable in one of the three tabs
 - [x] "Debate passes" label reads "Debate rounds" everywhere it appears
-- [x] `tsc --noEmit` clean and `vitest run` 22/22 passed
+- [x] `tsc --noEmit` clean and `vitest run` 22/22 passed throughout
 - [x] `DebateSettings.tsx` and `ComposerAdvanced.tsx` fully deleted with no dangling imports
+- [x] Quota indicator removed from compose card; renders in desktop sidebar footer with progress bar; accessible on mobile via Account / Settings

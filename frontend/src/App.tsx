@@ -517,6 +517,8 @@ export default function App() {
           onDelete={removeSession}
           userEmail={email}
           onLogout={logout}
+          runsThisMonth={userProfile?.runs_this_month ?? null}
+          runsQuota={userProfile?.runs_quota ?? null}
         />
 
         <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto" id="main-content">
@@ -559,8 +561,6 @@ export default function App() {
                   onOpenAdvanced={() => setAdvancedOpen(true)}
                   activeTemplateId={activeTemplateId}
                   onSelectTemplate={handleSelectTemplate}
-                  quotaUsed={userProfile?.runs_this_month ?? null}
-                  quotaTotal={userProfile?.runs_quota ?? null}
                 />
               )}
 
