@@ -41,9 +41,9 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ### Tasks
 
-- [x] Define mobile breakpoints for phone (≤640px `sm`) and tablet/desktop (≥768px `md`) — used consistently across all components
+- [x] Define mobile breakpoints for phone (<=640px `sm`) and tablet/desktop (>=768px `md`) — used consistently across all components
 - [x] Choose the primary mobile structure — bottom navigation bar (Sessions tab, center violet FAB, Account tab) matching Slack/Discord patterns
-- [x] Map desktop areas to mobile destinations: sessions→Sessions sheet, compose→main view, live debate→main view, final answer→main view, account/logout→Account sheet
+- [x] Map desktop areas to mobile destinations: sessions->Sessions sheet, compose->main view, live debate->main view, final answer->main view, account/logout->Account sheet
 - [x] Decide whether the left sidebar collapses to a bottom sheet — done: `ConsensusRunsSidebar` is `hidden md:flex`; replaced on mobile by `MobileSessionsSheet`
 - [x] Make sure saved sessions remain easy to open — Sessions tab in bottom nav opens slide-up sheet with full session list
 - [ ] Preserve shared-run read-only pages on mobile without requiring login — `SharedRunPage` exists but not yet mobile-tested
@@ -61,8 +61,8 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [x] Keep "New Run", logout, and account access reachable — center FAB for new run; Account sheet has logout, dark mode, settings, admin
 - [x] Ensure the main app panel fills the full viewport width — `w-full` layout, `CommandBarTeamAvatars` overflow fixed
 - [x] Add safe-area inset spacing (`env(safe-area-inset-bottom)`) — applied in `MobileBottomNav` and `MobileSessionsSheet`
-- [ ] Verify dark mode and light mode on narrow screens, including the bottom nav and drawers — needs manual device test
-- [x] Update `TopNav` to hide desktop-only items below the mobile breakpoint — "+ New Run", "Templates" → `hidden md:inline-flex`; `UserMenu` → `hidden md:block`
+
+- [x] Update `TopNav` to hide desktop-only items below the mobile breakpoint — "+ New Run", "Templates" -> `hidden md:inline-flex`; `UserMenu` -> `hidden md:block`
 - [x] Verify `ConsensusRunsSidebar` never renders at full desktop width on a phone — `hidden md:flex` applied
 
 ---
@@ -79,7 +79,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [ ] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are readable and editable by touch — not yet verified; likely needs input sizing and tap-target review
 - [x] Prevent text, buttons, template chips, and agent avatars from overflowing their containers — `CommandBarTeamAvatars` rewritten with `w-full` mobile container and inline `+` circle
 - [x] "Quick templates" horizontal scroll strip as the primary template entry point on mobile — `TemplateShortcutRow` already renders as a scrollable chip row below the compose box
-- [ ] Minimum tap target for all interactive elements: 44×44 px (WCAG 2.5.5) — partially done (Account sheet actions have `min-h-[44px]`); needs full audit of compose area, follow-up buttons, session list rows
+- [ ] Minimum tap target for all interactive elements: 44x44 px (WCAG 2.5.5) — partially done (Account sheet actions have `min-h-[44px]`); needs full audit of compose area, follow-up buttons, session list rows
 
 ---
 
@@ -96,8 +96,8 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [ ] Add a clear visual transition from live debate to final answer (scroll-to-top or reveal animation)
 - [ ] Keep copy, share, and export controls reachable after completion without requiring scroll — floating or sticky action row
 - [ ] Typing indicators (`TypingRow`) must not overflow the mobile viewport
-- [ ] `PinnedAnswer` card: verify expand/collapse tap target and that `FinalAnswerHeaderRoster` doesn't overflow at 375px
-- [ ] Stats bar (Score · tokens · cost) and `SessionPromptDownloads` buttons: verify layout when stacked on mobile; "Include full debate" checkbox needs ≥44px tap target
+- [ ] `PinnedAnswer` card: verify expand/collapse tap target and that `FinalAnswerHeaderRoster` does not overflow at 375px
+- [ ] Stats bar (Score, tokens, cost) and `SessionPromptDownloads` buttons: verify layout when stacked on mobile; "Include full debate" checkbox needs >=44px tap target
 - [ ] Follow-up composer: on mobile, open as a bottom sheet on "Ask follow-up" tap rather than expanding inline
 
 ---
@@ -108,7 +108,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ### Tasks
 
-- [ ] Add mobile session search by text or template name (not just a future maybe — the sidebar is too dense at 2–3 runs to be useful without filtering at scale)
+- [ ] Add mobile session search by text or template name (not just a future maybe — the sidebar is too dense at 2-3 runs to be useful without filtering at scale)
 - [ ] Preserve thread grouping and follow-up context with clear indentation or thread indicator
 - [ ] Make share, unshare, and delete actions accessible via a long-press or swipe gesture, not hover menus
 - [ ] Add empty, loading, and error states for the mobile session view
@@ -117,27 +117,34 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.6 - PWA, Performance, And Accessibility
+## Phase 6.0.6 - PWA And Accessibility
 
-**Goal:** Catch layout and interaction problems and add baseline PWA capabilities.
+**Goal:** Make the app installable and keyboard-accessible; add a graceful offline experience.
 
 ### Tasks
 
-- [ ] Test all core workflows at 375px (iPhone SE), 390px (iPhone 14 standard), and 768px (iPad mini portrait)
-- [ ] Test virtual keyboard behavior for prompt entry, login forms, and team edit forms on both iOS Safari and Android Chrome
-- [ ] Verify all tap targets meet 44×44 px minimum
-- [ ] Verify visible focus states work for keyboard users (do not rely on hover-only focus rings)
-- [ ] Add a `manifest.json` and service worker for basic PWA installability — users can "Add to Home Screen" to get a native-app-like entry point
-- [ ] Define an offline fallback page (the app is live-API-dependent, but a graceful offline screen is better than a blank page)
-- [ ] Set a mobile performance budget: target LCP ≤ 2.5s and TBT ≤ 200ms on a mid-range device over 4G
-- [ ] Add focused visual regression checks for the app shell, compose area, and live debate view at mobile widths
+- [ ] Add `manifest.json` and service worker via `vite-plugin-pwa` — users can "Add to Home Screen" on iOS/Android to get a native-app-like entry point (no browser chrome)
+- [ ] Define an offline fallback page — the app is live-API-dependent, but a graceful offline screen is better than a blank page
+- [ ] Verify visible focus states work for keyboard users — do not rely on hover-only focus rings; check compose bar, session list rows, nav buttons
+
+---
+
+## Deferred — low priority or needs tooling investment
+
+These items were removed from the active phases. Revisit when the core mobile experience is stable.
+
+- **LCP/TBT performance budget** (target LCP <=2.5s, TBT <=200ms on mid-range 4G) — not actionable without Lighthouse CI wired into the build pipeline.
+- **Visual regression checks at mobile widths** — needs Percy or Playwright snapshot setup; significant tooling cost for an early-stage product.
+- **Test at 375/390/768px as a tracked task** — this is a QA pass, not a dev deliverable. Do it manually before each phase ships; no need to track it as a plan item.
+- **Virtual keyboard behavior as a separate phase task** — covered by Phase 6.0.3 "Make the compose bar keyboard-safe". Not a separate item.
+- **Verify all tap targets meet 44x44 px as a separate phase task** — covered by Phase 6.0.3 tap-target audit. Not a separate item.
 
 ---
 
 ## Removed / consolidated items
 
-- "Add mobile session search/filter if the sidebar becomes too dense" — the "if" has been removed. Search is a concrete task in 5.0.5.
-- "Add safe-area spacing for mobile browsers" was formerly only in 5.0.2; it is now explicitly required for every affected component.
+- "Add mobile session search/filter if the sidebar becomes too dense" — the "if" has been removed. Search is a concrete task in 6.0.5.
+- "Add safe-area spacing for mobile browsers" was formerly only in 6.0.2; it is now explicitly required for every affected component.
 
 ---
 
@@ -149,4 +156,4 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - The live debate and final answer remain readable without layout overlap or font-size regression.
 - Session history, logout, and account entry points are reachable on mobile without more than two taps.
 - The app is installable as a PWA and shows a graceful offline page when there is no network.
-- Tap targets are ≥ 44×44 px throughout.
+- Tap targets are >=44x44 px throughout.
