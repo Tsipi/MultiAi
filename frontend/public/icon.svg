@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#6D28D9"/>
+  <!-- TeamStoa node graph — white on violet, scaled to 512 -->
+  <g stroke="#fff" stroke-width="14" stroke-linecap="round" opacity="0.55" fill="none">
+    <path d="M430 256 Q354 200 256 256"/>
+    <path d="M343 106 Q256 143 256 256"/>
+    <path d="M169 106 Q159 200 256 256"/>
+    <path d="M82 256 Q159 313 256 256"/>
+    <path d="M169 406 Q256 369 256 256"/>
+    <path d="M343 406 Q354 313 256 256"/>
+  </g>
+  <!-- Outer nodes -->
+  <circle cx="430" cy="256" r="22" fill="#fff" opacity="0.9"/>
+  <circle cx="343" cy="106" r="22" fill="#fff" opacity="0.9"/>
+  <circle cx="169" cy="106" r="22" fill="#fff" opacity="0.9"/>
+  <circle cx="82"  cy="256" r="22" fill="#fff" opacity="0.9"/>
+  <circle cx="169" cy="406" r="22" fill="#fff" opacity="0.9"/>
+  <circle cx="343" cy="406" r="22" fill="#fff" opacity="0.9"/>
+  <!-- Center node -->
+  <circle cx="256" cy="256" r="50" fill="#fff"/>
+</svg>

@@ -57,8 +57,8 @@ export function TeamMemberEditForm({ draft, setDraft, leadRole, onCancel, onSave
         </div>
       </div>
       <div className="mt-4 flex flex-wrap justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button type="button" size="sm" className="primary-cta border-0 shadow-none" onClick={onSave}>Save</Button>
+        <Button type="button" variant="outline" size="sm" className="min-h-[44px]" onClick={onCancel}>Cancel</Button>
+        <Button type="button" size="sm" className="primary-cta border-0 shadow-none min-h-[44px]" onClick={onSave}>Save</Button>
       </div>
     </>
   );

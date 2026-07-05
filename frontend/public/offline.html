@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>You're offline — TeamStoa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0b1a;
+      --text: #e2e0f0;
+      --muted: #a0a0b8;
+      --btn: #6d28d9;
+      --btn-hover: #7c3aed;
+      --btn-text: #fff;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f5f3ff;
+        --text: #1e1b4b;
+        --muted: #6b7280;
+        --btn: #6d28d9;
+        --btn-hover: #5b21b6;
+        --btn-text: #fff;
+      }
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px env(safe-area-inset-right, 24px) 24px env(safe-area-inset-left, 24px);
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6d28d9, #a21caf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 { font-size: 1.25rem; font-weight: 700; }
+    p { font-size: 0.9rem; color: var(--muted); max-width: 280px; line-height: 1.5; }
+    button {
+      margin-top: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      background: var(--btn);
+      color: var(--btn-text);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--btn-hover); }
+    button:active { opacity: 0.85; transform: scale(0.97); }
+    .status {
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-height: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="icon">
+    <svg viewBox="0 0 100 100" fill="none" width="40" height="40" aria-hidden="true">
+      <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.55" fill="none">
+        <path d="M84 50 Q69 39 50 50"/>
+        <path d="M67 20.6 Q50 28 50 50"/>
+        <path d="M33 20.6 Q31 39 50 50"/>
+        <path d="M16 50 Q31 61 50 50"/>
+        <path d="M33 79.4 Q50 72 50 50"/>
+        <path d="M67 79.4 Q69 61 50 50"/>
+      </g>
+      <circle cx="84" cy="50" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="67" cy="20.6" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="33" cy="20.6" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="16" cy="50" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="33" cy="79.4" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="67" cy="79.4" r="4.5" fill="#fff" opacity="0.9"/>
+      <circle cx="50" cy="50" r="10" fill="#fff"/>
+    </svg>
+  </div>
+  <h1>You're offline</h1>
+  <p>TeamStoa needs an internet connection to run debates. Connect and try again.</p>
+  <button onclick="window.location.reload()">Try again</button>
+  <p class="status" id="status"></p>
+
+  <script>
+    // Auto-reload as soon as the connection comes back
+    window.addEventListener('online', function () {
+      document.getElementById('status').textContent = 'Connection restored — reloading…';
+      setTimeout(function () { window.location.reload(); }, 800);
+    });
+    window.addEventListener('offline', function () {
+      document.getElementById('status').textContent = '';
+    });
+  </script>
+</body>
+</html>

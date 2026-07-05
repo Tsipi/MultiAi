@@ -20,7 +20,7 @@ export function ActionGhostButton({ children, icon, disabled, onClick, className
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "border bg-violet-500/12 font-display text-violet-700 shadow-none",
+        "border bg-violet-500/12 font-display text-violet-700 shadow-none min-h-[44px]",
         "hover:bg-violet-500/20 hover:text-violet-800 dark:text-violet-200",
         className
       )}

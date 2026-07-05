@@ -53,8 +53,7 @@ export function MobileAccountSheet({
 
       {/* Sheet */}
       <div
-        className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-[var(--app-surface)] shadow-2xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-[var(--app-surface)] shadow-2xl pb-safe"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-2">

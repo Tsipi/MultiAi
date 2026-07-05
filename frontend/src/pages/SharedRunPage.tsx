@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSharedRun } from "@/services/api";
 import { MarkdownView } from "@/components/primitives/MarkdownView";
+import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
 import type { ConsultResult } from "@/types";
 
 type Props = {
@@ -26,18 +27,18 @@ export function SharedRunPage({ slug }: Props) {
   }, [slug]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg)]">
-      <header className="border-b border-border px-4 py-3">
+    <div className="min-h-dvh flex flex-col bg-[var(--bg)]">
+      <header className="border-b border-border px-4 py-3 pt-safe">
         <div className="mx-auto flex w-full max-w-[880px] items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 font-bold text-white text-sm shadow-md">
-            M
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 shadow-md">
+            <TeamStoaIcon className="h-5 w-5" />
           </div>
-          <div className="font-bold text-base tracking-tight text-foreground">MultiAI</div>
+          <div className="font-bold text-base tracking-tight text-foreground">TeamStoa</div>
           <span className="text-xs text-muted-foreground">Shared run</span>
         </div>
       </header>
 
-      <main className="flex-1 px-4 py-6">
+      <main className="flex-1 px-4 py-6 pb-safe">
         <div className="mx-auto flex w-full max-w-[880px] flex-col gap-4">
           {loading && (
             <p className="text-sm text-muted-foreground">Loading shared run…</p>
@@ -80,9 +81,9 @@ export function SharedRunPage({ slug }: Props) {
             <button
               type="button"
               onClick={() => navigate("/app/new")}
-              className="rounded-lg bg-violet-600 hover:bg-violet-700 px-5 py-2.5 text-sm font-semibold text-white transition shadow-sm"
+              className="min-h-[44px] rounded-lg bg-violet-600 hover:bg-violet-700 px-6 py-3 text-sm font-semibold text-white transition shadow-sm"
             >
-              Try MultiAi
+              Try TeamStoa
             </button>
           </div>
         </div>

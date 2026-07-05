@@ -27,8 +27,7 @@ export function MobileSessionsSheet({ onClose, ...answerProps }: Props) {
 
       {/* Sheet */}
       <div
-        className="absolute bottom-0 left-0 right-0 flex max-h-[88vh] flex-col rounded-t-2xl bg-[var(--app-surface)] shadow-2xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        className="absolute bottom-0 left-0 right-0 flex max-h-[88vh] flex-col rounded-t-2xl bg-[var(--app-surface)] shadow-2xl pb-safe"
       >
         {/* Drag handle */}
         <div className="flex shrink-0 justify-center pt-3 pb-1">
@@ -50,7 +49,7 @@ export function MobileSessionsSheet({ onClose, ...answerProps }: Props) {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 shrink-0"
+            className="min-h-[44px] min-w-[44px] shrink-0"
             aria-label="Close sessions panel"
           >
             <X className="h-4 w-4" />

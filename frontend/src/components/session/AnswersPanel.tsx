@@ -140,7 +140,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               {query ? `${filteredThreads.length} result(s)` : `${threads.length} answer group(s)`}
             </p>
             {query && (
-              <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setSearchText("")}>
+              <Button type="button" variant="ghost" size="sm" className="min-h-[44px] px-2 text-xs" onClick={() => setSearchText("")}>
                 Show all
               </Button>
             )}
@@ -353,7 +353,7 @@ function AccordionItem({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-auto w-9 shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground"
+            className="h-auto min-w-[44px] shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground"
             onClick={() => onDelete(session.id)}
             aria-label="Delete session"
             title="Delete this run"

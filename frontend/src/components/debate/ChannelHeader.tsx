@@ -100,7 +100,7 @@ export function ChannelHeader({
       </div>
 
       {loading && (
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-[0.68rem] font-semibold">
+        <div className="hidden sm:flex min-w-0 flex-1 items-center justify-center gap-2 text-[0.68rem] font-semibold">
           <span className="truncate rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-sky-700 dark:text-sky-300">
             {stageLabel}
           </span>

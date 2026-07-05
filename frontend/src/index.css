@@ -229,6 +229,7 @@ body {
 .sidebar-answer-card-selected {
   border-color: var(--brand-300);
   outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-600) 30%, transparent);
 }
 
 .sidebar-answer-card-selected {
@@ -331,6 +332,22 @@ body {
       0 0 0 2px color-mix(in srgb, var(--success-500) 34%, transparent),
       0 0 14px color-mix(in srgb, var(--success-500) 76%, transparent);
   }
+}
+
+/* ========================================================================== */
+/* Safe-area utilities (iOS notch / Android nav bar)                           */
+/* ========================================================================== */
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility h-safe-bottom {
+  height: env(safe-area-inset-bottom, 0px);
 }
 
 /* ========================================================================== */
