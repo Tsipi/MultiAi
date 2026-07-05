@@ -27,10 +27,10 @@ export function DebateOptionsTable({
           <tr className="border-b border-border/55">
             <th scope="row" className="px-3 py-2.5 align-top text-left">
               <p className="m-0 text-xs font-semibold uppercase tracking-wide text-foreground/85">
-                Debate passes
+                Debate rounds
               </p>
               <p className="m-0 mt-1 text-[0.78rem] font-normal leading-snug text-muted-foreground">
-                Max critique-and-rewrite rounds before wrap-up. More passes are slower but more reviewed.
+                Max critique-and-rewrite rounds before wrap-up. More rounds are slower but more reviewed.
               </p>
             </th>
             <td className="w-[140px] px-3 py-2 align-middle">

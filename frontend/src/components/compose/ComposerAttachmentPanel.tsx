@@ -56,10 +56,11 @@ export function ComposerAttachmentPanel({ attachments, onAttachmentsChange }: Pr
   };
 
   return (
-    <div onPaste={onPaste} className="grid gap-3 rounded-lg border border-border/65 bg-card/35 p-3">
+    <div onPaste={onPaste} className="grid gap-3 rounded-xl border border-violet-500/20 bg-violet-500/[0.04] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-foreground/85">
-          Add context files
+        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Paperclip className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-300" />
+          Context files
           <InfoTip>TXT and PDF add text. Images use vision models. Size and count limits apply.</InfoTip>
         </span>
         <input

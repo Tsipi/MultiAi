@@ -10,8 +10,6 @@ export { ActionGhostButton } from "./ActionGhostButton";
 export { AttachmentChipList } from "./AttachmentChipList";
 export { AttachmentFileLinks } from "./AttachmentFileLinks";
 export { DebateOptionsTable } from "./DebateOptionsTable";
-export { DebateSettings } from "./DebateSettings";
 export { ModelUsageTable } from "./ModelUsageTable";
-export { SettingsBar } from "./SettingsBar";
 export { LeadRoleField } from "./LeadRoleField";
 export { WebResearchControl } from "./WebResearchControl";
