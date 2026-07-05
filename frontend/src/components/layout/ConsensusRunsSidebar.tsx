@@ -12,14 +12,17 @@ type Props = AnswersPanelProps & {
   onOpenChange: (open: boolean) => void;
   userEmail?: string | null;
   onLogout?: () => void;
+  runsThisMonth?: number | null;
+  runsQuota?: number | null;
 };
 
 export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function ConsensusRunsSidebar(
-  { open, onOpenChange, userEmail, onLogout, ...answersProps },
+  { open, onOpenChange, userEmail, onLogout, runsThisMonth, runsQuota, ...answersProps },
   ref
 ) {
   const navigate = useNavigate();
   const initial = userEmail ? userEmail[0].toUpperCase() : null;
+  const quotaPct = runsQuota && runsThisMonth != null ? Math.min(100, (runsThisMonth / runsQuota) * 100) : null;
   return (
     <aside
       className={cn(
@@ -98,6 +101,20 @@ export const ConsensusRunsSidebar = forwardRef<HTMLElement, Props>(function Cons
                   </Button>
                 )}
               </div>
+              {quotaPct !== null && runsThisMonth != null && runsQuota != null && (
+                <div className="mt-2 grid gap-1">
+                  <div className="flex justify-between text-[0.6rem] text-muted-foreground">
+                    <span>Runs this month</span>
+                    <span className={runsThisMonth >= runsQuota ? "text-amber-400" : ""}>{runsThisMonth} / {runsQuota}</span>
+                  </div>
+                  <div className="h-1 overflow-hidden rounded-full bg-muted/40">
+                    <div
+                      className={`h-full rounded-full transition-all ${runsThisMonth >= runsQuota ? "bg-amber-400" : "bg-violet-600"}`}
+                      style={{ width: `${quotaPct}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -24,8 +24,6 @@ type Props = {
   onOpenAdvanced: () => void;
   activeTemplateId: string | null;
   onSelectTemplate: (template: TeamTemplate) => void;
-  quotaUsed?: number | null;
-  quotaTotal?: number | null;
 };
 
 export function CommandBar({
@@ -42,8 +40,6 @@ export function CommandBar({
   onOpenAdvanced,
   activeTemplateId,
   onSelectTemplate,
-  quotaUsed,
-  quotaTotal,
 }: Props) {
   const busy = Boolean(disabled || loading);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -163,14 +159,8 @@ export function CommandBar({
                 >
                   <Plus className="h-5 w-5" strokeWidth={2} />
                 </Button>
-                <span className="text-[11px] text-muted-foreground/40 select-none">
-                  {quotaTotal != null && quotaUsed != null ? (
-                    <span className={quotaUsed >= quotaTotal ? "text-amber-400/80" : ""}>
-                      {quotaUsed} / {quotaTotal} runs this month
-                    </span>
-                  ) : (
-                    <span className="hidden sm:inline">Enter to run · Shift+Enter new line</span>
-                  )}
+                <span className="hidden text-[11px] text-muted-foreground/40 select-none sm:inline">
+                  Enter to run · Shift+Enter new line
                 </span>
               </div>
               <Button
