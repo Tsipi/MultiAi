@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { readAttachments, supportedUploadTypes } from "@/services/attachments";
@@ -97,12 +97,13 @@ export function CommandBar({
           >
             {/* Textarea row */}
             <div className="flex items-start gap-2 p-2 pl-3 pb-0">
+              {/* Attach button — desktop only; on mobile it moves to the footer */}
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 disabled={busy}
-                className="mt-2 min-h-[44px] min-w-[44px] shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15"
+                className="mt-2 hidden min-h-[44px] min-w-[44px] shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15 md:inline-flex"
                 aria-label="Add context files"
                 title="Attach files"
                 onClick={() => fileRef.current?.click()}
@@ -117,7 +118,7 @@ export function CommandBar({
                   "command-input min-h-[130px] max-h-[280px] w-full resize-y rounded-2xl border border-transparent bg-[var(--app-elevated)] px-3 py-3",
                   "text-[17px] font-display font-semibold text-foreground placeholder:text-muted-foreground/45 placeholder:font-normal"
                 )}
-                placeholder="Describe the challenge, question, or decision you want your team to tackle…"
+                placeholder="Ask your team anything…"
                 rows={4}
                 value={value}
                 disabled={busy}
@@ -131,19 +132,47 @@ export function CommandBar({
                   handleSubmit();
                 }}
               />
+              {/* Advanced settings button — mobile only, sits at top-right of the textarea row */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={busy}
+                className="mt-1 min-h-[44px] min-w-[44px] shrink-0 rounded-full text-muted-foreground hover:bg-violet-500/15 hover:text-violet-700 md:hidden"
+                aria-label="Advanced settings"
+                title="Advanced settings"
+                onClick={onOpenAdvanced}
+              >
+                <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
+              </Button>
             </div>
 
-            {/* Card footer: hint left · send button right */}
+            {/* Card footer: attach (mobile) + hint (desktop) left · send button right */}
             <div className="flex items-center justify-between px-4 py-2.5">
-              <span className="text-[11px] text-muted-foreground/40 select-none">
-                {quotaTotal != null && quotaUsed != null ? (
-                  <span className={quotaUsed >= quotaTotal ? "text-amber-400/80" : ""}>
-                    {quotaUsed} / {quotaTotal} runs this month
-                  </span>
-                ) : (
-                  <span className="hidden sm:inline">Enter to run · Shift+Enter new line</span>
-                )}
-              </span>
+              <div className="flex items-center gap-1">
+                {/* Attach button — mobile only, moved from textarea row */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={busy}
+                  className="min-h-[44px] min-w-[44px] shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15 md:hidden"
+                  aria-label="Add context files"
+                  title="Attach files"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <Plus className="h-5 w-5" strokeWidth={2} />
+                </Button>
+                <span className="text-[11px] text-muted-foreground/40 select-none">
+                  {quotaTotal != null && quotaUsed != null ? (
+                    <span className={quotaUsed >= quotaTotal ? "text-amber-400/80" : ""}>
+                      {quotaUsed} / {quotaTotal} runs this month
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline">Enter to run · Shift+Enter new line</span>
+                  )}
+                </span>
+              </div>
               <Button
                 type="button"
                 size="lg"

@@ -36,7 +36,7 @@ export function AgentStrip({ team, onTeamChange, leadRole, loading, lastActivity
       />
       <V2SectionHeader
         eyebrow="Your AI team"
-        subtitle="Fixed roster for each run: the Writer drafts answers, two Critics push back, and the Bench (scorer + summarizer, always DeepSeek on the server) turns rounds into scores and short summaries."
+        subtitle="Build your dream team: add up to 6 Writers and 6 Critics, each with their own model, name, and area of focus. They'll debate your question round by round until they reach a consensus."
         tip="Double-click any roster card to edit name, seat, model, and strengths. More options live under Advanced setup."
       />
       <div className="strip-grid strip-stagger">

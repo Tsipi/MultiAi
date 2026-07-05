@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Plus, Settings, Shield, Sun, Users, LogOut } from "lucide-react";
+import { Moon, SquarePen, Settings, Shield, Sun, Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { UserProfile } from "@/hooks/useAuth";
 import { TemplateShortcutRow } from "../team";
@@ -137,7 +137,7 @@ export function TopNav({ dark, onToggleDark, onNewRun, onOpenTemplates, userProf
             className="hidden md:inline-flex gap-1.5 font-display text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
             aria-label="Start a new run"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <SquarePen className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">New Run</span>
           </Button>
           <Button

@@ -1,4 +1,4 @@
-import { Clock, Plus, User } from "lucide-react";
+import { Clock, SquarePen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserProfile } from "@/hooks/useAuth";
 
@@ -54,7 +54,7 @@ export function MobileBottomNav({
           onClick={onNewRun}
           aria-label="Start a new run"
         >
-          <Plus className="h-6 w-6" />
+          <SquarePen className="h-6 w-6" />
         </button>
       </div>
 
