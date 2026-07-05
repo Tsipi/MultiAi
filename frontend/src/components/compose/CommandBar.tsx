@@ -102,7 +102,7 @@ export function CommandBar({
                 variant="ghost"
                 size="icon"
                 disabled={busy}
-                className="mt-2 h-10 w-10 shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15"
+                className="mt-2 min-h-[44px] min-w-[44px] shrink-0 rounded-full text-violet-700 hover:bg-violet-500/15"
                 aria-label="Add context files"
                 title="Attach files"
                 onClick={() => fileRef.current?.click()}
@@ -122,6 +122,9 @@ export function CommandBar({
                 value={value}
                 disabled={busy}
                 onChange={(e) => onChange(e.target.value)}
+                onFocus={(e) => {
+                  setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300);
+                }}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" || e.shiftKey) return;
                   e.preventDefault();

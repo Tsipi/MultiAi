@@ -66,7 +66,7 @@ export function PinnedAnswer({
           {faces.length > 0 && (
             <div
               ref={rosterRef}
-              className="absolute right-11 top-1/2 z-10 -translate-y-1/2"
+              className="absolute right-11 top-1/2 z-10 -translate-y-1/2 hidden sm:block"
               onMouseEnter={() => {
                 if (rosterRef.current && template) {
                   const r = rosterRef.current.getBoundingClientRect();

@@ -145,6 +145,7 @@ export function SessionPromptBlock({
             <textarea
               value={followupInstruction || ""}
               onChange={(e) => onFollowupInstructionChange?.(e.target.value)}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300)}
               placeholder="Describe what you want next..."
               disabled={loading}
               className="command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"
@@ -272,6 +273,7 @@ export function SessionPromptBlock({
             <textarea
               value={followupInstruction || ""}
               onChange={(e) => onFollowupInstructionChange?.(e.target.value)}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "nearest" }), 300)}
               placeholder="Describe what you want next..."
               disabled={loading}
               className="command-input w-full min-h-[100px] resize-y rounded-xl border border-violet-300/40 bg-card px-3 py-2 text-sm text-foreground disabled:opacity-50"

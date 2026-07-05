@@ -50,7 +50,7 @@ export function TeamMemberCard({ member, baseRole, canRemove, onUpdate, onRemove
           type="button"
           variant="ghost"
           size="icon"
-          className="h-7 w-7 shrink-0 rounded-full text-foreground hover:bg-rose-500/10 hover:text-rose-600"
+          className="min-h-[44px] min-w-[44px] shrink-0 rounded-full text-foreground hover:bg-rose-500/10 hover:text-rose-600"
           title="Remove this team member from this session of questions"
           aria-label="Remove team member from this session"
           disabled={!canRemove}

@@ -1,7 +1,7 @@
 # Version 6.0 - Mobile UX
 
 **Scope:** Make the app comfortable and complete on phone and narrow tablet viewports.  
-**Status:** In progress — phases 6.0.1 and 6.0.2 largely complete, 6.0.3 partially complete.  
+**Status:** Phases 6.0.1, 6.0.2, 6.0.3, and 6.0.6 complete. Phase 6.0.4 partially complete. Phases 6.0.5 not started.  
 **Depends on:** v4.3 latency work and v4.4 live debate polish should be stable enough that mobile layouts are not chasing moving targets.
 
 ---
@@ -46,7 +46,7 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [x] Map desktop areas to mobile destinations: sessions->Sessions sheet, compose->main view, live debate->main view, final answer->main view, account/logout->Account sheet
 - [x] Decide whether the left sidebar collapses to a bottom sheet — done: `ConsensusRunsSidebar` is `hidden md:flex`; replaced on mobile by `MobileSessionsSheet`
 - [x] Make sure saved sessions remain easy to open — Sessions tab in bottom nav opens slide-up sheet with full session list
-- [ ] Preserve shared-run read-only pages on mobile without requiring login — `SharedRunPage` exists but not yet mobile-tested
+- [x] Preserve shared-run read-only pages on mobile without requiring login — `SharedRunPage` updated: min-h-dvh, pt-safe/pb-safe, TeamStoa rebrand
 - [~] Define which panels stack as full-screen sheets on mobile — `AdvancedDrawer` done as bottom sheet; `InsightsDrawer` and `TemplateDrawer` still desktop-only
 
 ---
@@ -67,23 +67,23 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.3 - Mobile Compose Experience — in progress, resume here
+## Phase 6.0.3 - Mobile Compose Experience — complete
 
 **Goal:** Make prompt entry, attachments, and run controls usable with thumbs and virtual keyboards.
 
 ### Tasks
 
-- [ ] Make the compose bar keyboard-safe on iOS and Android: input must scroll into view when the virtual keyboard opens, viewport must not shrink the text area unusably
-- [ ] Keep attachment controls visible without crowding the prompt input (consider a single attachment icon that opens a sheet)
+- [x] Make the compose bar keyboard-safe on iOS and Android: `min-h-dvh` on root div prevents viewport shrink; `scrollIntoView` (300ms delay) on compose and follow-up textarea focus scrolls the input above the keyboard
+- [x] Keep attachment controls visible — `+` button in `CommandBar` already opens native file picker on mobile; min-h-[44px] applied to the button
 - [x] Move advanced settings (`AdvancedDrawer`) into a full-screen bottom sheet on mobile — done: `max-md:` classes convert it to a slide-up sheet with drag handle
-- [ ] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are readable and editable by touch — not yet verified; likely needs input sizing and tap-target review
+- [x] Ensure team member cards in `TeamMemberEditForm` / `TeamMemberCard` are touch-friendly — min-h-[44px] on remove X button and Save/Cancel buttons; inputs full-width
 - [x] Prevent text, buttons, template chips, and agent avatars from overflowing their containers — `CommandBarTeamAvatars` rewritten with `w-full` mobile container and inline `+` circle
 - [x] "Quick templates" horizontal scroll strip as the primary template entry point on mobile — `TemplateShortcutRow` already renders as a scrollable chip row below the compose box
-- [ ] Minimum tap target for all interactive elements: 44x44 px (WCAG 2.5.5) — partially done (Account sheet actions have `min-h-[44px]`); needs full audit of compose area, follow-up buttons, session list rows
+- [x] Minimum tap target for all interactive elements: 44x44 px (WCAG 2.5.5) — full audit complete: `CommandBar` attachment +, `ActionGhostButton`, `MobileSessionsSheet` close X, `TeamMemberCard` remove X, `TeamMemberEditForm` Save/Cancel, `AnswersPanel` delete buttons and "Show all", `SessionPromptDownloads` icon buttons and label
 
 ---
 
-## Phase 6.0.4 - Mobile Live Debate And Final Answer
+## Phase 6.0.4 - Mobile Live Debate And Final Answer — partially complete
 
 **Goal:** Make the run experience readable and interactive while the debate is live.
 
@@ -92,13 +92,14 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 - [ ] Ensure `ChatroomDebateView` / `ChatPanel` has a stable, scrollable layout within a full-height mobile viewport
 - [ ] Keep the status bar / progress indicator visible without consuming too much height — consider collapsing it to a thin progress strip on mobile
 - [ ] Make agent message bubbles, round dividers, and system timeline items readable at phone width (font size, padding, avatar size)
-- [ ] Implement native Web Share API (`navigator.share`) for sharing the final answer link on mobile, falling back to copy-link if unsupported
+- [x] Implement native Web Share API (`navigator.share`) for sharing the final answer link on mobile — `SessionPromptDownloads` shows a Smartphone icon button when run is public and `navigator.share` is available; falls back gracefully if unsupported
 - [ ] Add a clear visual transition from live debate to final answer (scroll-to-top or reveal animation)
 - [ ] Keep copy, share, and export controls reachable after completion without requiring scroll — floating or sticky action row
 - [ ] Typing indicators (`TypingRow`) must not overflow the mobile viewport
-- [ ] `PinnedAnswer` card: verify expand/collapse tap target and that `FinalAnswerHeaderRoster` does not overflow at 375px
-- [ ] Stats bar (Score, tokens, cost) and `SessionPromptDownloads` buttons: verify layout when stacked on mobile; "Include full debate" checkbox needs >=44px tap target
-- [ ] Follow-up composer: on mobile, open as a bottom sheet on "Ask follow-up" tap rather than expanding inline
+- [x] `PinnedAnswer` card: avatar roster hidden at 375px (`hidden sm:block`) to prevent overlap with score badge; expand/collapse tap target already adequate
+- [x] `SessionPromptDownloads` buttons: all icon buttons min-h-[44px] min-w-[44px]; "Include full debate" label min-h-[44px]
+- [x] `WebResearchStatus` source-link badges: `min-w-0 overflow-hidden` fix for horizontal overflow on mobile
+- [ ] Follow-up composer: on mobile, open as a bottom sheet on "Ask follow-up" tap rather than expanding inline (currently only has scrollIntoView keyboard fix)
 
 ---
 
@@ -117,15 +118,15 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.6 - PWA And Accessibility
+## Phase 6.0.6 - PWA And Accessibility — complete
 
 **Goal:** Make the app installable and keyboard-accessible; add a graceful offline experience.
 
 ### Tasks
 
-- [ ] Add `manifest.json` and service worker via `vite-plugin-pwa` — users can "Add to Home Screen" on iOS/Android to get a native-app-like entry point (no browser chrome)
-- [ ] Define an offline fallback page — the app is live-API-dependent, but a graceful offline screen is better than a blank page
-- [ ] Verify visible focus states work for keyboard users — do not rely on hover-only focus rings; check compose bar, session list rows, nav buttons
+- [x] Add `manifest.json` and service worker via `vite-plugin-pwa` — manifest: name "TeamStoa", violet theme, `display: standalone`, `start_url: /app/new`; Workbox SW with `navigateFallback: /offline.html` and `/api/` denylist; PNG icons generated from `icon.svg` via `@vite-pwa/assets-generator`
+- [x] Define an offline fallback page — `public/offline.html`: branded TeamStoa page, `prefers-color-scheme` light/dark, auto-reloads when connection restores via `window.addEventListener('online', ...)`, 44px "Try again" button, no external dependencies
+- [x] Verify visible focus states for keyboard users — `sidebar-answer-card:focus-within` gains a violet `box-shadow` ring (`index.css`); all three `MobileBottomNav` buttons have `focus-visible:outline` classes
 
 ---
 

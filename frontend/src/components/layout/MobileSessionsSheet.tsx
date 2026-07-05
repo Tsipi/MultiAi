@@ -49,7 +49,7 @@ export function MobileSessionsSheet({ onClose, ...answerProps }: Props) {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8 shrink-0"
+            className="min-h-[44px] min-w-[44px] shrink-0"
             aria-label="Close sessions panel"
           >
             <X className="h-4 w-4" />

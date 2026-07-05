@@ -311,6 +311,7 @@ export function ChatPanel(props: Props) {
               onDownloadMd={() => void runExport("md")}
               onDownloadPdf={() => void runExport("pdf")}
               isPublic={result.visibility === "public"}
+              publicSlug={result.public_slug}
               shareBusy={shareBusy}
               onShareToggle={props.onShareToggle && (async () => {
                 setShareBusy(true);

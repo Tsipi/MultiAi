@@ -492,7 +492,7 @@ export default function App() {
   const commandBarValue = loading && activeRunQuestion ? activeRunQuestion : form.question;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
       <TopNav
         dark={dark}
         onToggleDark={toggleDark}

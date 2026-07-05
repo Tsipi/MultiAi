@@ -21,7 +21,7 @@ export function WebResearchStatus({ result }: Props) {
 
   return (
     <section
-      className={`grid gap-2 rounded-xl border p-3 ${statusClass}`}
+      className={`grid min-w-0 gap-2 overflow-hidden rounded-xl border p-3 ${statusClass}`}
       aria-label="Web research status"
     >
       <div className="flex items-center gap-2">

@@ -33,6 +33,7 @@ export function MobileBottomNav({
         type="button"
         className={cn(
           "flex flex-1 flex-col items-center justify-center gap-1 px-2 transition-colors",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-[-2px]",
           activeSheet === "sessions"
             ? "text-violet-600"
             : "text-muted-foreground hover:text-foreground"
@@ -49,7 +50,7 @@ export function MobileBottomNav({
       <div className="flex flex-1 items-center justify-center">
         <button
           type="button"
-          className="relative -top-3 flex h-14 w-14 items-center justify-center rounded-full border-4 border-[var(--app-surface)] bg-gradient-to-br from-violet-600 to-violet-700 text-white shadow-lg shadow-violet-600/35 transition-all hover:scale-105 hover:shadow-violet-600/50 active:scale-95"
+          className="relative -top-3 flex h-14 w-14 items-center justify-center rounded-full border-4 border-[var(--app-surface)] bg-gradient-to-br from-violet-600 to-violet-700 text-white shadow-lg shadow-violet-600/35 transition-all hover:scale-105 hover:shadow-violet-600/50 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300 focus-visible:outline-offset-2"
           onClick={onNewRun}
           aria-label="Start a new run"
         >
@@ -62,6 +63,7 @@ export function MobileBottomNav({
         type="button"
         className={cn(
           "flex flex-1 flex-col items-center justify-center gap-1 px-2 transition-colors",
+          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500 focus-visible:outline-offset-[-2px]",
           activeSheet === "account"
             ? "text-violet-600"
             : "text-muted-foreground hover:text-foreground"
