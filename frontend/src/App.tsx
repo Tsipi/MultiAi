@@ -74,7 +74,7 @@ export default function App() {
   const { form, setForm, team, setTeam, attachments, setAttachments, activeCast, setActiveCast, addTeamMember, resetCompose } = useComposeForm(setToast);
 
   // ─── Session history ───────────────────────────────────────────────────────
-  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles } = useSessionHistory(isLoggedIn);
+  const { history, setHistory, selectedId, setSelectedId, resultsById, setResultsById, castBySession, setCastBySession, sessionTitles, setSessionTitles, sessionsLoading, sessionsError, refreshSessions } = useSessionHistory(isLoggedIn);
 
   // ─── Clarification ─────────────────────────────────────────────────────────
   const { clarificationPrompt, setClarificationPrompt, clarificationReason, setClarificationReason, clarificationOptions, setClarificationOptions, clarificationChoice, clarificationOtherText, setClarificationOtherText, chooseClarification, clearClarification } = useClarification();
@@ -337,6 +337,26 @@ export default function App() {
     );
     setResult((prev) => (prev?.session_id === id ? { ...prev, visibility, public_slug: slug } : prev));
   }
+
+  const handleShareToggleById = async (id: string) => {
+    const loaded = resultsById[id];
+    if (!loaded) return;
+    try {
+      if (loaded.visibility === "public") {
+        await unshareSession(id);
+        applyShareState(id, "private", null);
+        setToast("Run is now private.");
+      } else {
+        const slug = await shareSession(id);
+        applyShareState(id, "public", slug);
+        const url = `${window.location.origin}/shared/${slug}`;
+        await navigator.clipboard.writeText(url);
+        setToast("Share link copied to clipboard.");
+      }
+    } catch {
+      setToast("Could not update sharing for this run.");
+    }
+  };
 
   const removeSession = async (id: string) => {
     try {
@@ -620,7 +640,11 @@ export default function App() {
             setMobileSheet(null);
           }}
           onDelete={removeSession}
+          onShareToggle={handleShareToggleById}
           onClose={() => setMobileSheet(null)}
+          loading={sessionsLoading}
+          error={sessionsError}
+          onRefresh={refreshSessions}
         />
       )}
 

@@ -122,7 +122,7 @@ export const TEAM_TEMPLATES: TeamTemplate[] = [
   },
   {
     id: "investment-debate",
-    name: "Investment Debate Team",
+    name: "Investment Team",
     description: "Investment theses, risk vs reward, and market analysis.",
     members: [
       member("Brett", "writer", "Investment analyst — builds the bull case with data and market comps", "openai/gpt-5.4"),
