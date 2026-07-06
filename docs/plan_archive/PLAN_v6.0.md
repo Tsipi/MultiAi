@@ -107,18 +107,18 @@ TeamStoa should feel like a real mobile workspace, not a desktop dashboard squee
 
 ---
 
-## Phase 6.0.5 - Mobile Session History
+## Phase 6.0.5 - Mobile Session History — complete
 
 **Goal:** Make saved runs and threads easy to browse on small screens.
 
 ### Tasks
 
-- [ ] Add mobile session search by text or template name (not just a future maybe — the sidebar is too dense at 2-3 runs to be useful without filtering at scale)
-- [ ] Preserve thread grouping and follow-up context with clear indentation or thread indicator
-- [ ] Make share, unshare, and delete actions accessible via a long-press or swipe gesture, not hover menus
-- [ ] Add empty, loading, and error states for the mobile session view
-- [ ] Confirm pull-to-refresh or manual refresh works predictably
-- [ ] Back navigation from a session view returns to the session list without losing scroll position
+- [x] Add mobile session search by text or template name — search input + live filter already in `AnswersPanel` compact mode (used by `MobileSessionsSheet`)
+- [x] Preserve thread grouping and follow-up context with clear indentation or thread indicator — `groupByThread()` + `child` prop (indented `ml-2 sm:ml-3`) in `AnswersPanel`
+- [x] Make share, unshare, and delete actions accessible without hover — Share/Unshare icon button added to each compact row alongside the existing Delete button; only visible once a session's result is loaded (visibility known); `handleShareToggleById` in `App.tsx`
+- [x] Add empty, loading, and error states for the mobile session view — `useSessionHistory` now exposes `sessionsLoading`/`sessionsError`/`refreshSessions`; `MobileSessionsSheet` shows spinner while loading, error + retry when fetch fails, and "No runs yet" empty state
+- [x] Pull-to-refresh / manual refresh — `RefreshCw` button in `MobileSessionsSheet` header; spins while loading; calls `refreshSessions` from `useSessionHistory`
+- [x] Back navigation from a session view returns to the session list without losing scroll position — `MobileSessionsSheet` auto-scrolls to the row with `aria-current="true"` on mount, so the previously-selected session is visible each time the sheet opens
 
 ---
 

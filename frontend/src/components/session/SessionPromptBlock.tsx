@@ -339,7 +339,7 @@ export function SessionPromptBlock({
               {teamTemplateName && <TemplateNameChip name={teamTemplateName} />}
             </div>
             <p className="text-sm text-muted-foreground">
-              This answer is from a previous run{result.session_id ? <> (session <span className="font-mono text-xs">{result.session_id}</span>)</> : ""}.
+              {savedAnswerSubtitle(result, teamTemplateName)}
             </p>
           </div>
           {onStartNewSession && (
@@ -377,7 +377,25 @@ export function SessionPromptBlock({
           }}
           onEdit={() => setEditing(true)}
         />
+
       )}
     </section>
   );
+}
+
+function savedAnswerSubtitle(result: ConsultResult, teamTemplateName?: string): string {
+  const team = teamTemplateName || "your team";
+  const date = result.session_id ? formatSessionDate(result.session_id) : "";
+  const rounds = result.full_discussion?.length ?? 0;
+  const parts: string[] = [`Answered by your ${team}`];
+  if (date) parts.push(date);
+  if (rounds > 0) parts.push(`${rounds} round${rounds !== 1 ? "s" : ""}`);
+  return parts.join(" · ") + ".";
+}
+
+function formatSessionDate(sessionId: string): string {
+  const m = sessionId.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})$/);
+  if (!m) return "";
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4]), Number(m[5]), Number(m[6]));
+  return d.toLocaleString(undefined, { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
 }

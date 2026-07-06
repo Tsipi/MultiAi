@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listSessions } from "@/services/api";
 import { ConsultResult, SessionPreview } from "@/types";
 import { type CastSelection, toPreview } from "@/lib/consultHelpers";
@@ -20,6 +20,8 @@ export function useSessionHistory(isLoggedIn: boolean) {
   const [resultsById, setResultsById] = useState<Record<string, ConsultResult>>({});
   const [castBySession, setCastBySession] = useState<Record<string, CastSelection>>(loadCastFromStorage);
   const [sessionTitles, setSessionTitles] = useState<Record<string, string>>({});
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [sessionsError, setSessionsError] = useState(false);
 
   useEffect(() => {
     try {
@@ -27,15 +29,26 @@ export function useSessionHistory(isLoggedIn: boolean) {
     } catch {}
   }, [castBySession]);
 
+  const refreshSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    setSessionsError(false);
+    try {
+      const rows = await listSessions();
+      setHistory(rows.map(toPreview));
+    } catch {
+      setSessionsError(true);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoggedIn) {
       setHistory([]);
       return;
     }
-    listSessions()
-      .then((rows) => setHistory(rows.map(toPreview)))
-      .catch(() => setHistory([]));
-  }, [isLoggedIn]);
+    void refreshSessions();
+  }, [isLoggedIn, refreshSessions]);
 
   return {
     history,
@@ -48,5 +61,8 @@ export function useSessionHistory(isLoggedIn: boolean) {
     setCastBySession,
     sessionTitles,
     setSessionTitles,
+    sessionsLoading,
+    sessionsError,
+    refreshSessions,
   };
 }

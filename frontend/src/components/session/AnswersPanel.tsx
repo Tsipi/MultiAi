@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useState } from "react";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown, Link2Off, Share2, Trash2 } from "lucide-react";
 import { ChatPanel } from "../debate/ChatPanel";
 import { ChatroomDebateView } from "../debate/ChatroomDebateView";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export type AnswersPanelProps = {
   chatPanelProps: ChatPanelProps;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
+  onShareToggle?: (id: string) => void | Promise<void>;
   /** Sidebar layout: tighter chrome, no duplicate "Consensus" title */
   compact?: boolean;
 };
@@ -43,6 +44,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
     chatPanelProps,
     onSelect,
     onDelete,
+    onShareToggle,
     compact = false,
   },
   ref
@@ -189,6 +191,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               isExpanded={!compact && expandedId === thread.parent.id}
               isSelected={compact && selectedId === thread.parent.id}
               listSelectOnly={compact}
+              shareVisibility={resultsById[thread.parent.id]?.visibility}
               chatProps={buildSessionChatProps(
                 thread.parent.id,
                 selectedId,
@@ -199,6 +202,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               suppressActivityFeed={chatPanelProps.loading}
               onToggle={() => (compact ? selectRow(thread.parent.id) : toggleItem(thread.parent.id))}
               onDelete={onDelete}
+              onShareToggle={onShareToggle}
             />
             {thread.runs.map((run) => (
               <AccordionItem
@@ -211,6 +215,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 isExpanded={!compact && expandedId === run.id}
                 isSelected={compact && selectedId === run.id}
                 listSelectOnly={compact}
+                shareVisibility={resultsById[run.id]?.visibility}
                 chatProps={buildSessionChatProps(
                   run.id,
                   selectedId,
@@ -221,6 +226,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 suppressActivityFeed={chatPanelProps.loading}
                 onToggle={() => (compact ? selectRow(run.id) : toggleItem(run.id))}
                 onDelete={onDelete}
+                onShareToggle={onShareToggle}
                 child
               />
             ))}
@@ -289,10 +295,12 @@ function AccordionItem({
   isExpanded,
   isSelected,
   listSelectOnly,
+  shareVisibility,
   chatProps,
   suppressActivityFeed,
   onToggle,
   onDelete,
+  onShareToggle,
   child = false,
 }: {
   session: SessionPreview;
@@ -301,10 +309,12 @@ function AccordionItem({
   isExpanded: boolean;
   isSelected: boolean;
   listSelectOnly: boolean;
+  shareVisibility?: string;
   chatProps: ChatPanelProps;
   suppressActivityFeed: boolean;
   onToggle: () => void;
   onDelete: (id: string) => void;
+  onShareToggle?: (id: string) => void | Promise<void>;
   child?: boolean;
 }) {
   const description = [session.is_followup ? "Follow-up" : null, formatDate(session.timestamp)]
@@ -312,6 +322,7 @@ function AccordionItem({
     .join(" · ");
 
   if (listSelectOnly) {
+    const isShared = shareVisibility === "public";
     return (
       <div
         className={cn(
@@ -349,6 +360,22 @@ function AccordionItem({
               )}
             </div>
           </button>
+          {onShareToggle && shareVisibility !== undefined && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-auto min-w-[44px] shrink-0 bg-transparent hover:bg-muted/45",
+                isShared ? "text-violet-500 hover:text-violet-400" : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => void onShareToggle(session.id)}
+              aria-label={isShared ? "Make private" : "Share run"}
+              title={isShared ? "Make private" : "Share run"}
+            >
+              {isShared ? <Link2Off className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
