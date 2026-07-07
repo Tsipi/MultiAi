@@ -39,6 +39,9 @@ import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
+import { TermsPage } from "./pages/TermsPage";
+import { AboutPage } from "./pages/AboutPage";
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -505,6 +508,9 @@ export default function App() {
   if (sharedSlugMatch) return <SharedRunPage slug={sharedSlugMatch[1]} />;
   if (location.pathname === "/forgot-password") return <ForgotPasswordPage />;
   if (location.pathname === "/reset-password") return <ResetPasswordPage />;
+  if (location.pathname === "/privacy") return <PrivacyPage />;
+  if (location.pathname === "/terms") return <TermsPage />;
+  if (location.pathname === "/about") return <AboutPage />;
 
   if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 

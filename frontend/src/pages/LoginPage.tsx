@@ -1,7 +1,7 @@
 import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 type Props = {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -116,6 +116,15 @@ export function LoginPage({ onLogin, onRegister }: Props) {
             >
               {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
             </button>
+
+            {mode === "register" && (
+              <p className="text-center text-xs text-muted-foreground/60">
+                By creating an account you agree to our{" "}
+                <Link to="/terms" className="underline hover:text-muted-foreground transition">Terms of Service</Link>
+                {" "}and{" "}
+                <Link to="/privacy" className="underline hover:text-muted-foreground transition">Privacy Policy</Link>.
+              </p>
+            )}
           </form>
 
           <div className="mt-5 text-center text-sm text-muted-foreground">

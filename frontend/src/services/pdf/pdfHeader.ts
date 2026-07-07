@@ -18,7 +18,7 @@ export function drawPageHeader(
 
     font(doc, "bold", 9);
     textColor(doc, PDF.colors.brand);
-    doc.text("MultiAi Consensus", PDF.marginX + logoSize + 7, 45);
+    doc.text("TeamStoa", PDF.marginX + logoSize + 7, 45);
 
     if (exportDate) {
       font(doc, "italic", PDF.fontSize.meta);
