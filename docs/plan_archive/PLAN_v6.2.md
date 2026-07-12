@@ -1,7 +1,7 @@
 # Version 6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing
 
 **Scope:** Close the remaining gaps from the Marketing rebrand checklist before any public launch.
-**Status:** Phases 6.2.1–6.2.6 complete. Phase 6.2.7 (sitemap) deferred. Phase 6.2.8 (email) blocked — setup instructions kept in private notes.
+**Status:** Phases 6.2.1–6.2.6 complete. Phase 6.2.7 (sitemap) deferred. Phase 6.2.8 (email) blocked. Phase 6.2.9 (SPA routing) in progress.
 **Depends on:** v6.0 (mobile UX) stable. Domain `teamstoa.com` connected.
 
 ---
@@ -125,6 +125,61 @@ Required before any public marketing push or paid tier.
 - [ ] Set Railway env vars: `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM=TeamStoa <noreply@teamstoa.com>`, `APP_URL=https://www.teamstoa.com`
 - [ ] Test password reset and verification emails end-to-end
 - [ ] Update contact email in `PrivacyPage.tsx`, `TermsPage.tsx`, `AboutPage.tsx` to `hello@teamstoa.com`
+
+---
+
+## Phase 6.2.9 - SPA Routing Fix (nginx on Railway) — in progress
+
+**Goal:** Make every app route work on hard navigation (typing a URL directly, opening a shared
+link in a new tab, refreshing a deep page) — not just on in-app clicks.
+
+### Why this matters
+
+TeamStoa is a Single-Page Application (SPA): React renders every route in the browser, but the
+server only has one real file — `index.html`. When a user navigates inside the app, React Router
+handles it silently. But when the browser makes a fresh HTTP request for a route like `/admin`,
+`/privacy`, or `/shared/abc123`, the server must return `index.html` for the app to boot and
+take over. If it returns a 404 — or worse, returns `index.html` for the JS bundle too — the page
+is blank.
+
+This is a **launch blocker** for two reasons:
+
+1. **Shared debate links** (`/shared/:slug`) are the product's primary viral loop. If a recipient
+   opens a shared link in a new browser tab, they get a blank page. No one will share the product.
+2. **Legal and marketing pages** (`/privacy`, `/terms`, `/about`) added in Phases 6.2.4–6.2.6
+   must work as direct links — they are referenced in registration forms, emails, and footers.
+
+### What was tried first and why it failed
+
+A `frontend/public/_redirects` file with `/* /index.html 200` (Netlify-style rewrite) was added
+as a quick workaround. Railway's static file server partially supported it — the HTML document
+was served correctly — but then applied the catch-all to the JS bundle requests too
+(`/assets/index-BqZJMeSN.js` → returned `index.html` → MIME type error → blank page).
+Railway has no "404 fallback page" setting in its dashboard to fix this properly.
+
+### Solution: nginx Dockerfile
+
+Replace Railway's built-in static file server with an nginx container built from a
+`frontend/Dockerfile`. nginx's `try_files $uri $uri/ /index.html` directive is the industry
+standard for SPA routing: it serves real files (JS, CSS, images) directly, and only falls back
+to `index.html` for paths that have no matching file — exactly what is needed.
+
+**Files added:**
+
+- `frontend/Dockerfile` — multi-stage build: Node 20 builds the Vite app, nginx alpine serves it
+- `frontend/nginx.conf` — SPA routing config with long-cache headers for hashed assets
+
+**Railway change required:** In the frontend Railway service, set the root directory to
+`frontend/` so Railway finds and builds the `Dockerfile`. The service type changes from
+Railway's built-in static server to a Docker-based service.
+
+### Tasks
+
+- [x] Add `frontend/Dockerfile` (multi-stage: node build → nginx serve)
+- [x] Add `frontend/nginx.conf` (SPA `try_files` + 1-year asset cache)
+- [ ] Update Railway frontend service: set root directory to `frontend/`, trigger redeploy
+- [ ] Verify: hard-navigate to `/admin`, `/privacy`, `/shared/:slug` — all should load correctly
+- [ ] Remove `frontend/public/_redirects` once nginx is confirmed working (it is now unused)
 
 ---
 
