@@ -1,7 +1,6 @@
 import { AttachmentFileRef, ConsultPayload, ConsultResult, StreamHandlers } from "../types";
+import { getApiBaseUrl } from "../lib/apiBaseUrl";
 import { getAuthToken } from "../lib/authToken";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 function authHeaders(): Record<string, string> {
   const token = getAuthToken();
@@ -16,7 +15,7 @@ function apiFetch(url: string, init?: RequestInit): Promise<Response> {
 }
 
 export async function consult(payload: ConsultPayload): Promise<ConsultResult> {
-  const response = await apiFetch(`${BASE_URL}/api/consult`, {
+  const response = await apiFetch(`${getApiBaseUrl()}/api/consult`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -36,7 +35,7 @@ export async function listSessions(): Promise<Array<{
   is_followup?: boolean;
   run_title?: string;
 }>> {
-  const response = await apiFetch(`${BASE_URL}/api/sessions`);
+  const response = await apiFetch(`${getApiBaseUrl()}/api/sessions`);
   if (!response.ok) {
     throw new Error("Could not load sessions.");
   }
@@ -52,7 +51,7 @@ export async function listSessions(): Promise<Array<{
 }
 
 export async function getSession(sessionId: string): Promise<ConsultResult> {
-  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}`);
+  const response = await apiFetch(`${getApiBaseUrl()}/api/sessions/${sessionId}`);
   if (!response.ok) {
     throw new Error("Could not load session.");
   }
@@ -68,7 +67,7 @@ function titleFallback(question: string): string {
 
 export async function generateTitle(question: string, role = ""): Promise<string> {
   try {
-    const response = await apiFetch(`${BASE_URL}/api/title`, {
+    const response = await apiFetch(`${getApiBaseUrl()}/api/title`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, role })
@@ -82,14 +81,14 @@ export async function generateTitle(question: string, role = ""): Promise<string
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}`, { method: "DELETE" });
+  const response = await apiFetch(`${getApiBaseUrl()}/api/sessions/${sessionId}`, { method: "DELETE" });
   if (!response.ok) {
     throw new Error("Could not delete session.");
   }
 }
 
 export async function shareSession(sessionId: string): Promise<string> {
-  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}/share`, { method: "POST" });
+  const response = await apiFetch(`${getApiBaseUrl()}/api/sessions/${sessionId}/share`, { method: "POST" });
   if (!response.ok) {
     throw new Error("Could not share session.");
   }
@@ -98,14 +97,14 @@ export async function shareSession(sessionId: string): Promise<string> {
 }
 
 export async function unshareSession(sessionId: string): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/api/sessions/${sessionId}/unshare`, { method: "POST" });
+  const response = await apiFetch(`${getApiBaseUrl()}/api/sessions/${sessionId}/unshare`, { method: "POST" });
   if (!response.ok) {
     throw new Error("Could not unshare session.");
   }
 }
 
 export async function getSharedRun(slug: string): Promise<ConsultResult> {
-  const response = await apiFetch(`${BASE_URL}/api/shared/${slug}`);
+  const response = await apiFetch(`${getApiBaseUrl()}/api/shared/${slug}`);
   if (!response.ok) {
     throw new Error("Shared run not found.");
   }
@@ -113,7 +112,7 @@ export async function getSharedRun(slug: string): Promise<ConsultResult> {
 }
 
 export async function consultStream(payload: ConsultPayload, handlers: StreamHandlers): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/api/consult-stream`, {
+  const response = await apiFetch(`${getApiBaseUrl()}/api/consult-stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

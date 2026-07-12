@@ -1,8 +1,7 @@
 import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
+import { getApiBaseUrl } from "@/lib/apiBaseUrl";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ export function ForgotPasswordPage() {
     setError("");
     setLoading(true);
     try {
-      await fetch(`${BASE_URL}/api/auth/forgot-password`, {
+      await fetch(`${getApiBaseUrl()}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

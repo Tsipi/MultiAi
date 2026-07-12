@@ -209,23 +209,23 @@ If you see that, the backend is running correctly.
 
 ---
 
-## Step 6 — One code change before deploying the frontend
+## Step 6 — Confirm frontend API configuration
 
-Right now the frontend is hardcoded to call `http://localhost:8000` for the backend. In production it needs to call the Railway backend URL instead. This is a one-line change.
+The frontend reads the backend URL from `VITE_API_BASE_URL` when Railway builds the static files.
+Local development still uses `http://localhost:8000`, but production builds should never call localhost.
 
-Open [frontend/src/services/api.ts](../../frontend/src/services/api.ts) and find the line that sets the API base URL. Change it to read from an environment variable:
+The source of truth is [frontend/src/lib/apiBaseUrl.ts](../../frontend/src/lib/apiBaseUrl.ts):
 
 ```ts
-// Change this line:
-const API_BASE = "http://localhost:8000";
-
-// To this:
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, "");
 ```
 
-`import.meta.env.VITE_API_BASE_URL` is how Vite (the frontend build tool) reads environment variables at build time. The `?? "http://localhost:8000"` part means "if the variable is not set, fall back to localhost" — so local development still works without any changes.
+`import.meta.env.VITE_API_BASE_URL` is how Vite reads environment variables at build time.
+If the variable is missing in production, the app shows a configuration error instead of silently
+posting to `http://localhost:8000`.
 
-**Commit and push this change to GitHub before continuing.**
+**Important:** because Vite bakes this value into the frontend bundle during `npm run build`, changing
+the Railway variable requires a fresh frontend redeploy.
 
 ---
 
@@ -249,6 +249,9 @@ This is the most important setting for the frontend service. It tells Railway to
    - This means Railway will run all commands from inside the `frontend/` folder, so `npm install` will find `package.json` correctly.
 
 ### 7c — Set build and start commands
+
+This repo pins the frontend to Node 20+ with `frontend/package.json` and `frontend/.nvmrc`.
+That matters because Tailwind's native build package requires Node 20 or newer.
 
 **Build Command:**
 ```
@@ -274,7 +277,8 @@ npx serve dist -l $PORT
 - **No trailing slash**
 - Why: this gets baked into the frontend at build time so all API calls go to your live backend instead of localhost.
 
-After adding the variable, click **"Deploy"** (or redeploy if it already tried to build).
+After adding or changing the variable, click **"Redeploy"** on the frontend service. A restart is not
+enough because the value must be present during the build.
 
 ---
 
@@ -351,9 +355,12 @@ From now on: `git push origin main` → Railway rebuilds and redeploys automatic
 **What it means:** Database migration failed — likely `DATABASE_URL` is not set yet.  
 **Fix:** Confirm `DATABASE_URL` is in the backend service Variables (see above), then trigger a new deploy.
 
-### Frontend deployed but login redirects to localhost
-**What it means:** `VITE_API_BASE_URL` was not set when the frontend was built.  
-**Fix:** Add the variable, then click **"Redeploy"** in the frontend service Deployments tab.
+### Frontend deployed but login posts to localhost or shows a production API URL error
+**What it means:** `VITE_API_BASE_URL` was not set when the frontend was built, or the frontend service
+is serving an older build.  
+**Fix:** In the **frontend** service, add `VITE_API_BASE_URL=https://YOUR-BACKEND-URL` with no trailing
+slash, then click **"Redeploy"** in the frontend service Deployments tab. Do not set this variable only
+on the backend service.
 
 ---
 
