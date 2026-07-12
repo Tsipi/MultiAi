@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import { jsPDF } from "tsipi";
 
 const doc = new jsPDF({ unit: "pt", format: "a4" });
 doc.setFont("helvetica", "normal");
