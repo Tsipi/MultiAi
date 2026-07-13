@@ -262,10 +262,21 @@ npm install && npm run build
 
 **Start Command:**
 ```
-npx serve dist -l $PORT
+npx serve -s dist -l $PORT
 ```
-- `serve` is a simple static file server — it just sends files from the `dist/` folder to browsers
+- `serve` is a simple static file server — it just sends files from the `dist/` folder to browsers. It is
+  listed in `frontend/package.json` as a normal dependency, so the build step (`npm install`) already
+  installs it — `npx` finds it locally instead of re-downloading it from the registry on every restart.
+- `-s` — single-page-app mode. This app uses client-side routing (React Router), so only `index.html`
+  really exists as a page; routes like `/app/run/:id` are rendered in the browser, not served as real
+  files. Without `-s`, refreshing the page on any route other than `/` returns a 404 (blank page).
+  `-s` makes `serve` fall back to `index.html` for any path that is not a real file in `dist/`, while
+  still serving real files (JS/CSS bundles, images) normally.
 - `-l $PORT` — listens on the port Railway assigns
+
+**Healthcheck Path (optional but recommended):** in Settings → Deploy → "Healthcheck Path", set it to
+`/`. This makes Railway wait for a successful response from the new deployment before routing traffic
+to it and killing the old one, instead of just checking that the process started.
 
 ### 7d — Set environment variables for the frontend
 
