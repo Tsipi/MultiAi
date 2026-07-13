@@ -120,6 +120,7 @@ export function applyRunResult(
       parent_session_id: next.parent_session_id,
       is_followup: next.is_followup,
       run_title: fallbackTitle,
+      team_template_id: next.team_template_id,
     }),
     ...prev.filter((p) => p.id !== next.session_id),
   ]);

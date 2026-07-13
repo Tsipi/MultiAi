@@ -56,6 +56,11 @@ export function toPreview(row: {
   parent_session_id?: string;
   is_followup?: boolean;
   run_title?: string;
+  team_template_id?: string;
+  writer_names?: string[];
+  critic_names?: string[];
+  model_writers?: string[];
+  model_critics?: string[];
 }): SessionPreview {
   return {
     id: row.session_id,
@@ -65,6 +70,11 @@ export function toPreview(row: {
     parent_session_id: row.parent_session_id || "",
     is_followup: Boolean(row.is_followup),
     run_title: row.run_title || row.question,
+    team_template_id: row.team_template_id ?? "",
+    writer_names: row.writer_names,
+    critic_names: row.critic_names,
+    model_writers: row.model_writers,
+    model_critics: row.model_critics,
   };
 }
 

@@ -157,10 +157,18 @@ async def list_sessions(
 
     runs = (await db.execute(stmt)).scalars().all()
 
+    # The sidebar shows a team-template badge per session using team_template_id below,
+    # without loading each session's full result. Sessions saved before that field
+    # existed have none, so for those rows only, the raw writer/critic cast is also
+    # included as legacy_cast — letting the frontend infer a template the same way the
+    # main saved-answer view already does. Every session going forward stays lean
+    # (team_template_id alone, legacy_cast empty).
     rows: list[dict] = []
     for run in runs:
         output_result = await db.execute(select(Output).where(Output.run_id == run.id))
         output = output_result.scalar_one_or_none()
+        team_template_id = ""
+        legacy_cast: dict = {}
         if output:
             payload = output.full_session_json
             is_stub = bool(payload.get("needs_clarification")) and not bool(
@@ -168,6 +176,14 @@ async def list_sessions(
             )
             if is_stub:
                 continue
+            team_template_id = payload.get("team_template_id", "")
+            if not team_template_id:
+                legacy_cast = {
+                    "writer_names": payload.get("writer_names", []),
+                    "critic_names": payload.get("critic_names", []),
+                    "model_writers": payload.get("model_writers", []),
+                    "model_critics": payload.get("model_critics", []),
+                }
         rows.append({
             "session_id": run.session_id,
             "question": run.prompt,
@@ -176,6 +192,8 @@ async def list_sessions(
             "parent_session_id": run.parent_session_id or "",
             "is_followup": run.is_followup,
             "run_title": run.title,
+            "team_template_id": team_template_id,
+            **legacy_cast,
         })
     return rows
 

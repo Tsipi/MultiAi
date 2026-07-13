@@ -30,6 +30,7 @@ class ConsultRequest(BaseModel):
     critic_names: list[str] = Field(default_factory=list)
     writer_roles: list[str] = Field(default_factory=list)
     critic_roles: list[str] = Field(default_factory=list)
+    team_template_id: str = ""
     # Legacy single-model fields — coerced into the list fields by the validator below
     writer: str = ""
     critic_a: str = ""
@@ -94,6 +95,7 @@ class ConsultResponse(BaseModel):
     critic_names: list[str] = []
     writer_roles: list[str] = []
     critic_roles: list[str] = []
+    team_template_id: str = ""
 
     # ── Debate output ───────────────────────────────────────────────────────
     final_answer: str
