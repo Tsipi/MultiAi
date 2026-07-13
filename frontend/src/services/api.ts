@@ -201,6 +201,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     root_question: String(raw.root_question ?? ""),
     source_prompt: String(raw.source_prompt ?? ""),
     source_final_answer: String(raw.source_final_answer ?? ""),
+    source_final_score: Number(raw.source_final_score ?? 0),
     followup_instruction: String(raw.followup_instruction ?? ""),
 
     // ── Usage & cost ────────────────────────────────────────────────────

@@ -47,10 +47,10 @@ export function DebateChatBubble({
 
   const isRight = align !== undefined ? align === "right" : id === "writer";
   return (
-    <li className={cn("flex gap-2 items-end", isRight && "flex-row-reverse")}>
+    <li className={cn("flex gap-2 items-end min-w-0", isRight && "flex-row-reverse")}>
       <div
         className={cn(
-          "max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",
+          "min-w-0 max-w-[min(92%,900px)] rounded-xl border border-border/35 px-2.5 py-2 shadow-sm",
           `bubble-${id}`
         )}
       >
@@ -75,7 +75,7 @@ export function DebateChatBubble({
             {sublabel && <span className="text-[0.64rem] text-muted-foreground/60 leading-snug">{sublabel}</span>}
           </div>
         </div>
-        <div className="disc-prose text-sm leading-snug">{children}</div>
+        <div className="disc-prose min-w-0 break-words text-sm leading-snug">{children}</div>
         {rawText ? (
           <div className="mt-2 flex justify-end gap-1">
             <Button type="button" size="icon" variant="outline" className="h-7 w-7 rounded-full" onClick={() => void copyText()} aria-label="Copy answer text">

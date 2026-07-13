@@ -72,6 +72,7 @@ export type ConsultPayload = {
   root_question?: string;
   source_prompt?: string;
   source_final_answer?: string;
+  source_final_score?: number;
   followup_instruction?: string;
 };
 
@@ -123,6 +124,7 @@ export type ConsultResult = {
   root_question: string;
   source_prompt: string;
   source_final_answer: string;
+  source_final_score: number;
   followup_instruction: string;
 
   // ── Usage & cost ──────────────────────────────────────────────────────

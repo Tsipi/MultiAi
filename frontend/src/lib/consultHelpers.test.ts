@@ -113,6 +113,7 @@ describe("buildFollowupContext", () => {
     root_question: "Original root trip prompt",
     source_prompt: "Original source prompt",
     source_final_answer: "Older source answer without the new city.",
+    source_final_score: 7,
     followup_instruction: "",
     model_costs: [],
     total_cost_usd: 0,

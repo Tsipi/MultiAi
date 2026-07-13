@@ -400,7 +400,7 @@ export function ChatPanel(props: Props) {
             defaultOpen
             titleClassName="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300"
           >
-            <div className="grid gap-0">
+            <div className="flex flex-col gap-0">
               {result.full_discussion.map((r, idx) => {
                 const roundLabel = String((r.round_num as number) ?? idx + 1);
                 const criticCount = Math.max(
@@ -419,7 +419,7 @@ export function ChatPanel(props: Props) {
                 return (
                   <article
                     key={idx}
-                    className={cn("grid gap-2", idx > 0 && "mt-3")}
+                    className={cn("flex flex-col gap-2 min-w-0", idx > 0 && "mt-3")}
                   >
                     <div className="flex items-center gap-3 select-none">
                       <div className="flex-1 border-t border-border/25" />
@@ -433,7 +433,7 @@ export function ChatPanel(props: Props) {
                       </div>
                       <div className="flex-1 border-t border-border/25" />
                     </div>
-                    <ol className="list-none m-0 grid gap-2 p-0">
+                    <ol className="list-none m-0 flex flex-col gap-2 p-0 min-w-0">
                       <DebateChatBubble
                         id="writer"
                         label={writerName}

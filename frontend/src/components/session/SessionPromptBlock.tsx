@@ -4,12 +4,11 @@ import type { TeamMember } from "@/data/experts";
 import { attachmentListForDisplay, promptTextForDisplay, stripAttachmentBlock } from "@/lib/promptDisplay";
 import { sharedLeadExpertRole } from "@/lib/teamSharedRole";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
 import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
 import { SessionPromptActions } from "./SessionPromptActions";
 import { SessionAttachmentList } from "./SessionAttachmentList";
 import { SessionViewActions } from "./SessionViewActions";
-import { MarkdownView } from "../primitives/MarkdownView";
+import { PinnedAnswer } from "./PinnedAnswer";
 import { TemplateNameChip } from "../team/TemplateNameChip";
 import { WebResearchStatus } from "./WebResearchStatus";
 
@@ -85,19 +84,13 @@ export function SessionPromptBlock({
 
       <WebResearchStatus result={result} />
 
-      {/* 2. Previous answer — collapsible to keep the panel compact */}
-      <details className="group/prev">
-        <summary className="cursor-pointer list-none select-none [&::-webkit-details-marker]:hidden flex items-center justify-between gap-2 hover:opacity-70 transition-opacity">
-          <p className={sectionLabel + " pointer-events-none"}>Previous answer</p>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open/prev:rotate-180" />
-        </summary>
-        <div className="mt-2 max-h-56 overflow-y-auto">
-          <MarkdownView
-            content={result.source_final_answer || "Previous answer unavailable."}
-            className="border-violet-500/15 bg-card/60 text-sm max-w-none shadow-none"
-          />
-        </div>
-      </details>
+      {/* 2. Previous answer — same card treatment as the Final Answer, with its own score badge */}
+      <PinnedAnswer
+        label="Previous Answer"
+        finalAnswer={result.source_final_answer || "Previous answer unavailable."}
+        score={result.source_final_score}
+        previewWhenClosed={false}
+      />
 
       {/* 3. Follow-up instruction (this session) */}
       <div className="grid gap-1.5">

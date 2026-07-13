@@ -99,6 +99,7 @@ export function buildFollowupContext(result: ConsultResult): {
   rootQuestion: string;
   parentPrompt: string;
   parentFinalAnswer: string;
+  parentFinalScore: number;
 } {
   const rootQuestion = result.root_question || result.source_prompt || result.question;
   const parentPrompt = result.is_followup
@@ -108,5 +109,6 @@ export function buildFollowupContext(result: ConsultResult): {
     rootQuestion,
     parentPrompt,
     parentFinalAnswer: result.final_answer || result.source_final_answer,
+    parentFinalScore: result.final_score,
   };
 }
