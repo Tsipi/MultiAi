@@ -301,6 +301,9 @@ export default function App() {
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
+    // A saved session's team label must come from its own recorded cast, never from
+    // whatever template happened to be active in the compose picker beforehand.
+    setActiveTemplateId(null);
     if (!loading) setActivity([]);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     if (resultsById[id]) return;
@@ -495,7 +498,10 @@ export default function App() {
     if (userProfile.pref_web_research_mode) {
       setForm((f) => ({ ...f, web_search_mode: userProfile.pref_web_research_mode as typeof f.web_search_mode }));
     }
-    if (userProfile.pref_team_template) {
+    // Only pre-select the default team for a fresh compose — never override the
+    // team label of a saved run opened directly via URL (e.g. a reload or deep link).
+    const viewingExistingRun = /^\/app\/run\//.test(location.pathname);
+    if (userProfile.pref_team_template && !viewingExistingRun) {
       const tpl = TEAM_TEMPLATES.find((t) => t.id === userProfile.pref_team_template);
       if (tpl) { setTeam(tpl.members); setActiveTemplateId(tpl.id); }
     }
