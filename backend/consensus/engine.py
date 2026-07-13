@@ -44,6 +44,7 @@ class ConsensusEngine:
         root_question: str = "",
         source_prompt: str = "",
         source_final_answer: str = "",
+        source_final_score: float = 0.0,
         followup_instruction: str = "",
         writer_names: list[str] | None = None,
         critic_names: list[str] | None = None,
@@ -113,6 +114,7 @@ class ConsensusEngine:
             root_question=root_question or (question if not is_followup else ""),
             source_prompt=source_prompt,
             source_final_answer=source_final_answer,
+            source_final_score=source_final_score,
             followup_instruction=followup_instruction,
             base_question=question,
             attachment_files=[

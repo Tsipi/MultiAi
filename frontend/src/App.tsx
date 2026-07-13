@@ -214,14 +214,14 @@ export default function App() {
     setLoading(true);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
-    const { rootQuestion, parentPrompt, parentFinalAnswer } = buildFollowupContext(displayResult);
+    const { rootQuestion, parentPrompt, parentFinalAnswer, parentFinalScore } = buildFollowupContext(displayResult);
     const followupQuestion = [
       "Original prompt:", rootQuestion, "",
       "Previous final answer:", parentFinalAnswer, "",
       "Follow-up instruction:", mergedInstruction,
     ].join("\n");
     const basePayload = mergeTeamIntoPayload(
-      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: parentPrompt, source_final_answer: parentFinalAnswer, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
+      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: parentPrompt, source_final_answer: parentFinalAnswer, source_final_score: parentFinalScore, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
       team, [], ""
     );
     const payload = {

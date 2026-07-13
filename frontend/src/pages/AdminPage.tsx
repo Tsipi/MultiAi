@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/apiBaseUrl";
 
 interface AdminUser {
   id: string;
@@ -71,8 +70,8 @@ export function AdminPage({ token }: Props) {
     setError("");
     try {
       const [usersRes, statsRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, { headers: authHeaders }),
-        fetch(`${BASE_URL}/api/admin/stats`, { headers: authHeaders }),
+        fetch(`${getApiBaseUrl()}/api/admin/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, { headers: authHeaders }),
+        fetch(`${getApiBaseUrl()}/api/admin/stats`, { headers: authHeaders }),
       ]);
       if (!usersRes.ok) throw new Error("Failed to load users.");
       setUsers(await usersRes.json() as AdminUser[]);
@@ -90,7 +89,7 @@ export function AdminPage({ token }: Props) {
     setActionLoading(user.id + ":toggle");
     const action = user.is_active ? "disable" : "enable";
     try {
-      const res = await fetch(`${BASE_URL}/api/admin/users/${user.id}/${action}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/admin/users/${user.id}/${action}`, {
         method: "PATCH",
         headers: authHeaders,
       });
@@ -109,7 +108,7 @@ export function AdminPage({ token }: Props) {
   const resendVerification = async (user: AdminUser) => {
     setActionLoading(user.id + ":verify");
     try {
-      const res = await fetch(`${BASE_URL}/api/admin/users/${user.id}/resend-verification`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/admin/users/${user.id}/resend-verification`, {
         method: "POST",
         headers: authHeaders,
       });
@@ -128,7 +127,7 @@ export function AdminPage({ token }: Props) {
   const sendResetPassword = async (user: AdminUser) => {
     setActionLoading(user.id + ":reset");
     try {
-      const res = await fetch(`${BASE_URL}/api/admin/users/${user.id}/send-reset-password`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/admin/users/${user.id}/send-reset-password`, {
         method: "POST",
         headers: authHeaders,
       });
@@ -147,7 +146,7 @@ export function AdminPage({ token }: Props) {
   const viewSessions = async (user: AdminUser) => {
     setSessionsLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/api/admin/users/${user.id}/sessions`, { headers: authHeaders });
+      const res = await fetch(`${getApiBaseUrl()}/api/admin/users/${user.id}/sessions`, { headers: authHeaders });
       if (!res.ok) throw new Error("Failed to load sessions.");
       const sessions = await res.json() as AdminSession[];
       setSessionsView({ user, sessions });

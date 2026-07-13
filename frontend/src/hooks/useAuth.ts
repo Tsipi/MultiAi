@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { getApiBaseUrl } from "@/lib/apiBaseUrl";
 import { clearAuthToken, getAuthToken, setAuthToken } from "@/lib/authToken";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export interface UserPreferences {
   pref_answer_mode: string | null;
@@ -38,7 +37,7 @@ export function useAuth() {
       setUserProfile(null);
       return;
     }
-    fetch(`${BASE_URL}/api/me`, {
+    fetch(`${getApiBaseUrl()}/api/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -57,7 +56,7 @@ export function useAuth() {
   }, [token, logout]);
 
   const login = async (email: string, password: string): Promise<void> => {
-    const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ username: email, password }),
@@ -71,7 +70,7 @@ export function useAuth() {
   };
 
   const register = async (email: string, password: string): Promise<void> => {
-    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -85,7 +84,7 @@ export function useAuth() {
 
   const updateProfile = async (fields: { display_name?: string }): Promise<void> => {
     if (!token) throw new Error("Not authenticated.");
-    const res = await fetch(`${BASE_URL}/api/users/me`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/users/me`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +99,7 @@ export function useAuth() {
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
     if (!token) throw new Error("Not authenticated.");
-    const res = await fetch(`${BASE_URL}/api/users/me`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/users/me`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -120,7 +119,7 @@ export function useAuth() {
 
   const savePreferences = async (prefs: Partial<UserPreferences>): Promise<void> => {
     if (!token) throw new Error("Not authenticated.");
-    const res = await fetch(`${BASE_URL}/api/me/preferences`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/me/preferences`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

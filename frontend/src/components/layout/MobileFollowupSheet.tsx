@@ -41,7 +41,7 @@ export function MobileFollowupSheet({
       {/* Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-[90] bg-black/40 md:hidden transition-opacity duration-300",
+          "fixed inset-0 z-[190] bg-black/40 md:hidden transition-opacity duration-300",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -54,7 +54,7 @@ export function MobileFollowupSheet({
         aria-modal="true"
         aria-label="Follow-up composer"
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[95] md:hidden",
+          "fixed bottom-0 left-0 right-0 z-[195] md:hidden",
           "rounded-t-2xl bg-[var(--app-surface)] shadow-2xl pb-safe",
           "transition-transform duration-300 ease-out",
           isOpen ? "translate-y-0" : "translate-y-full"
@@ -117,9 +117,12 @@ export function MobileFollowupSheet({
             type="button"
             className="primary-cta font-display min-h-[44px] w-full rounded-xl border-0 font-semibold shadow-none"
             disabled={loading || !followupInstruction.trim()}
-            onClick={onSubmit}
+            onClick={() => {
+              onSubmit();
+              onClose();
+            }}
           >
-            {loading ? "Team is working…" : "Send follow-up"}
+            Send follow-up
           </Button>
         </div>
       </div>

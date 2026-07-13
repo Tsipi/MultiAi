@@ -63,6 +63,7 @@ class ConsultRequest(BaseModel):
     root_question: str = ""
     source_prompt: str = ""
     source_final_answer: str = ""
+    source_final_score: float = 0.0
     followup_instruction: str = ""
 
 
@@ -115,6 +116,7 @@ class ConsultResponse(BaseModel):
     root_question: str = ""
     source_prompt: str = ""
     source_final_answer: str = ""
+    source_final_score: float = 0.0
     followup_instruction: str = ""
 
     # ── Usage & cost ────────────────────────────────────────────────────────

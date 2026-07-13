@@ -3,8 +3,7 @@ import type { UserPreferences, UserProfile } from "@/hooks/useAuth";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { TEAM_TEMPLATES } from "@/data/templates";
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import { getApiBaseUrl } from "@/lib/apiBaseUrl";
 
 type Props = {
   userProfile: UserProfile;
@@ -126,7 +125,7 @@ export function SettingsPage({ userProfile, token, onUpdateProfile, onChangePass
     setExportLoading(true);
     setExportError("");
     try {
-      const res = await fetch(`${BASE_URL}/api/account/export`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/account/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Export failed.");
@@ -149,7 +148,7 @@ export function SettingsPage({ userProfile, token, onUpdateProfile, onChangePass
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      const res = await fetch(`${BASE_URL}/api/account`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/account`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

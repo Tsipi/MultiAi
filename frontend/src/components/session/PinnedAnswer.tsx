@@ -24,6 +24,9 @@ type Props = {
   score: number;
   cast?: { writer: RosterFace; critics: RosterFace[] };
   teamTemplateName?: string;
+  label?: string;
+  /** When false, the collapsed state shows only the header — no clamped preview text. */
+  previewWhenClosed?: boolean;
 };
 
 export function PinnedAnswer({
@@ -31,6 +34,8 @@ export function PinnedAnswer({
   score,
   cast,
   teamTemplateName,
+  label = "Final Answer",
+  previewWhenClosed = true,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
@@ -56,7 +61,7 @@ export function PinnedAnswer({
         >
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             <span className="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              Final Answer
+              {label}
             </span>
             <span className="rounded-full px-2 py-0.5 text-[0.65rem] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
               Score {score.toFixed(1)} / 10
@@ -87,7 +92,7 @@ export function PinnedAnswer({
           />
         </Button>
 
-      {!expanded && (
+      {!expanded && previewWhenClosed && (
         <div className="border-t border-border/40 bg-card/50 px-4 pb-3 pt-3 dark:bg-card/30">
           <MarkdownView
             content={finalAnswer}

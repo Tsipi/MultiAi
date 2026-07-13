@@ -70,6 +70,7 @@ class DebateSession:
     root_question: str = ""             # the very first question in this thread (never changes across follow-ups)
     source_prompt: str = ""             # immediate parent's question
     source_final_answer: str = ""       # immediate parent's final answer
+    source_final_score: float = 0.0     # immediate parent's consensus score
     followup_instruction: str = ""      # what the user asked to change/extend
 
     # ── Usage & cost ────────────────────────────────────────────────────────
