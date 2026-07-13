@@ -325,14 +325,13 @@ export function SessionPromptBlock({
       {isSavedAnswer ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="flex flex-col gap-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
-                Viewing saved answer
-              </h2>
-              {teamTemplateName && <TemplateNameChip name={teamTemplateName} />}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {savedAnswerSubtitle(result, teamTemplateName)}
+            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300">
+              Viewing saved answer
+            </h2>
+            <p className="m-0 text-sm text-muted-foreground">
+              Answered by your{" "}
+              {teamTemplateName ? <TemplateNameChip name={teamTemplateName} /> : "team"}
+              {savedAnswerMetaSuffix(result)}
             </p>
           </div>
           {onStartNewSession && (
@@ -376,14 +375,13 @@ export function SessionPromptBlock({
   );
 }
 
-function savedAnswerSubtitle(result: ConsultResult, teamTemplateName?: string): string {
-  const team = teamTemplateName || "your team";
+function savedAnswerMetaSuffix(result: ConsultResult): string {
   const date = result.session_id ? formatSessionDate(result.session_id) : "";
   const rounds = result.full_discussion?.length ?? 0;
-  const parts: string[] = [`Answered by your ${team}`];
+  const parts: string[] = [];
   if (date) parts.push(date);
   if (rounds > 0) parts.push(`${rounds} round${rounds !== 1 ? "s" : ""}`);
-  return parts.join(" · ") + ".";
+  return (parts.length ? ` · ${parts.join(" · ")}` : "") + ".";
 }
 
 function formatSessionDate(sessionId: string): string {

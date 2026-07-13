@@ -1,11 +1,12 @@
 import { forwardRef, useEffect, useState } from "react";
-import { ChevronDown, Link2Off, Share2, Trash2 } from "lucide-react";
+import { ChevronDown, Link2Off, Share2, Trash2, type LucideIcon } from "lucide-react";
 import { ChatPanel } from "../debate/ChatPanel";
 import { ChatroomDebateView } from "../debate/ChatroomDebateView";
 import { cn } from "@/lib/utils";
 import { panelHeadingClass } from "@/lib/panelStyles";
 import { AnswerMode, ConsultResult, SessionPreview } from "../../types";
 import { type CastSelection } from "@/lib/consultHelpers";
+import { inferTeamTemplateId, TEMPLATE_ICONS } from "@/data/templates";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -176,7 +177,9 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
 
       {/* Accordion list of sessions */}
       <div className="flex flex-col gap-1.5 ">
-        {filteredThreads.map((thread) => (
+        {filteredThreads.map((thread) => {
+          const threadTemplateIcon = resolveThreadTemplateIcon(thread, resultsById);
+          return (
           <div
             key={thread.threadId}
             className="flex flex-col gap-1.5 rounded-xl border border-[#ffffff08] bg-[var(--app-surface)] p-1"
@@ -192,6 +195,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               isSelected={compact && selectedId === thread.parent.id}
               listSelectOnly={compact}
               shareVisibility={resultsById[thread.parent.id]?.visibility}
+              templateIcon={threadTemplateIcon}
               chatProps={buildSessionChatProps(
                 thread.parent.id,
                 selectedId,
@@ -216,6 +220,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 isSelected={compact && selectedId === run.id}
                 listSelectOnly={compact}
                 shareVisibility={resultsById[run.id]?.visibility}
+                templateIcon={threadTemplateIcon}
                 chatProps={buildSessionChatProps(
                   run.id,
                   selectedId,
@@ -231,7 +236,8 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               />
             ))}
           </div>
-        ))}
+          );
+        })}
         {compact && query && filteredThreads.length === 0 && (
           <p className="m-0 rounded-lg border border-[#ffffff08] bg-[var(--app-elevated)]/45 px-3 py-2 text-xs text-muted-foreground">
             No answers match your search. Use Show all to reset.
@@ -296,6 +302,7 @@ function AccordionItem({
   isSelected,
   listSelectOnly,
   shareVisibility,
+  templateIcon,
   chatProps,
   suppressActivityFeed,
   onToggle,
@@ -310,6 +317,7 @@ function AccordionItem({
   isSelected: boolean;
   listSelectOnly: boolean;
   shareVisibility?: string;
+  templateIcon?: LucideIcon | null;
   chatProps: ChatPanelProps;
   suppressActivityFeed: boolean;
   onToggle: () => void;
@@ -320,80 +328,92 @@ function AccordionItem({
   const description = [session.is_followup ? "Follow-up" : null, formatDate(session.timestamp)]
     .filter(Boolean)
     .join(" · ");
+  const TemplateIcon = templateIcon;
+  const templateBadge = TemplateIcon && (
+    <span
+      className="absolute -top-2 right-3 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-violet-300/50 bg-[var(--app-surface)] shadow-sm dark:border-violet-700/50"
+      aria-hidden
+    >
+      <TemplateIcon className="h-2.5 w-2.5 text-violet-600 dark:text-violet-400" strokeWidth={2.5} />
+    </span>
+  );
 
   if (listSelectOnly) {
     const isShared = shareVisibility === "public";
     return (
-      <div
-        className={cn(
-          "sidebar-answer-card rounded-xl border overflow-hidden transition-all duration-150 ease-out",
-          isSelected && "sidebar-answer-card-selected",
-          child && "ml-2 sm:ml-3"
-        )}
-      >
-        <div className="flex items-stretch gap-1">
-          <button
-            type="button"
-            className={cn(
-              "min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent text-left transition-colors cursor-pointer border-0 shadow-none rounded-xl",
-              rowButtonFocusClass
-            )}
-            onClick={onToggle}
-            aria-current={isSelected ? "true" : undefined}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-1">
-                <span
-                  className={cn(
-                    "leading-snug line-clamp-2 text-sm",
-                    child ? "font-normal text-foreground/85" : "font-medium"
+      <div className={cn("relative", child && "ml-2 sm:ml-3")}>
+        {templateBadge}
+        <div
+          className={cn(
+            "sidebar-answer-card rounded-xl border overflow-hidden transition-all duration-150 ease-out",
+            isSelected && "sidebar-answer-card-selected"
+          )}
+        >
+          <div className="flex items-stretch gap-1">
+            <button
+              type="button"
+              className={cn(
+                "min-w-0 flex-1 flex items-center gap-2 px-3 py-2.5 bg-transparent text-left transition-colors cursor-pointer border-0 shadow-none rounded-xl",
+                rowButtonFocusClass
+              )}
+              onClick={onToggle}
+              aria-current={isSelected ? "true" : undefined}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-1">
+                  <span
+                    className={cn(
+                      "leading-snug line-clamp-2 text-sm",
+                      child ? "font-normal text-foreground/85" : "font-medium"
+                    )}
+                  >
+                    {title}
+                  </span>
+                  {sessionNumber > 0 && (
+                    <span className="text-[0.62rem] text-muted-foreground/55 shrink-0 mt-0.5">#{sessionNumber}</span>
                   )}
-                >
-                  {title}
-                </span>
-                {sessionNumber > 0 && (
-                  <span className="text-[0.62rem] text-muted-foreground/55 shrink-0 mt-0.5">#{sessionNumber}</span>
+                </div>
+                {description && (
+                  <span className="text-[0.72rem] text-muted-foreground leading-tight block">{description}</span>
                 )}
               </div>
-              {description && (
-                <span className="text-[0.72rem] text-muted-foreground leading-tight block">{description}</span>
-              )}
-            </div>
-          </button>
-          {onShareToggle && shareVisibility !== undefined && (
+            </button>
+            {onShareToggle && shareVisibility !== undefined && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-auto min-w-[44px] shrink-0 bg-transparent hover:bg-muted/45",
+                  isShared ? "text-violet-500 hover:text-violet-400" : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => void onShareToggle(session.id)}
+                aria-label={isShared ? "Make private" : "Share run"}
+                title={isShared ? "Make private" : "Share run"}
+              >
+                {isShared ? <Link2Off className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className={cn(
-                "h-auto min-w-[44px] shrink-0 bg-transparent hover:bg-muted/45",
-                isShared ? "text-violet-500 hover:text-violet-400" : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => void onShareToggle(session.id)}
-              aria-label={isShared ? "Make private" : "Share run"}
-              title={isShared ? "Make private" : "Share run"}
+              className="h-auto min-w-[44px] shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground"
+              onClick={() => onDelete(session.id)}
+              aria-label="Delete session"
+              title="Delete this run"
             >
-              {isShared ? <Link2Off className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-auto min-w-[44px] shrink-0 rounded-l-none rounded-r-xl bg-transparent text-muted-foreground hover:bg-muted/45 hover:text-foreground"
-            onClick={() => onDelete(session.id)}
-            aria-label="Delete session"
-            title="Delete this run"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={cn("rounded-xl border border-[#ffffff06] bg-[var(--app-elevated)]/55 overflow-visible", child && "ml-3")}>
+    <div className={cn("relative rounded-xl border border-[#ffffff06] bg-[var(--app-elevated)]/55 overflow-visible", child && "ml-3")}>
+      {templateBadge}
       <div className="flex items-stretch gap-1">
         <button
           type="button"
@@ -452,6 +472,34 @@ function AccordionItem({
       )}
     </div>
   );
+}
+
+/**
+ * A thread's follow-ups almost always keep using the same team, but their full results are only
+ * loaded once opened. Rather than showing no badge until each one is clicked, resolve the icon once
+ * from whichever session in the thread already has a cached result, and share it across the thread.
+ */
+function resolveThreadTemplateIcon(
+  thread: { parent: SessionPreview; runs: SessionPreview[] },
+  resultsById: Record<string, ConsultResult>
+): LucideIcon | null {
+  for (const session of [thread.parent, ...thread.runs]) {
+    const icon = templateIconForResult(resultsById[session.id]);
+    if (icon) return icon;
+  }
+  return null;
+}
+
+/** Icon for the session's own team template, inferred from its recorded writer/critic names and models. Null for custom (non-template) teams. */
+function templateIconForResult(result: ConsultResult | null | undefined) {
+  if (!result) return null;
+  const templateId = inferTeamTemplateId({
+    writerName: result.writer_names?.[0],
+    writerModel: result.model_writers?.[0],
+    criticNames: result.critic_names,
+    criticModels: result.model_critics,
+  });
+  return templateId ? TEMPLATE_ICONS[templateId] ?? null : null;
 }
 
 function formatDate(iso?: string): string {
