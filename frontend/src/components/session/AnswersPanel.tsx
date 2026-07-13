@@ -177,9 +177,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
 
       {/* Accordion list of sessions */}
       <div className="flex flex-col gap-1.5 ">
-        {filteredThreads.map((thread) => {
-          const threadTemplateIcon = resolveThreadTemplateIcon(thread, resultsById);
-          return (
+        {filteredThreads.map((thread) => (
           <div
             key={thread.threadId}
             className="flex flex-col gap-1.5 rounded-xl border border-[#ffffff08] bg-[var(--app-surface)] p-1"
@@ -195,7 +193,6 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               isSelected={compact && selectedId === thread.parent.id}
               listSelectOnly={compact}
               shareVisibility={resultsById[thread.parent.id]?.visibility}
-              templateIcon={threadTemplateIcon}
               chatProps={buildSessionChatProps(
                 thread.parent.id,
                 selectedId,
@@ -220,7 +217,6 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
                 isSelected={compact && selectedId === run.id}
                 listSelectOnly={compact}
                 shareVisibility={resultsById[run.id]?.visibility}
-                templateIcon={threadTemplateIcon}
                 chatProps={buildSessionChatProps(
                   run.id,
                   selectedId,
@@ -236,8 +232,7 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               />
             ))}
           </div>
-          );
-        })}
+        ))}
         {compact && query && filteredThreads.length === 0 && (
           <p className="m-0 rounded-lg border border-[#ffffff08] bg-[var(--app-elevated)]/45 px-3 py-2 text-xs text-muted-foreground">
             No answers match your search. Use Show all to reset.
@@ -302,7 +297,6 @@ function AccordionItem({
   isSelected,
   listSelectOnly,
   shareVisibility,
-  templateIcon,
   chatProps,
   suppressActivityFeed,
   onToggle,
@@ -317,7 +311,6 @@ function AccordionItem({
   isSelected: boolean;
   listSelectOnly: boolean;
   shareVisibility?: string;
-  templateIcon?: LucideIcon | null;
   chatProps: ChatPanelProps;
   suppressActivityFeed: boolean;
   onToggle: () => void;
@@ -328,7 +321,7 @@ function AccordionItem({
   const description = [session.is_followup ? "Follow-up" : null, formatDate(session.timestamp)]
     .filter(Boolean)
     .join(" · ");
-  const TemplateIcon = templateIcon;
+  const TemplateIcon = templateIconForSession(session);
   const templateBadge = TemplateIcon && (
     <span
       className="absolute -top-2 right-3 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-violet-300/50 bg-[var(--app-surface)] shadow-sm dark:border-violet-700/50"
@@ -475,29 +468,20 @@ function AccordionItem({
 }
 
 /**
- * A thread's follow-ups almost always keep using the same team, but their full results are only
- * loaded once opened. Rather than showing no badge until each one is clicked, resolve the icon once
- * from whichever session in the thread already has a cached result, and share it across the thread.
+ * Icon for the session's team template. Uses the explicit `team_template_id` recorded at run time;
+ * for older sessions saved before that field existed, the backend instead sends the raw writer/critic
+ * names+models for just those rows, so this falls back to inferring the template from them — matching
+ * what the main saved-answer view already does. Null for custom (non-template) teams either way.
  */
-function resolveThreadTemplateIcon(
-  thread: { parent: SessionPreview; runs: SessionPreview[] },
-  resultsById: Record<string, ConsultResult>
-): LucideIcon | null {
-  for (const session of [thread.parent, ...thread.runs]) {
-    const icon = templateIconForResult(resultsById[session.id]);
-    if (icon) return icon;
+function templateIconForSession(session: SessionPreview): LucideIcon | null {
+  if (session.team_template_id) {
+    return TEMPLATE_ICONS[session.team_template_id] ?? null;
   }
-  return null;
-}
-
-/** Icon for the session's own team template, inferred from its recorded writer/critic names and models. Null for custom (non-template) teams. */
-function templateIconForResult(result: ConsultResult | null | undefined) {
-  if (!result) return null;
   const templateId = inferTeamTemplateId({
-    writerName: result.writer_names?.[0],
-    writerModel: result.model_writers?.[0],
-    criticNames: result.critic_names,
-    criticModels: result.model_critics,
+    writerName: session.writer_names?.[0],
+    writerModel: session.model_writers?.[0],
+    criticNames: session.critic_names,
+    criticModels: session.model_critics,
   });
   return templateId ? TEMPLATE_ICONS[templateId] ?? null : null;
 }

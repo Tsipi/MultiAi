@@ -112,9 +112,11 @@ export default function App() {
   // ─── Derived values ────────────────────────────────────────────────────────
   const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
 
-  // When viewing a saved session with no explicit template, infer it from the cast names
+  // When viewing a saved session with no explicit template, prefer the id recorded on the session
+  // itself; fall back to inferring it from the cast names for older sessions saved before that field existed.
   const inferredTemplateId = useMemo(() => {
     if (activeTemplateId) return null; // explicit selection wins
+    if (displayResult?.team_template_id) return displayResult.team_template_id;
     return inferTeamTemplateId({
       writerName: displayResult?.writer_names?.[0],
       criticNames: displayResult?.critic_names,
@@ -186,7 +188,7 @@ export default function App() {
     const cast = selectCastFromTeam(team);
     setActiveCast(cast);
     setActiveRunTemplateId(resolvedTemplateId);
-    const payload = mergeTeamIntoPayload({ ...form, question: questionText }, team, attachments, clarificationTag, clarificationQuestion);
+    const payload = mergeTeamIntoPayload({ ...form, question: questionText, team_template_id: resolvedTemplateId ?? "" }, team, attachments, clarificationTag, clarificationQuestion);
     try {
       await execute(payload, cast, questionText);
     } catch (error) {
@@ -221,7 +223,7 @@ export default function App() {
       "Follow-up instruction:", mergedInstruction,
     ].join("\n");
     const basePayload = mergeTeamIntoPayload(
-      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: parentPrompt, source_final_answer: parentFinalAnswer, source_final_score: parentFinalScore, followup_instruction: mergedInstruction, role: displayResult.role || form.role },
+      { ...form, question: followupQuestion, is_followup: true, parent_session_id: displayResult.session_id, thread_id: displayResult.thread_id || displayResult.session_id, source_prompt: parentPrompt, source_final_answer: parentFinalAnswer, source_final_score: parentFinalScore, followup_instruction: mergedInstruction, role: displayResult.role || form.role, team_template_id: resolvedTemplateId ?? "" },
       team, [], ""
     );
     const payload = {
@@ -276,7 +278,7 @@ export default function App() {
     setActivity(["Resuming with your clarification…"]);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     const { payload: basePayload, cast: baseCast, title: baseTitle } = pending ?? {
-      payload: mergeTeamIntoPayload({ ...form }, team, attachments, "", ""),
+      payload: mergeTeamIntoPayload({ ...form, team_template_id: resolvedTemplateId ?? "" }, team, attachments, "", ""),
       cast: selectCastFromTeam(team),
       title: form.question,
     };

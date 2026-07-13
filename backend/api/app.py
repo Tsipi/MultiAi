@@ -298,6 +298,7 @@ def _to_response(session: DebateSession) -> ConsultResponse:
         critic_names=session.critic_names,
         writer_roles=session.writer_roles,
         critic_roles=session.critic_roles,
+        team_template_id=session.team_template_id,
         total_cost_usd=session.total_cost_usd,
         total_tokens=session.total_tokens,
         thread_id=session.thread_id,
@@ -374,6 +375,7 @@ async def consult(
         critic_names=payload.critic_names,
         writer_roles=payload.writer_roles,
         critic_roles=payload.critic_roles,
+        team_template_id=payload.team_template_id,
         web_search_mode=payload.web_search_mode,
         answer_mode=payload.answer_mode,
     )
@@ -421,6 +423,7 @@ async def consult_stream(
                 critic_names=payload.critic_names,
                 writer_roles=payload.writer_roles,
                 critic_roles=payload.critic_roles,
+                team_template_id=payload.team_template_id,
                 web_search_mode=payload.web_search_mode,
                 answer_mode=payload.answer_mode,
                 progress_hook=activity,

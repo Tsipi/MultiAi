@@ -49,6 +49,7 @@ class DebateSession:
     critic_names: list[str] = field(default_factory=list)
     writer_roles: list[str] = field(default_factory=list)
     critic_roles: list[str] = field(default_factory=list)
+    team_template_id: str = ""  # id of the team template used, if any (e.g. "tourist-planner")
 
     # ── Debate output ───────────────────────────────────────────────────────
     rounds: list[DebateRound] = field(default_factory=list)

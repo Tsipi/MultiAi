@@ -97,6 +97,7 @@ describe("buildFollowupContext", () => {
     critic_names: [],
     writer_roles: [],
     critic_roles: [],
+    team_template_id: "",
     final_answer: "Immediate parent answer mentions Verona.",
     final_score: 8,
     full_discussion: [],

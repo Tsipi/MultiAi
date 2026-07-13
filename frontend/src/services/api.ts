@@ -34,6 +34,11 @@ export async function listSessions(): Promise<Array<{
   parent_session_id?: string;
   is_followup?: boolean;
   run_title?: string;
+  team_template_id?: string;
+  writer_names?: string[];
+  critic_names?: string[];
+  model_writers?: string[];
+  model_critics?: string[];
 }>> {
   const response = await apiFetch(`${getApiBaseUrl()}/api/sessions`);
   if (!response.ok) {
@@ -47,6 +52,11 @@ export async function listSessions(): Promise<Array<{
     parent_session_id?: string;
     is_followup?: boolean;
     run_title?: string;
+    team_template_id?: string;
+    writer_names?: string[];
+    critic_names?: string[];
+    model_writers?: string[];
+    model_critics?: string[];
   }>>;
 }
 
@@ -178,6 +188,7 @@ function normalizeResult(raw: Partial<ConsultResult> & Record<string, unknown>):
     critic_names: Array.isArray(raw.critic_names) ? raw.critic_names.map(String) : [],
     writer_roles: Array.isArray(raw.writer_roles) ? raw.writer_roles.map(String) : [],
     critic_roles: Array.isArray(raw.critic_roles) ? raw.critic_roles.map(String) : [],
+    team_template_id: String(raw.team_template_id ?? ""),
 
     // ── Debate output ───────────────────────────────────────────────────
     final_answer: String(raw.final_answer ?? ""),

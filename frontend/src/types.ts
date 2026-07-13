@@ -52,6 +52,7 @@ export type ConsultPayload = {
   critic_names?: string[];
   writer_roles?: string[];
   critic_roles?: string[];
+  team_template_id?: string;
   // Legacy single-model fields — kept for backward compat; backend coerces into the lists above
   writer: string;
   critic_a: string;
@@ -102,6 +103,7 @@ export type ConsultResult = {
   critic_names: string[];
   writer_roles: string[];    // seat-specific prompt roles
   critic_roles: string[];
+  team_template_id: string;
 
   // ── Debate output ─────────────────────────────────────────────────────
   final_answer: string;
@@ -152,4 +154,10 @@ export type SessionPreview = {
   parent_session_id?: string;
   is_followup?: boolean;
   run_title?: string;
+  team_template_id?: string;
+  /** Only present for sessions saved before team_template_id existed — used as an inference fallback. */
+  writer_names?: string[];
+  critic_names?: string[];
+  model_writers?: string[];
+  model_critics?: string[];
 };
