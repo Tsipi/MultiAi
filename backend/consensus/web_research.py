@@ -102,6 +102,7 @@ async def research_web(
                 "max_results": max(1, min(cfg.web_search_max_results, 10)),
             }
         ],
+        "max_tokens": cfg.web_research_max_tokens,
     }
 
     try:

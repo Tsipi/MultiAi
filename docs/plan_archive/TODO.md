@@ -39,3 +39,20 @@ Items below were added after v4.3 shipped, used as a rough timestamp reference. 
     plan docs (see docs/plan_archive/PLAN_Tests.md for the narrower, plan-doc-driven check already
     done). Low priority, not urgent.
 
+ 8. Recheck again the Follow up question flow and fix it ![alt text](../images_archive/TODO_images/image.png)
+      - check what if team is being changed on follow-up question
+      - constraint text area of the follow up
+
+ 9. Recheck the session counters 
+
+ 10. When hebrew asks for web search
+
+ 11. recheck the Fast/balanced if work as defined - ![alt text](../images_archive/TODO_images/image-3.png)
+
+ 12. score in red when get 10/10 ![alt text](../images_archive/TODO_images/image-1.png)
+
+ 13. fix Runs this month ![alt text](../images_archive/TODO_images/image-2.png)
+
+14. When question submitted "Pick a Team should be also disabled not letting the user change it in the middle of mission initializing or when question delivered ![alt text](../images_archive/TODO_images/image-4.png)
+
+15. There is no need for "Round 1 on each of the personas ![alt text](../images_archive/TODO_images/image-5.png)

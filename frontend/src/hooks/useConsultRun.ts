@@ -77,6 +77,13 @@ export function generatedSessionTitlePrompt(next: ConsultResult, title: string):
   return next.followup_instruction || next.base_question || next.question || title;
 }
 
+const GENERATED_TITLE_MIN_QUESTION_LENGTH = 37;
+
+/** Short questions already fit the sidebar as-is — skip the LLM title call for them. */
+export function shouldRequestGeneratedTitle(questionText: string): boolean {
+  return questionText.trim().length > GENERATED_TITLE_MIN_QUESTION_LENGTH;
+}
+
 export function shouldUseGeneratedSessionTitle(generatedTitle: string, fallbackTitle: string): boolean {
   const normalized = generatedTitle.trim().toLowerCase();
   if (!normalized) return false;
@@ -125,11 +132,14 @@ export function applyRunResult(
     ...prev.filter((p) => p.id !== next.session_id),
   ]);
   setSessionTitles((prev) => ({ ...prev, [next.session_id]: fallbackTitle }));
-  generateTitle(generatedSessionTitlePrompt(next, title), next.role || "")
-    .then((t) => {
-      if (shouldUseGeneratedSessionTitle(t, fallbackTitle)) {
-        setSessionTitles((prev) => ({ ...prev, [next.session_id]: t }));
-      }
-    })
-    .catch(() => {});
+  const titlePrompt = generatedSessionTitlePrompt(next, title);
+  if (shouldRequestGeneratedTitle(titlePrompt)) {
+    generateTitle(titlePrompt, next.role || "")
+      .then((t) => {
+        if (shouldUseGeneratedSessionTitle(t, fallbackTitle)) {
+          setSessionTitles((prev) => ({ ...prev, [next.session_id]: t }));
+        }
+      })
+      .catch(() => {});
+  }
 }

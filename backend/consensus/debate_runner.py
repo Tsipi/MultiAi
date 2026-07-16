@@ -67,6 +67,7 @@ async def run_rounds(
                 writer,
                 cfg,
                 image_urls=image_urls or [],
+                max_tokens=cfg.round_call_max_tokens,
             )
             for i, writer in enumerate(writers)
         ])
@@ -78,7 +79,9 @@ async def run_rounds(
             role_context=_role_for(writer_roles, 0, domain),
             intent_scope=session.intent_scope,
         )
-        answer = await call_openrouter(initial_prompt, primary_writer, cfg, image_urls=image_urls or [])
+        answer = await call_openrouter(
+            initial_prompt, primary_writer, cfg, image_urls=image_urls or [], max_tokens=cfg.round_call_max_tokens
+        )
 
     rolling = ""
     for idx in range(1, max_rounds + 1):
@@ -93,6 +96,7 @@ async def run_rounds(
                 ),
                 critic,
                 cfg,
+                max_tokens=cfg.round_call_max_tokens,
             )
             for i, critic in enumerate(critics)
         ])
@@ -130,12 +134,12 @@ async def run_rounds(
         if len(revised_answers) >= 2:
             (score, reason), refined_answer = await asyncio.gather(
                 score_consensus_multi(revised_answers, cfg),
-                call_openrouter(refine, primary_writer, cfg),
+                call_openrouter(refine, primary_writer, cfg, max_tokens=cfg.round_call_max_tokens),
             )
         else:
             (score, reason), refined_answer = await asyncio.gather(
                 score_consensus(answer, revised_answers[0], cfg),
-                call_openrouter(refine, primary_writer, cfg),
+                call_openrouter(refine, primary_writer, cfg, max_tokens=cfg.round_call_max_tokens),
             )
 
         summary = await summarize_round(refined_answer, merged, cfg)

@@ -225,7 +225,9 @@ class ConsensusEngine:
             )
             await report("Synthesizing final answer")
             phase_started = perf_counter()
-            session.final_answer = await call_openrouter(final_prompt, writers[0], self.cfg)
+            session.final_answer = await call_openrouter(
+                final_prompt, writers[0], self.cfg, max_tokens=self.cfg.round_call_max_tokens
+            )
             record_phase("final_synthesis", phase_started, model=writers[0])
             session.final_score = session.rounds[-1].consensus_score if session.rounds else 0.0
             phase_started = perf_counter()
@@ -248,7 +250,9 @@ class ConsensusEngine:
                 refined = WRITER_REFINEMENT.format(
                     rolling_context=rolling, question=question_with_context, critique=repair, role_context=primary_writer_role, intent_scope=session.intent_scope
                 )
-                session.final_answer = await call_openrouter(refined, writers[0], self.cfg)
+                session.final_answer = await call_openrouter(
+                    refined, writers[0], self.cfg, max_tokens=self.cfg.round_call_max_tokens
+                )
                 is_ok, _, _ = await validate_relevance(question_with_context, session.final_answer, self.cfg)
                 record_phase("repair", phase_started, status="passed" if is_ok else "failed")
                 if not is_ok:

@@ -339,7 +339,7 @@ async def generate_title(payload: TitleRequest) -> dict:
     r = (payload.role or "")[:600]
     prompt = build_export_title_prompt(q, r)
     try:
-        raw = await call_openrouter(prompt, CFG.export_title_model, CFG)
+        raw = await call_openrouter(prompt, CFG.export_title_model, CFG, max_tokens=CFG.title_max_tokens)
         title = normalize_export_title(raw, q)
         return {"title": title}
     except Exception:
