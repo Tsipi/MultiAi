@@ -161,20 +161,31 @@ already matched (no change needed). v5.1's entry was missing an explicit
 to begin with, so it was skipped when tables were stripped from every
 other version) — added "**Status:** Done." for consistency.
 
-## Section 3 — CLAUDE.md  [ ]
-- [ ] Add missing individual files to Key modules table (useConsultRun.ts,
-      data/templates.ts, lib/*.ts files, pages/*.tsx files)
-- [ ] Add one summary row per missing component folder (compose/, debate/,
+## Section 3 — CLAUDE.md  [x]
+- [x] Add missing individual files to Key modules table (useConsultRun.ts,
+      data/templates.ts, lib/*.ts files, pages/*.tsx files) — all 17
+      verified to exist on disk before adding, none skipped
+- [x] Add one summary row per missing component folder (compose/, debate/,
       drawers/, layout/, session/, team/, ui/) and for services/pdf/
-- [ ] Replace "Current Session State" section entirely with:
-      - Completed work: see docs/plan_archive/
-      - Active plan: see PLAN.md
-      - Architecture reference: see docs/engineering/
-      - In-progress / not yet verified: [pull from PLAN.md's non-Done rows
-        after Section 1 edits — expect v5.2, v6.2, v6.3, v6.4, v7.0]
-- [ ] Fix the "Branch: PLAN_v4.2 — last updated 2026-06-14" line to reflect
-      the actual current branch and today's date
-- [ ] Show diff, wait for confirmation
+      (replaced its old single-file exporter.ts-only row)
+- [x] Replace "Current Session State" section entirely with: Completed
+      work / Active plan / Architecture reference pointers, In production,
+      In development, and Not yet started/blocked (v5.2, v6.2, v6.3, v6.4,
+      v7.0, Marketing) — read fresh from PLAN.md, matched the expected list
+      exactly, nothing to flag as different
+- [x] Fixed the Branch line using real `git rev-parse --abbrev-ref HEAD`
+      (`PLAN_v6.0`) and real `date` output (2026-07-16) — see command
+      output in the conversation
+- [x] Show diff, wait for confirmation
+
+Note: while picking example files for the new `components/compose/` folder
+row, found that `ComposerAdvanced.tsx` still exists on disk (54 lines)
+even though `PLAN_v6.1.md` states it was deleted as part of the v6.1
+Advanced Setup Panel Redesign (`DebateSettings.tsx` IS actually gone,
+confirming v6.1 partially executed as documented). Did not cite
+`ComposerAdvanced.tsx` as a key-file example to avoid pointing at a
+possibly-stale file; did not investigate or fix further since it's outside
+this section's scope — flagging for awareness only.
 
 ## Section 4 — TODO.md  [ ]
 - [ ] Rename internal title and add the timestamp/purpose note per the
