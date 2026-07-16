@@ -143,9 +143,9 @@ The same avatar can appear in several places: compose roster, template picker, l
 
 ### Tasks
 
-- [ ] Manually verify one Fast or Balanced live run.
-- [ ] Manually verify one follow-up run.
-- [ ] Manually verify one saved/replayed run if the parser compatibility task changes rendering.
+- [x] Manually verify one Fast or Balanced live run.
+- [x] Manually verify one follow-up run.
+- [x] Manually verify one saved/replayed run if the parser compatibility task changes rendering.
 - [x] Add only targeted tests for parsing changes that are easy to break, such as grouped progress messages or old critic labels.
 - [x] Skip full mobile QA in this version; mobile layout belongs to v5.0.
 

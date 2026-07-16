@@ -12,10 +12,30 @@
 
 ---
 
+### v4.2 highlights
+
+**PDF and Markdown export polish**  
+Exports now support fuller run context, better document structure, and optional full-debate output.
+
+**Public sharing**  
+Saved runs can be shared publicly, unshared again, and loaded through a read-only shared-run route.
+
+**Full debate export**  
+Users can include the Director's Cut / full debate transcript in exported Markdown and PDF files.
+
+**Per-agent roles**  
+Writer and Critic role arrays are passed through the frontend payload, API schemas, persisted sessions, follow-up runs, and debate prompts. Each agent's role now influences that specific agent instead of relying only on one shared role.
+
+**Live web research**  
+The app supports `Auto / Search web / No web`, retrieves one controlled OpenRouter web-plugin research packet when needed, injects that evidence into the debate context, and preserves source metadata in saved/shared/exported results.
+ 
+---
+
 ## Phase 4.2.1 — PDF Export Polish
 
 **Reference:** session `20260609_150411` exported 2026-06-09 — 6 issues identified.  
 **Files:** `frontend/src/services/exporter.ts`, `frontend/src/services/pdfMarkdown.ts`
+
 
 ### 4.2.1.1 Bug 1 — `---` horizontal rules print as literal dashes *(high priority)*
 

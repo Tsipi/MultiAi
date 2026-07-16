@@ -1,6 +1,7 @@
-# Version 4.3 — Cleanup and fixing inconsistencies 
+# Cleanup and Consistency Fixes — Ongoing
 
-  
+Items below were added after v4.3 shipped, used as a rough timestamp reference. This is a personal running list, separate from PLAN.md/ROADMAP.md.
+
 ## General follow-up items that are useful but not part of the active implementation plan.
 ---
 
@@ -33,4 +34,8 @@
     - Reliability of strict formats such as `SCORE:` / `REASON:`
     - Quality of scoring, validation, summary, and clarification decisions
     - Compatibility with current OpenRouter model IDs and Railway configuration
+
+ 7. Run a full unused-file / dead-code audit across frontend/src — not just files claimed-deleted in
+    plan docs (see docs/plan_archive/PLAN_Tests.md for the narrower, plan-doc-driven check already
+    done). Low priority, not urgent.
 
