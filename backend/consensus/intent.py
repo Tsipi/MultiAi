@@ -78,7 +78,12 @@ async def assess_intent(question: str, role: str, clarification: str, cfg: AppCo
     if clarification.strip():
         scope = f"{question.strip()} | Clarification: {clarification.strip()}"
         return IntentAssessment(False, "Clarification provided by user.", scope, "", [])
-    raw = await call_openrouter(INTENT_PROMPT.format(question=question.strip(), role=role.strip()), cfg.intent_model, cfg)
+    raw = await call_openrouter(
+        INTENT_PROMPT.format(question=question.strip(), role=role.strip()),
+        cfg.intent_model,
+        cfg,
+        max_tokens=cfg.intent_max_tokens,
+    )
     try:
         data = json.loads(_strip_fences(raw))
         options = [str(x).strip() for x in data.get("clarification_options", []) if str(x).strip()]

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ConsultResult } from "@/types";
-import { generatedSessionTitlePrompt, sessionTitleFallback, shouldUseGeneratedSessionTitle } from "./useConsultRun";
+import {
+  generatedSessionTitlePrompt,
+  sessionTitleFallback,
+  shouldRequestGeneratedTitle,
+  shouldUseGeneratedSessionTitle,
+} from "./useConsultRun";
 
 const baseResult = {
   session_id: "session-1",
@@ -53,6 +58,18 @@ describe("generatedSessionTitlePrompt", () => {
     expect(generatedSessionTitlePrompt(baseResult, "Original compose title")).toBe(
       "How should we reduce latency?",
     );
+  });
+});
+
+describe("shouldRequestGeneratedTitle", () => {
+  it("skips the LLM call for short questions (37 chars or fewer)", () => {
+    expect(shouldRequestGeneratedTitle("Short question here")).toBe(false);
+  });
+
+  it("requests a generated title once the question exceeds 37 chars", () => {
+    expect(
+      shouldRequestGeneratedTitle("This question is long enough to need a shorter generated title"),
+    ).toBe(true);
   });
 });
 

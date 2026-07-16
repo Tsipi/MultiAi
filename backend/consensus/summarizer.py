@@ -21,4 +21,4 @@ Write a concise summary only. No preamble.
 async def summarize_round(answer: str, critique: str, cfg: AppConfig) -> str:
     """Return compressed summary for rolling context."""
     prompt = SUMMARIZER_PROMPT.format(answer=answer[:800], critique=critique[:800])
-    return await call_openrouter(prompt, cfg.summarizer_model, cfg)
+    return await call_openrouter(prompt, cfg.summarizer_model, cfg, max_tokens=cfg.summary_max_tokens)

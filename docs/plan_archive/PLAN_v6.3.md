@@ -1,7 +1,7 @@
 # Version 6.3 - Mobile Follow-up & Debate View Fixes
 
-**Scope:** Bug-fix session covering the mobile follow-up flow, the Full Debate transcript view, and saved-session team labeling.
-**Status:** Phase 6.3.1 complete. Phase 6.3.2 not started (idea only).
+**Scope:** Bug-fix session covering the mobile follow-up flow, the Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, and sidebar title-generation cost trimming.
+**Status:** Phase 6.3.1 complete. Phase 6.3.2 not started (idea only). Phase 6.3.3 complete.
 
 ---
 
@@ -38,3 +38,17 @@
 - [ ] Expose via a new endpoint or embed in the session response
 - [ ] "Follow-up N of M" badge near the score badges
 - [ ] Optional expandable "thread timeline" panel
+
+---
+
+## Phase 6.3.3 - OpenRouter Call Reliability & Title-Generation Cost Trimming — complete
+
+### Tasks
+
+- [x] Fix `EXPORT_TITLE_MODEL` default id typo (`openrouter/gpt-oss-120b` -> `openai/gpt-oss-120b`) — was failing every `/api/title` call with HTTP 400 "not a valid model ID"
+- [x] Add explicit `max_tokens` to every OpenRouter call (`call_openrouter` + `web_research.py`), using new `config.py` budget constants, to stop OpenRouter's worst-case-cost preflight check from blocking on a model's large default max output (e.g. Claude Sonnet's 65536-token default) even when the key has balance for the real (much smaller) completion — actual token usage and billing are unaffected
+- [x] Raise `title_max_tokens` (60 -> 300) — `openai/gpt-oss-120b` is a reasoning model that spends part of its token budget on internal reasoning before emitting visible text; 60 tokens left no room for actual output, so `content` came back `null`
+- [x] Harden `call_openrouter` against empty/`null` response content: raises a clear `LLMCallError` with the provider's `finish_reason` instead of crashing on `len(None)` — protects any future call to a reasoning model or a content-filtered response, not just the title endpoint
+- [x] Sidebar session title: skip the `/api/title` LLM call entirely for questions of 37 characters or fewer — short questions already read fine as the raw-question fallback title, so calling an LLM to shorten them further was an unnecessary request. Added `shouldRequestGeneratedTitle()` gate in `useConsultRun.ts`; only the Markdown/PDF export titles are unaffected (PDF was already non-LLM; Markdown export still always calls `/api/title`)
+
+**Verified:** `pytest tests/` (56/57 — one pre-existing unrelated failure), `vitest run` (9/9 for `useConsultRun.test.ts`), `tsc --noEmit` clean, manual reproduction of all three backend errors resolved by the user.

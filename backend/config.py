@@ -29,7 +29,7 @@ class AppConfig:
     scorer_model: str = field(default_factory=lambda: os.getenv("SCORER_MODEL", ""))
     summarizer_model: str = field(default_factory=lambda: os.getenv("SUMMARIZER_MODEL", ""))
     validator_model: str = field(default_factory=lambda: os.getenv("VALIDATOR_MODEL", ""))
-    export_title_model: str = os.getenv("EXPORT_TITLE_MODEL", "openrouter/gpt-oss-120b")
+    export_title_model: str = os.getenv("EXPORT_TITLE_MODEL", "openai/gpt-oss-120b")
     web_search_model: str = os.getenv("WEB_SEARCH_MODEL", "openai/gpt-5.4")
     web_search_engine: str = os.getenv("WEB_SEARCH_ENGINE", "exa")
     web_search_max_results: int = int(os.getenv("WEB_SEARCH_MAX_RESULTS", "5"))
@@ -54,6 +54,11 @@ class AppConfig:
     consensus_default: int = 8
     min_relevance_score: float = 7.0
     summary_max_tokens: int = 200
+    round_call_max_tokens: int = 800
+    scorer_max_tokens: int = 100
+    intent_max_tokens: int = 400
+    title_max_tokens: int = 300
+    web_research_max_tokens: int = 3000
     attachment_text_chars: int = 8000
     attachment_image_limit: int = 3
     attachment_pdf_page_limit: int = 12

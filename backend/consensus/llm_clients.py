@@ -36,7 +36,11 @@ def _normalize_base_url(base_url: str) -> str:
 
 
 async def call_openrouter(
-    prompt: str, model: str, cfg: AppConfig, image_urls: list[str] | None = None
+    prompt: str,
+    model: str,
+    cfg: AppConfig,
+    image_urls: list[str] | None = None,
+    max_tokens: int | None = None,
 ) -> str:
     """Call OpenRouter chat completion API."""
     if not cfg.openrouter_api_key:
@@ -48,27 +52,34 @@ async def call_openrouter(
         user_content = [{"type": "text", "text": prompt}] + [
             {"type": "image_url", "image_url": {"url": url}} for url in image_urls
         ]
+    payload = {
+        "model": model_id,
+        "messages": [
+            {"role": "system", "content": SYSTEM_GUARDRAIL},
+            {"role": "user", "content": user_content},
+        ],
+    }
+    if max_tokens is not None:
+        payload["max_tokens"] = max_tokens
     try:
         started_at = perf_counter()
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
                 url,
                 headers={"Authorization": f"Bearer {cfg.openrouter_api_key}"},
-                json={
-                    "model": model_id,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_GUARDRAIL},
-                        {"role": "user", "content": user_content},
-                    ],
-                },
+                json=payload,
             )
         response.raise_for_status()
         body = response.json()
+        content = body["choices"][0]["message"].get("content")
+        if not content:
+            finish_reason = body["choices"][0].get("finish_reason", "unknown")
+            raise LLMCallError(f"OpenRouter returned empty content for model {model_id} (finish_reason={finish_reason})")
         usage = body.get("usage", {})
         prompt_tokens = int(usage.get("prompt_tokens", max(1, len(prompt) // 4)))
-        completion_tokens = int(usage.get("completion_tokens", max(1, len(body["choices"][0]["message"]["content"]) // 4)))
+        completion_tokens = int(usage.get("completion_tokens", max(1, len(content) // 4)))
         record_usage(model, prompt_tokens, completion_tokens, perf_counter() - started_at)
-        return body["choices"][0]["message"]["content"].strip()
+        return content.strip()
     except httpx.HTTPStatusError as exc:
         details = exc.response.text[:300]
         LOGGER.error("LLM call failed model=%s url=%s status=%s body=%s", model_id, url, exc.response.status_code, details)
