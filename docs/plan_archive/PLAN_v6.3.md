@@ -29,15 +29,19 @@
 
 ### Idea
 
-- Walk the `parent_session_id` chain on demand to reconstruct question → answer → score for a whole thread, rather than duplicating a growing score array onto every session.
-- Once that lookup exists, "Follow-up N of M" numbering and a "thread timeline" view both fall out of it for free.
+Both `list_sessions()` implementations (`backend/storage/session_store.py:50`, `backend/storage/db_session_store.py:149`) already fully load every session's payload into memory to build the sidebar preview list (needed for the stub check and `team_template_id`) — `final_score` is already sitting in that loaded payload, just not copied into the returned preview dict. `backend/api/sessions.py`'s `GET /api/sessions` route returns that list as plain `list[dict]` with no Pydantic schema in between, so no schema layer needs updating either.
+
+That means the whole feature can be built **without any new endpoint or backend walking helper**: add `final_score` to the existing preview dict (one line in each store), thread it onto the frontend `SessionPreview` type, and derive "Follow-up N of M" plus a full thread timeline entirely client-side from the `sessions` array `AnswersPanel.tsx` already holds in memory — the same pattern already used for `sessionNumberMap` (`AnswersPanel.tsx:61`) and thread grouping (`groupByThread`, `AnswersPanel.tsx:500`). Zero extra I/O, zero extra network calls per session view.
+
+(Originally scoped as a backend helper that walks `parent_session_id` back to the root via repeated `load_session()` calls — dropped because it would've added N sequential loads per session *view*, duplicating data the sidebar's single existing `/api/sessions` call already loads for free.)
 
 ### Tasks
 
-- [ ] Backend helper to walk `parent_session_id` back to `root_question`, returning an ordered `{session_id, question, final_score, timestamp}` list
-- [ ] Expose via a new endpoint or embed in the session response
-- [ ] "Follow-up N of M" badge near the score badges
-- [ ] Optional expandable "thread timeline" panel
+- [ ] Add `final_score` to the dict returned by `list_sessions()` in both `session_store.py` and `db_session_store.py`
+- [ ] Add `final_score` to `SessionPreview` in `frontend/src/types.ts`
+- [ ] Extend `groupByThread` (`AnswersPanel.tsx`) to sort each thread's `runs` chronologically (oldest first) so "Follow-up N of M" numbering reads in the right order, and expose each step's `{session_id, question, final_score, timestamp}`
+- [ ] "Follow-up N of M" badge near the score badges in `SessionPromptBlock.tsx` / `PinnedAnswer.tsx`
+- [ ] Optional expandable "thread timeline" panel listing every step, built from the same in-memory data
 
 ---
 

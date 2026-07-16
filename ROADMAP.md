@@ -104,10 +104,10 @@ Full spec: `docs/plan_archive/PLAN_v6.2.md`
 ### v6.3 - Mobile Follow-up & Debate View Fixes
 Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, and sidebar title-generation cost trimming.
 
-**Status:** In Progress — 6.3.1 (Mobile Follow-up & Debate View Fixes) done, 6.3.2 (Follow-up Thread History & Ordering) planned, 6.3.3 (OpenRouter Call Reliability Fixes) done.
+**Status:** In Progress — 6.3.1 (Mobile Follow-up & Debate View Fixes) done, 6.3.2 (Follow-up Thread History & Ordering) planned, 6.3.3 (OpenRouter Call Reliability & Title-Generation Cost Trimming) done.
 
 **In production:** 6.3.1 shipped.  
-**In development:** 6.3.3 (OpenRouter Call Reliability Fixes) done; 6.3.2 (Follow-up Thread History & Ordering) not started; v6.2's remaining items (6.2.7/6.2.8/6.2.9) still open in parallel; v6.4 queued next.
+**In development:** 6.3.3 (OpenRouter Call Reliability & Title-Generation Cost Trimming) done; 6.3.2 (Follow-up Thread History & Ordering) not started; v6.2's remaining items (6.2.7/6.2.8/6.2.9) still open in parallel; v6.4 queued next.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 

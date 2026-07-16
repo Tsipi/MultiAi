@@ -1,7 +1,8 @@
 # PLAN.md
 
 **In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-**In development:** v6.3 - Mobile Follow-up & Debate View Fixes (working on
+**In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.3
+OpenRouter Call Reliability & Title-Generation Cost Trimming done; working on
 6.3.2; v6.2 remaining items 6.2.7/6.2.8/6.2.9 still open in parallel; v6.4
 queued next)
 
