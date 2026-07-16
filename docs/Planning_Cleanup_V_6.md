@@ -97,21 +97,69 @@ original checklist):
   that it's synthesized, rather than skip the table or invent numbering
   for its 8-item implementation checklist.
 
-## Section 2 — ROADMAP.md  [ ]
-- [ ] Fix v6.0 phase table: replace copy-pasted v5.0 phase names with real
+## Section 2 — ROADMAP.md  [x]
+- [x] Fix v6.0 phase table: replace copy-pasted v5.0 phase names with real
       names from PLAN_v6.0.md (Mobile Information Architecture, Responsive
       App Shell, Mobile Compose Experience, Mobile Live Debate And Final
-      Answer, Mobile Session History, PWA And Accessibility)
-- [ ] Move v5.0 into "Shipped" section
-- [ ] Move v6.0 into "Shipped" section
-- [ ] Move v4.4 into "Shipped" section
-- [ ] Add v5.1 entry -> "Shipped" section
-- [ ] Add v5.2 entry -> "Planned" section (status: Blocked)
-- [ ] Add v6.1 entry -> "Shipped" section
-- [ ] Add v6.2 entry -> "Current" section (status: In Progress)
-- [ ] Add v6.3 entry -> "Current" section (status: In Progress)
-- [ ] Add v6.4 entry -> "Planned" section
-- [ ] Show diff, wait for confirmation before moving to Section 3
+      Answer, Mobile Session History, Mobile QA And Accessibility — PLAN.md
+      calls 6.0.6 this, not "PWA And Accessibility" as originally guessed
+      here; used PLAN.md's current wording per instruction to treat PLAN.md
+      as sole source of truth)
+- [x] Move v5.0 into "Shipped" section
+- [x] Move v6.0 into "Shipped" section
+- [x] Move v4.4 into "Shipped" section
+- [x] Add v5.1 entry -> "Shipped" section
+- [x] Add v5.2 entry -> "Planned" section (status: Blocked)
+- [x] Add v6.1 entry -> "Shipped" section
+- [x] Add v6.2 entry -> "Current" section (status: In Progress)
+- [x] Add v6.3 entry -> "Current" section (status: In Progress)
+- [x] Add v6.4 entry -> "Planned" section
+- [x] Show diff, wait for confirmation before moving to Section 3
+
+Note: entire ROADMAP.md rewritten from scratch (via Write, not incremental
+Edit) since nearly every section changed. v1.0-v4.3 Shipped entries carried
+over verbatim (out of scope, already correct). Added a Marketing entry
+under "Planned" (points to docs/local_only/PLAN_Marketing.md, matching
+PLAN.md's version archive table) and a short vocabulary/mirroring note at
+the top, matching PLAN.md's governance line. v6.3's entry includes a
+short "In production" / "In development" note reflecting PLAN.md's header
+split. Every status value mapped cleanly to Done/In Progress/Blocked/
+Planned — nothing needed flagging as a vocabulary mismatch.
+
+Follow-up (user-requested after initial Section 2 diff): removed every
+per-phase "Phase | Goal | Status" table from ROADMAP.md (v4.4, v5.0, v6.0,
+v6.1, v6.2, v6.3, v6.4, v7.0) — ROADMAP.md is now high-level only (theme +
+one-line scope + a single prose "Status:" line + full-spec link), no
+phase-level detail duplicated from PLAN.md. v6.3 kept its "In production /
+In development" note (high-level, not phase detail) in addition to its new
+one-line Status. v6.1's "synthesized row" note was removed along with its
+table since it no longer applies. Header text, section structure (Shipped/
+Current/Planned), and Backlog were not touched.
+
+Follow-up 2 (user-requested): added full Phase | Goal | Status detail
+tables for v5.1 and v5.2 to PLAN.md (inserted after v5.0, before v6.0),
+matching the v4.4/v5.0/v6.0/v6.1-v6.4 format. Unlike v6.1, v5.1's archive
+file DOES have real numbered phases (5.1.0-5.1.4) — no synthesis needed.
+Found and flagged a real contradiction: Phase 5.1.4 "API Hardening And
+Tests" has one task done (rate limiting) and one explicitly unchecked
+("deferred pending user approval" — automated test coverage). User decided:
+mark 5.1.4 Done (matching the archive's overall "Complete" status and
+PLAN.md's existing Done row), treating the deferred test-coverage item as
+an accepted scope-cut rather than an open blocker — but log that deferred
+item separately so it isn't lost. Created new `docs/plan_archive/
+PLAN_Tests.md` (same pattern as `TODO.md` — a side file, not part of the
+PLAN.md/ROADMAP.md workflow) as a running list of deferred test-coverage
+debt, with this item as its first entry.
+
+v5.2's table (5.2.1 Google OAuth, 5.2.2 Notification Preferences, 5.2.3
+Impersonate / View As — all Planned; section heading status Blocked)
+followed the original instructions with no ambiguity.
+
+Checked ROADMAP.md against the new PLAN.md data: v5.2's existing entry
+already matched (no change needed). v5.1's entry was missing an explicit
+"**Status:**" line that every other entry now has (it had no phase table
+to begin with, so it was skipped when tables were stripped from every
+other version) — added "**Status:** Done." for consistency.
 
 ## Section 3 — CLAUDE.md  [ ]
 - [ ] Add missing individual files to Key modules table (useConsultRun.ts,

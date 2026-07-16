@@ -1,7 +1,8 @@
 # MultiAi Roadmap
 
 High-level version history and future direction.  
-Detailed specs for each version live in `docs/plan_archive/PLAN_vX.x.md`.
+Detailed specs for each version live in `docs/plan_archive/PLAN_vX.x.md`.  
+Status vocabulary: Done / In Progress / Blocked / Planned (see `docs/Planning_Cleanup_V_6.md`). This file mirrors PLAN.md's "Active roadmap" table — keep both in sync when a version's status changes.
 
 ---
 
@@ -54,73 +55,89 @@ Added Fast/Balanced/Deep answer modes, reduced default run latency, skipped unne
 
 Full spec: `docs/plan_archive/PLAN_v4.3.md`
 
+### v4.4 - Live Debate Experience Polish
+Compact progress notes, named teammate copy, typing polish, clearer repair/error notes.
+
+**Status:** Done.
+
+Full spec: `docs/plan_archive/PLAN_v4.4.md`
+
+### v5.0 - New Login, Auth, Admin, And User Settings
+Product-ready account UX, admin area, regular user settings, permission hardening.
+
+**Status:** Done.
+
+Full spec: `docs/plan_archive/PLAN_v5.0.md`
+
+### v5.1 - Auth And Settings Polish
+Login/settings fixes, admin password-reset trigger, rate limiting, deferred v5.0 items completed.
+
+**Status:** Done.
+
+Full spec: `docs/plan_archive/PLAN_v5.1.md`
+
+### v6.0 - Mobile UX
+Responsive app shell, mobile compose, mobile sessions, mobile run experience.
+
+**Status:** Done.
+
+Full spec: `docs/plan_archive/PLAN_v6.0.md`
+
+### v6.1 - Advanced Setup Panel Redesign
+Three-tab (Team/Debate/Sources) redesign of the Advanced Setup drawer.
+
+**Status:** Done.
+
+Full spec: `docs/plan_archive/PLAN_v6.1.md`
+
 ---
 
 ## Current
 
-### v4.4 - Live Debate Experience Polish
-**Theme:** Make the live debate section feel like a polished AI team room instead of a raw backend activity log.
+### v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, And OG Sharing
+PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix.
 
-The original v4.4 draft was narrowed after v4.3 shipped the live header, stage badge, answer mode, elapsed time, round count, score, avatars, and agent message styling. Current v4.4 focuses on the remaining rough edges users can feel.
+**Status:** In Progress — 6.2.1-6.2.6 done; 6.2.7 (sitemap) planned, 6.2.8 (production email) blocked, 6.2.9 (SPA routing fix) in progress.
 
-| Phase | Goal |
-|-------|------|
-| 4.4.1 | Compact Routine Progress Messages - done |
-| 4.4.2 | Remove Generic Critic Labels From User-Facing Copy - done |
-| 4.4.3 | Simplify Typing And Loading States - done |
-| 4.4.4 | Preserve Compatibility For Saved And Larger Debates - done |
-| 4.4.5 | Avatar Fetch And Render Audit - done |
-| 4.4.6 | Minimal Verification - manual check pending |
-| 4.4.7 | Clear Repair And Provider-Limit Notes - done |
+Full spec: `docs/plan_archive/PLAN_v6.2.md`
 
-Full spec: `docs/plan_archive/PLAN_v4.4.md`
+### v6.3 - Mobile Follow-up & Debate View Fixes
+Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling.
+
+**Status:** In Progress — 6.3.1 (Mobile Follow-up & Debate View Fixes) done, 6.3.2 (Follow-up Thread History & Ordering) planned.
+
+**In production:** 6.3.1 shipped.  
+**In development:** 6.3.2 (Follow-up Thread History & Ordering) not started; v6.2's remaining items (6.2.7/6.2.8/6.2.9) still open in parallel; v6.4 queued next.
+
+Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
 ---
 
 ## Planned
 
-### v5.0 - New Login, Auth, Admin, And User Settings
-**Theme:** Product-ready account UX, regular user settings, admin area, and permission hardening.
+### v5.2 - Deferred Auth And Account Features
+**Status:** Blocked — Google OAuth, notification preferences, impersonate/view-as; blocked on missing infra and explicit approval.
 
-| Phase | Goal | Status |
-|-------|------|--------|
-| 5.0.1 | Auth Audit And Role Model | Planned |
-| 5.0.2 | New Login And Registration UX | Planned |
-| 5.0.3 | Regular User Settings | Planned |
-| 5.0.4 | Admin Area | Planned |
-| 5.0.5 | Usage Quotas And Billing Preparation | Planned |
-| 5.0.6 | Permissions And API Hardening | Planned |
-| 5.0.7 | Deployment And Operations | Planned |
+Full spec: `docs/plan_archive/PLAN_v5.2.md`
 
-Full spec: `docs/plan_archive/PLAN_v5.0.md`
+### v6.4 - Markdown Table Rendering (App + PDF Export)
+Render GFM-style markdown tables in the live app and PDF export.
 
-### v6.0 - Mobile UX
-**Theme:** Responsive app shell, mobile compose, mobile sessions, and mobile run experience.
+**Status:** Planned.
 
-| Phase | Goal |
-|-------|------|
-| 6.0.1 | Auth Audit And Role Model |
-| 6.0.2 | New Login And Registration UX |
-| 6.0.3 | Regular User Settings |
-| 6.0.4 | Admin Area |
-| 6.0.5 | Permissions And API Hardening |
-| 6.0.6 | Deployment And Operations |
-
-Full spec: `docs/plan_archive/PLAN_v6.0.md`
+Full spec: `docs/plan_archive/PLAN_v6.4.md`
 
 ### v7.0 - Next.js, SEO, Template Pages, SSR/SSG
-**Theme:** Move public and SEO-sensitive surfaces to Next.js while preserving the private app workflow.
+Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture.
 
-| Phase | Goal |
-|-------|------|
-| 7.0.1 | Architecture Decision |
-| 7.0.2 | Template Page System |
-| 7.0.3 | SSR Shared Run Pages |
-| 7.0.4 | Marketing And SEO Foundation |
-| 7.0.5 | App Router And Private App Integration |
-| 7.0.6 | Deployment, Analytics, And Verification |
+**Status:** Planned.
 
 Full spec: `docs/plan_archive/PLAN_v7.0.md`
+
+### Marketing - TeamStoa Brand, Launch, And Growth
+In-app rebrand, landing page, content, analytics, Product Hunt, pricing.
+
+Full spec: `docs/local_only/PLAN_Marketing.md`
 
 ---
 

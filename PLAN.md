@@ -13,11 +13,11 @@ queued next)
 
 | Version | Theme | Scope | Status |
 |---------|-------|-------|--------|
-| v4.0 | UI Foundation | React Router v6 + Team Templates (frontend only) | Complete |
-| v4.1 | Persistence & Auth | PostgreSQL, Alembic, fastapi-users, login UI | Complete |
-| v4.1.1 | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | Complete |
-| v4.2 | Sharing, Export, Roles, and Live Web Research | Public sharing, full debate export, per-agent roles, live web research | Complete |
-| v4.3 | Reduce Run Latency | Fast/Balanced/Deep mode, fewer unnecessary calls, timing instrumentation | Complete |
+| v4.0 | UI Foundation | React Router v6 + Team Templates (frontend only) | Done |
+| v4.1 | Persistence & Auth | PostgreSQL, Alembic, fastapi-users, login UI | Done |
+| v4.1.1 | Cleanup & Reorganisation | Component folder move, CORS, session scoping, PLAN sync | Done |
+| v4.2 | Sharing, Export, Roles, and Live Web Research | Public sharing, full debate export, per-agent roles, live web research | Done |
+| v4.3 | Reduce Run Latency | Fast/Balanced/Deep mode, fewer unnecessary calls, timing instrumentation | Done |
 | v4.4 | Live Debate Experience Polish | Compact progress notes, named teammate copy, typing polish, clearer repair/error notes | Done |
 | v5.0 | New Login, Auth, Admin, and User Settings | Product-ready account UX, admin area, regular user settings, permission hardening | Done |
 | v5.1 | Auth And Settings Polish | Login/settings fixes, admin password-reset trigger, rate limiting, deferred v5.0 items completed | Done |
@@ -112,6 +112,28 @@ Full spec: `docs/plan_archive/PLAN_v5.0.md`
 ## v5.1 Auth And Settings Polish - Done
 
 Full spec: `docs/plan_archive/PLAN_v5.1.md`
+
+| Phase | Goal | Status |
+|-------|------|--------|
+| 5.1.0 | Login Fixes | Done |
+| 5.1.1 | Settings Polish | Done |
+| 5.1.2 | Regular User Settings | Done |
+| 5.1.3 | Admin Improvements | Done |
+| 5.1.4 | API Hardening And Tests | Done |
+
+Note: 5.1.4's automated-test-coverage task was deferred pending approval, not fully done — treated as an accepted scope-cut rather than an open blocker. Tracked separately in `docs/plan_archive/PLAN_Tests.md`.
+
+---
+
+## v5.2 Deferred Auth And Account Features - Blocked
+
+Full spec: `docs/plan_archive/PLAN_v5.2.md`
+
+| Phase | Goal | Status |
+|-------|------|--------|
+| 5.2.1 | Google OAuth | Planned |
+| 5.2.2 | Notification Preferences | Planned |
+| 5.2.3 | Impersonate / View As | Planned |
 
 ---
 
