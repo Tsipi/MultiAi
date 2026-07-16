@@ -1,7 +1,7 @@
 # Version 6.3 - Mobile Follow-up & Debate View Fixes
 
 **Scope:** Bug-fix session covering the mobile follow-up flow, the Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, and sidebar title-generation cost trimming.
-**Status:** Phase 6.3.1 complete. Phase 6.3.2 not started (idea only). Phase 6.3.3 complete.
+**Status:** Phase 6.3.1 complete. Phase 6.3.2 descoped to sort-only (badge/score plumbing built, reviewed, and reverted). Phase 6.3.3 complete.
 
 ---
 
@@ -23,25 +23,22 @@
 
 ---
 
-## Phase 6.3.2 - Follow-up Thread History & Ordering — not started (idea)
+## Phase 6.3.2 - Follow-up Thread History & Ordering — descoped to sort-only
 
 **Goal:** Let a user with several chained follow-ups see the score and position of every step in the thread, not just the immediate parent's.
 
-### Idea
+### What was tried and reverted
 
-Both `list_sessions()` implementations (`backend/storage/session_store.py:50`, `backend/storage/db_session_store.py:149`) already fully load every session's payload into memory to build the sidebar preview list (needed for the stub check and `team_template_id`) — `final_score` is already sitting in that loaded payload, just not copied into the returned preview dict. `backend/api/sessions.py`'s `GET /api/sessions` route returns that list as plain `list[dict]` with no Pydantic schema in between, so no schema layer needs updating either.
+A full implementation was built and verified (add `final_score` to `list_sessions()` in both stores, thread it onto `SessionPreview`, a `threadPositionFor()` helper deriving 1-based position + thread total client-side from the in-memory `sessions` array, and a "Follow-up N of M" badge on the "Previous Answer" card via a new `positionBadge` prop on `PinnedAnswer.tsx`). The design avoided any new endpoint or backend walking helper (see git history on this file for the original write-up).
 
-That means the whole feature can be built **without any new endpoint or backend walking helper**: add `final_score` to the existing preview dict (one line in each store), thread it onto the frontend `SessionPreview` type, and derive "Follow-up N of M" plus a full thread timeline entirely client-side from the `sessions` array `AnswersPanel.tsx` already holds in memory — the same pattern already used for `sessionNumberMap` (`AnswersPanel.tsx:61`) and thread grouping (`groupByThread`, `AnswersPanel.tsx:500`). Zero extra I/O, zero extra network calls per session view.
+**Reverted per user review of the live UI:** the badge wasn't wanted, and its counting was confusing in practice — it numbers the root question as step 1, so a thread with 2 follow-ups reads "Follow-up 3 of 3" even though only 2 items are actually labeled "Follow-up" in the sidebar. Given the badge was the only consumer of the `final_score`/`threadPosition` plumbing, all of it was removed rather than left as unused code: `final_score` additions to both `list_sessions()` stores, `SessionPreview`/`toPreview`/`services/api.ts` types, `threadPositionFor()` and its tests, and the `threadPosition` prop chain through `App.tsx` → `AnswersPanel.tsx` → `ChatPanel.tsx` → `SessionPromptBlock.tsx` → `PinnedAnswer.tsx`.
 
-(Originally scoped as a backend helper that walks `parent_session_id` back to the root via repeated `load_session()` calls — dropped because it would've added N sequential loads per session *view*, duplicating data the sidebar's single existing `/api/sessions` call already loads for free.)
+### What shipped
 
-### Tasks
+- [x] `groupByThread` (`AnswersPanel.tsx`) now sorts each thread's `runs` chronologically (oldest first) instead of inheriting the newest-first order of the full session list — a small, independent readability fix for the sidebar accordion, kept on its own merit since it doesn't depend on anything else that was reverted.
+- [ ] Position/score visibility across the whole thread — not pursued further this round. If revisited, get UI sign-off on the exact wording/placement before re-wiring the data plumbing.
 
-- [ ] Add `final_score` to the dict returned by `list_sessions()` in both `session_store.py` and `db_session_store.py`
-- [ ] Add `final_score` to `SessionPreview` in `frontend/src/types.ts`
-- [ ] Extend `groupByThread` (`AnswersPanel.tsx`) to sort each thread's `runs` chronologically (oldest first) so "Follow-up N of M" numbering reads in the right order, and expose each step's `{session_id, question, final_score, timestamp}`
-- [ ] "Follow-up N of M" badge near the score badges in `SessionPromptBlock.tsx` / `PinnedAnswer.tsx`
-- [ ] Optional expandable "thread timeline" panel listing every step, built from the same in-memory data
+**Verified:** `tsc --noEmit`, `vitest run` (24/24), `npm run build`, `python -m compileall`, and `pytest tests/` (56/57 — one pre-existing unrelated failure) all clean after the revert.
 
 ---
 

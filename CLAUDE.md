@@ -263,11 +263,10 @@ Claude updates `### Current Session State` automatically after:
 - **Active plan:** see `PLAN.md`
 - **Architecture reference:** see `docs/engineering/`
 - **In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.3 OpenRouter Call Reliability & Title-Generation Cost Trimming done; working on 6.3.2; v6.2 remaining items 6.2.7/6.2.8/6.2.9 still open in parallel; v6.4 queued next)
+- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.3 done on this branch, not yet deployed beyond 6.3.1; 6.3.2 descoped to a sort-only fix after the "Follow-up N of M" badge was built, reviewed, and reverted as unwanted); v6.2 remaining items 6.2.7/6.2.8/6.2.9 still open in parallel; v6.4 queued next
 - **Not yet started / blocked:**
   - v5.2 - Deferred Auth And Account Features — Blocked
   - v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing — In Progress (6.2.7 Sitemap, 6.2.8 Production Email, 6.2.9 SPA Routing Fix remaining)
-  - v6.3 - Mobile Follow-up & Debate View Fixes — In Progress (6.3.2 Follow-up Thread History & Ordering remaining)
   - v6.4 - Markdown Table Rendering (App + PDF Export) — Planned
   - v7.0 - Next.js + SEO — Planned
   - Marketing - TeamStoa Brand, Launch, And Growth — Planned
