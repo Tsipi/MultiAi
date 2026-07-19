@@ -1,6 +1,7 @@
 import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { getApiBaseUrl } from "@/lib/apiBaseUrl";
+import { Check } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -78,7 +79,9 @@ export function ResetPasswordPage() {
         <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-6 shadow-xl">
           {done ? (
             <div className="text-center py-2">
-              <div className="text-3xl mb-3">✅</div>
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-700 to-violet-400 shadow-md">
+                <Check className="h-7 w-7 text-white" strokeWidth={3} />
+              </div>
               <h1 className="text-lg font-semibold text-foreground mb-2">Password updated</h1>
               <p className="text-sm text-muted-foreground mb-6">
                 Your password has been changed. You can now sign in with your new password.
