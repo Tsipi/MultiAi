@@ -97,7 +97,7 @@ Full spec: `docs/plan_archive/PLAN_v6.1.md`
 ### v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, And OG Sharing
 PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix.
 
-**Status:** Done — all phases (6.2.1-6.2.9) Done on branch, not yet merged to `main`. Production email (Resend) confirmed working locally and on the live Railway backend; transactional email template and reset-password success page rebranded. Known follow-up (not a blocker): `hello@teamstoa.com` has no inbound mail receiving set up yet.
+**Status:** Done — all phases (6.2.1-6.2.9) Done on branch, not yet merged to `main`. Production email (Resend) confirmed working locally and on the live Railway backend; transactional email template plus the forgot-password and reset-password success screens rebranded. Known follow-up (not a blocker): `hello@teamstoa.com` has no inbound mail receiving set up yet.
 
 Full spec: `docs/plan_archive/PLAN_v6.2.md`
 

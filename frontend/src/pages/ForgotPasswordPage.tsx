@@ -1,5 +1,6 @@
 import { TeamStoaIcon } from "@/components/layout/TeamStoaIcon";
 import { getApiBaseUrl } from "@/lib/apiBaseUrl";
+import { Mail } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -47,7 +48,9 @@ export function ForgotPasswordPage() {
         <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-6 shadow-xl">
           {sent ? (
             <div className="text-center py-2">
-              <div className="text-3xl mb-3">✉️</div>
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-700 to-violet-400 shadow-md">
+                <Mail className="h-7 w-7 text-white" strokeWidth={2} />
+              </div>
               <h1 className="text-lg font-semibold text-foreground mb-2">Check your email</h1>
               <p className="text-sm text-muted-foreground mb-6">
                 If <span className="text-foreground font-medium">{email}</span> is registered, we sent
