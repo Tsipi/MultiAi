@@ -1,11 +1,11 @@
 # Version 6.3 - Mobile Follow-up & Debate View Fixes
 
 **Scope:** Bug-fix session covering the mobile follow-up flow, the Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, and sidebar title-generation cost trimming.
-**Status:** Phase 6.3.1 complete. Phase 6.3.2 not started (idea only). Phase 6.3.3 complete.
+**Status:** Phase 6.3.1 Done. Phase 6.3.2 Done (scope reduced to a sort-only fix — see phase notes). Phase 6.3.3 Done.
 
 ---
 
-## Phase 6.3.1 - Mobile Follow-up & Debate View Fixes — complete
+## Phase 6.3.1 - Mobile Follow-up & Debate View Fixes — Done
 
 ### Tasks
 
@@ -23,25 +23,25 @@
 
 ---
 
-## Phase 6.3.2 - Follow-up Thread History & Ordering — not started (idea)
+## Phase 6.3.2 - Follow-up Thread History & Ordering — Done
 
 **Goal:** Let a user with several chained follow-ups see the score and position of every step in the thread, not just the immediate parent's.
 
-### Idea
+### What was tried and reverted
 
-- Walk the `parent_session_id` chain on demand to reconstruct question → answer → score for a whole thread, rather than duplicating a growing score array onto every session.
-- Once that lookup exists, "Follow-up N of M" numbering and a "thread timeline" view both fall out of it for free.
+A full implementation was built and verified (add `final_score` to `list_sessions()` in both stores, thread it onto `SessionPreview`, a `threadPositionFor()` helper deriving 1-based position + thread total client-side from the in-memory `sessions` array, and a "Follow-up N of M" badge on the "Previous Answer" card via a new `positionBadge` prop on `PinnedAnswer.tsx`). The design avoided any new endpoint or backend walking helper (see git history on this file for the original write-up).
 
-### Tasks
+**Reverted per user review of the live UI:** the badge wasn't wanted, and its counting was confusing in practice — it numbers the root question as step 1, so a thread with 2 follow-ups reads "Follow-up 3 of 3" even though only 2 items are actually labeled "Follow-up" in the sidebar. Given the badge was the only consumer of the `final_score`/`threadPosition` plumbing, all of it was removed rather than left as unused code: `final_score` additions to both `list_sessions()` stores, `SessionPreview`/`toPreview`/`services/api.ts` types, `threadPositionFor()` and its tests, and the `threadPosition` prop chain through `App.tsx` → `AnswersPanel.tsx` → `ChatPanel.tsx` → `SessionPromptBlock.tsx` → `PinnedAnswer.tsx`.
 
-- [ ] Backend helper to walk `parent_session_id` back to `root_question`, returning an ordered `{session_id, question, final_score, timestamp}` list
-- [ ] Expose via a new endpoint or embed in the session response
-- [ ] "Follow-up N of M" badge near the score badges
-- [ ] Optional expandable "thread timeline" panel
+### What shipped
+
+- [x] `groupByThread` (`AnswersPanel.tsx`) now sorts each thread's `runs` chronologically (oldest first) instead of inheriting the newest-first order of the full session list — a small, independent readability fix for the sidebar accordion, kept on its own merit since it doesn't depend on anything else that was reverted.
+
+**Verified:** `tsc --noEmit`, `vitest run` (24/24), `npm run build`, `python -m compileall`, and `pytest tests/` (56/57 — one pre-existing unrelated failure) all clean after the revert.
 
 ---
 
-## Phase 6.3.3 - OpenRouter Call Reliability & Title-Generation Cost Trimming — complete
+## Phase 6.3.3 - OpenRouter Call Reliability & Title-Generation Cost Trimming — Done
 
 ### Tasks
 

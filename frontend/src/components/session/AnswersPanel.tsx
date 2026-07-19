@@ -511,7 +511,9 @@ function groupByThread(
   for (const [threadId, rows] of byThread.entries()) {
     const parent =
       rows.find((row) => !row.is_followup && row.id === threadId) ?? rows[rows.length - 1];
-    const runs = rows.filter((row) => row.id !== parent.id);
+    const runs = rows
+      .filter((row) => row.id !== parent.id)
+      .sort((a, b) => (a.timestamp || "").localeCompare(b.timestamp || ""));
     threads.push({ threadId, parent, runs });
   }
   return threads;

@@ -16,6 +16,9 @@ coverage/
 # Claude Code memory (local only)
 .claude/settings.local.json
 
+# Claude Code personal slash commands (local only)
+.claude/commands/
+
 # Local VSCode settings
 .vscode/settings.json
 

@@ -20,12 +20,9 @@ Items below were added after v4.3 shipped, used as a rough timestamp reference. 
  
  6. Optional Utility Model Benchmarking
 
-    Consider benchmarking faster OpenRouter options for scorer, summarizer, validator, and intent
-    assessment only if real production runs show that utility calls are still a meaningful source of
-    latency or cost after v4.3.
+    Consider benchmarking faster OpenRouter options for scorer, summarizer, validator, and intent assessment only if real production runs show that utility calls are still a meaningful source of latency or cost after v4.3.
 
-    This is not required for v4.3 because utility models are already configurable through environment
-    variables, and Session Insights records per-model call count, cost, and latency.
+    This is not required for v4.3 because utility models are already configurable through environment variables, and Session Insights records per-model call count, cost, and latency.
 
     When it becomes useful, compare candidate utility models on:
 
