@@ -268,7 +268,7 @@ Claude updates `### Current Session State` automatically after:
   - v5.2 - Deferred Auth And Account Features — Blocked
   - v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing — In Progress (6.2.7 Sitemap, 6.2.8 Production Email, 6.2.9 SPA Routing Fix remaining)
   - v6.4 - Markdown Table Rendering (App + PDF Export) — Planned
-  - v7.0 - Next.js + SEO — Planned
+  - v_SEO - Next.js + SEO — Planned
   - Marketing - TeamStoa Brand, Launch, And Growth — Planned
 
 ## Workflow Rules

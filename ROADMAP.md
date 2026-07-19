@@ -127,12 +127,12 @@ Render GFM-style markdown tables in the live app and PDF export.
 
 Full spec: `docs/plan_archive/PLAN_v6.4.md`
 
-### v7.0 - Next.js, SEO, Template Pages, SSR/SSG
+### v_SEO - Next.js, SEO, Template Pages, SSR/SSG
 Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture.
 
 **Status:** Planned.
 
-Full spec: `docs/plan_archive/PLAN_v7.0.md`
+Full spec: `docs/plan_archive/PLAN_SEO.md`
 
 ### Marketing - TeamStoa Brand, Launch, And Growth
 In-app rebrand, landing page, content, analytics, Product Hunt, pricing.

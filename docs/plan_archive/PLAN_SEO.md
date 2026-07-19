@@ -1,4 +1,4 @@
-# Version 7.0 - Next.js, SEO, Template Pages, SSR/SSG
+# v_SEO - Next.js, SEO, Template Pages, SSR/SSG
 
 **Scope:** Move public and SEO-sensitive surfaces to Next.js while preserving the private app workflow.  
 **Status:** Planning only. Do not implement until explicitly approved.  
@@ -8,11 +8,11 @@
 
 ## Goal
 
-MultiAi's private app can remain a client-heavy workspace, but public pages need crawlability, metadata, fast first load, and share-friendly previews. v7.0 should introduce Next.js for the public surface and decide whether the private app also migrates or remains separate.
+MultiAi's private app can remain a client-heavy workspace, but public pages need crawlability, metadata, fast first load, and share-friendly previews. v_SEO should introduce Next.js for the public surface and decide whether the private app also migrates or remains separate.
 
 ---
 
-## Phase 7.0.1 - Architecture Decision
+## Phase v_SEO-1 - Architecture Decision
 
 **Goal:** Decide the safest migration shape before code moves.
 
@@ -34,7 +34,7 @@ MultiAi's private app can remain a client-heavy workspace, but public pages need
 
 ---
 
-## Phase 7.0.2 - Template Page System
+## Phase v_SEO-2 - Template Page System
 
 **Goal:** Turn team templates and use cases into crawlable pages.
 
@@ -48,7 +48,7 @@ MultiAi's private app can remain a client-heavy workspace, but public pages need
 
 ---
 
-## Phase 7.0.3 - SSR Shared Run Pages
+## Phase v_SEO-3 - SSR Shared Run Pages
 
 **Goal:** Make public shared runs fast, link-preview friendly, and crawlable where appropriate.
 
@@ -62,7 +62,7 @@ MultiAi's private app can remain a client-heavy workspace, but public pages need
 
 ---
 
-## Phase 7.0.4 - Marketing And SEO Foundation
+## Phase v_SEO-4 - Marketing And SEO Foundation
 
 **Goal:** Build the public discovery surface without weakening the private product.
 
@@ -76,7 +76,7 @@ MultiAi's private app can remain a client-heavy workspace, but public pages need
 
 ---
 
-## Phase 7.0.5 - App Router And Private App Integration
+## Phase v_SEO-5 - App Router And Private App Integration
 
 **Goal:** Keep authenticated app behavior stable during the migration.
 
@@ -90,7 +90,7 @@ MultiAi's private app can remain a client-heavy workspace, but public pages need
 
 ---
 
-## Phase 7.0.6 - Deployment, Analytics, And Verification
+## Phase v_SEO-6 - Deployment, Analytics, And Verification
 
 **Goal:** Ship the SEO surface with reliable hosting and measurable outcomes.
 
