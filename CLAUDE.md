@@ -263,10 +263,9 @@ Claude updates `### Current Session State` automatically after:
 - **Active plan:** see `PLAN.md`
 - **Architecture reference:** see `docs/engineering/`
 - **In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3 all Done on this branch, not yet deployed beyond 6.3.1); v6.2's 6.2.7 (Sitemap) and 6.2.9 (SPA Routing Fix) Done — verified live on Railway (sitemap.xml serves correctly, hard-navigation to /about, /privacy, /terms works; unrelated PWA `navigateFallback` bug found and fixed along the way in `vite.config.ts`); v6.4 queued next
+- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3 all Done on this branch, not yet deployed beyond 6.3.1); v6.2 - Pre-Launch Polish all phases (6.2.1-6.2.9) Done on this branch, not yet merged to `main` — Resend production email confirmed working (local + live Railway backend test), transactional email template and reset-password success page rebranded; known follow-up: `hello@teamstoa.com` has no inbound mail receiving configured yet (Resend's MX/SPF only covers the `send.` subdomain for outbound); v6.4 queued next
 - **Not yet started / blocked:**
   - v5.2 - Deferred Auth And Account Features — Blocked
-  - v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing — In Progress (only 6.2.8 Production Email remains, Blocked on Resend signup)
   - v6.4 - Markdown Table Rendering (App + PDF Export) — Planned
   - v_SEO - Next.js + SEO — Planned
   - Marketing - TeamStoa Brand, Launch, And Growth — Planned
