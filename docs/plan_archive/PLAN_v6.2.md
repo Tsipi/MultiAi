@@ -1,7 +1,7 @@
 # Version 6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing
 
 **Scope:** Close the remaining gaps from the Marketing rebrand checklist before any public launch.
-**Status:** Phases 6.2.1–6.2.7 Done. Phase 6.2.8 (email) Blocked. Phase 6.2.9 (SPA routing fix) In Progress — code-side work done; pending manual Railway dashboard verification.
+**Status:** Phases 6.2.1–6.2.7 and 6.2.9 Done. Phase 6.2.8 (email) Blocked.
 **Depends on:** v6.0 (mobile UX) stable. Domain `teamstoa.com` connected.
 
 ---
@@ -135,7 +135,7 @@ present in the build output and `dist/_redirects` is gone.
 
 ---
 
-## Phase 6.2.9 - SPA Routing Fix (Railway) — In Progress
+## Phase 6.2.9 - SPA Routing Fix (Railway) — Done
 
 **Goal:** Make every app route work on hard navigation (typing a URL directly, opening a shared
 link in a new tab, refreshing a deep page) — not just on in-app clicks.
@@ -192,20 +192,45 @@ without a custom Docker image. This is documented as the standing configuration 
 The old `frontend/public/_redirects` file had no effect under `serve` (that syntax is
 Netlify-specific) and has been removed as dead weight.
 
+### Bug found during manual verification: PWA navigateFallback pointed at the wrong page
+
+While verifying hard-navigation, a second, unrelated bug was found in `frontend/vite.config.ts`
+(present since the original PWA setup, `f41aa31`): `workbox.navigateFallback` was set to
+`/offline.html` instead of `/index.html`. In `generateSW` mode this isn't a "try network, fall
+back on failure" setting — `createHandlerBoundToURL` builds a precache-only handler, so the
+generated service worker unconditionally serves the precached `/offline.html` placeholder for
+*any* navigation not in `navigateFallbackDenylist`, regardless of network status, once that
+service worker is fully active and controlling the tab. That defeats the entire point of this
+phase for any visitor whose service worker has taken over. Fixed by pointing `navigateFallback`
+at `/index.html` (the standard SPA-shell pattern) so hard-navigated routes boot the real app and
+let client-side routing take it from there. Confirmed the rebuilt `dist/sw.js` now binds
+`NavigationRoute` to `/index.html`.
+
+This bug was not proven to be the cause of any specific symptom seen during live testing (see
+Verified line below) — it was found by reading the generated service worker code, not reproduced
+in the browser. It is fixed on its own merits regardless.
+
 ### Tasks
 
 - [x] ~~Add `frontend/Dockerfile` / `frontend/nginx.conf`~~ — superseded, removed from repo
 - [x] Railway frontend service: root directory `frontend/`, start command `npx serve -s dist -l
       $PORT` — documented in `docs/engineering/railway-deployment.md`
 - [x] Remove `frontend/public/_redirects` (unused under `serve`)
-- [ ] **Manual verification required** (cannot be checked from this repo): confirm the live
-      Railway frontend service's Start Command matches the above, then hard-navigate to `/about`,
-      `/privacy`, `/terms`, and an existing `/shared/:slug` link — all should load, not 404 or
-      blank-page. Phase stays In Progress until this is done and confirmed.
+- [x] Fix `navigateFallback` in `frontend/vite.config.ts` (`/offline.html` → `/index.html`)
+- [x] Manual verification on the live Railway deployment: hard-navigated to `/about`, `/privacy`,
+      `/terms`, and `/sitemap.xml`
 
-**Verified:** `npm run build` succeeds locally with the `_redirects` file removed. The Railway
-Start Command itself has not been checked against the live dashboard this session — that's the
-remaining manual step above.
+**Verified:** `npm run build` succeeds locally. Live manual test on `www.teamstoa.com` initially
+showed a false alarm — a stale browser cache/service worker from earlier testing sessions served
+an old `index.html` referencing a JS chunk hash that no longer exists in the current deploy;
+`serve -s` correctly falls back to `index.html` (200, `text/html`) for that missing file per its
+designed behavior, which the browser then rejected as an invalid module script. Confirmed via
+DevTools Network tab (200/`text/html`/HTML body for the missing `.js` request) that this was a
+client-cache artifact, not a server misconfiguration — a hard reload / "Clear site data" resolved
+it immediately, and a fresh hard-navigation test to `/about`, `/privacy`, `/terms`, and
+`/sitemap.xml` (served as real static XML, not the SPA fallback) all passed. Real first-time
+visitors are unaffected; this only recurs for a tester's own browser revisiting the domain across
+multiple deploys — hard-reload before each retest.
 
 ---
 

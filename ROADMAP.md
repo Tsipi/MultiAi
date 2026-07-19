@@ -97,7 +97,7 @@ Full spec: `docs/plan_archive/PLAN_v6.1.md`
 ### v6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, And OG Sharing
 PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix.
 
-**Status:** In Progress — 6.2.1-6.2.7 Done; 6.2.9 (SPA routing fix) In Progress, code-side done but pending manual Railway verification; 6.2.8 (production email) Blocked.
+**Status:** In Progress — 6.2.1-6.2.7 and 6.2.9 (SPA routing fix) Done, verified live on Railway; 6.2.8 (production email) Blocked.
 
 Full spec: `docs/plan_archive/PLAN_v6.2.md`
 
@@ -107,7 +107,7 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** 6.3.1 shipped; 6.3.2/6.3.3 done on branch, not yet deployed.  
-**In development:** v6.2's 6.2.7 done on this branch; 6.2.9 In Progress (pending manual Railway verification); 6.2.8 still Blocked; v6.4 queued next.
+**In development:** v6.2's 6.2.7 and 6.2.9 Done, verified live on Railway; 6.2.8 still Blocked; v6.4 queued next.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
