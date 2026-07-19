@@ -1,7 +1,7 @@
 # Version 6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing
 
 **Scope:** Close the remaining gaps from the Marketing rebrand checklist before any public launch.
-**Status:** Phases 6.2.1–6.2.6 complete. Phase 6.2.7 (sitemap) deferred. Phase 6.2.8 (email) blocked. Phase 6.2.9 (SPA routing) in progress.
+**Status:** Phases 6.2.1–6.2.7 Done. Phase 6.2.8 (email) Blocked. Phase 6.2.9 (SPA routing fix) In Progress — code-side work done; pending manual Railway dashboard verification.
 **Depends on:** v6.0 (mobile UX) stable. Domain `teamstoa.com` connected.
 
 ---
@@ -97,21 +97,28 @@ Required before any public marketing push or paid tier.
 
 ---
 
-## Phase 6.2.7 - Sitemap
+## Phase 6.2.7 - Sitemap — Done
 
 **Goal:** Help search crawlers discover all public pages once they exist.
 
 ### Tasks
 
-- [ ] Create `frontend/public/sitemap.xml` listing: `/`, `/about`, `/privacy`, `/terms`, plus any future `/templates/*` pages
-- [ ] Add `<lastmod>` dates and `<changefreq>` hints
-- [ ] Submit to Google Search Console after the landing page is live
+- [x] Create `frontend/public/sitemap.xml` listing: `/`, `/about`, `/privacy`, `/terms`, plus any future `/templates/*` pages
+- [x] Add `<lastmod>` dates and `<changefreq>` hints
+- [ ] Submit to Google Search Console after the landing page is live (deferred — no landing page exists yet, tracked separately, not part of this phase's scope)
 
-**Note:** The `robots.txt` already references `https://www.teamstoa.com/sitemap.xml`. Do not create the sitemap until at least the landing page and legal pages exist — an empty or stub sitemap sends a negative signal to crawlers.
+**Note:** The `robots.txt` already references `https://www.teamstoa.com/sitemap.xml`. `/` currently
+resolves to the login screen rather than a marketing landing page (the landing page itself is
+tracked separately — see "What is the Landing Page?" below) but is still the canonical URL and is
+listed. `/shared/:slug` is intentionally excluded — those are per-user dynamic pages, not stable
+crawlable content.
+
+**Verified:** `npm run build` succeeds; confirmed `dist/sitemap.xml` and `dist/robots.txt` are
+present in the build output and `dist/_redirects` is gone.
 
 ---
 
-## Phase 6.2.8 - Production Email (Resend) — blocked
+## Phase 6.2.8 - Production Email (Resend) — Blocked
 
 **Goal:** Real transactional emails (password reset, account verification) delivered to users.
 
@@ -128,7 +135,7 @@ Required before any public marketing push or paid tier.
 
 ---
 
-## Phase 6.2.9 - SPA Routing Fix (nginx on Railway) — in progress
+## Phase 6.2.9 - SPA Routing Fix (Railway) — In Progress
 
 **Goal:** Make every app route work on hard navigation (typing a URL directly, opening a shared
 link in a new tab, refreshing a deep page) — not just on in-app clicks.
@@ -152,34 +159,53 @@ This is a **launch blocker** for two reasons:
 ### What was tried first and why it failed
 
 A `frontend/public/_redirects` file with `/* /index.html 200` (Netlify-style rewrite) was added
-as a quick workaround. Railway's static file server partially supported it — the HTML document
-was served correctly — but then applied the catch-all to the JS bundle requests too
+as a quick workaround. Railway's built-in static file server partially supported it — the HTML
+document was served correctly — but then applied the catch-all to the JS bundle requests too
 (`/assets/index-BqZJMeSN.js` → returned `index.html` → MIME type error → blank page).
 Railway has no "404 fallback page" setting in its dashboard to fix this properly.
 
-### Solution: nginx Dockerfile
+### What was tried second: nginx Dockerfile (abandoned)
 
-Replace Railway's built-in static file server with an nginx container built from a
-`frontend/Dockerfile`. nginx's `try_files $uri $uri/ /index.html` directive is the industry
-standard for SPA routing: it serves real files (JS, CSS, images) directly, and only falls back
-to `index.html` for paths that have no matching file — exactly what is needed.
+An nginx container built from `frontend/Dockerfile` + `frontend/nginx.conf` (`try_files $uri $uri/
+/index.html`) was added, then reverted a few commits later (`8ac57bc`, `f1bf488`) in favor of the
+simpler solution below. Neither file exists in the repo anymore — do not resurrect them without
+checking why they were dropped first.
 
-**Files added:**
+### Solution actually shipped: `serve -s` as the Railway start command
 
-- `frontend/Dockerfile` — multi-stage build: Node 20 builds the Vite app, nginx alpine serves it
-- `frontend/nginx.conf` — SPA routing config with long-cache headers for hashed assets
+Instead of a custom Docker/nginx image, the frontend Railway service build stays on Railway's
+default static build, and the **Start Command** (set in the Railway dashboard, frontend service →
+Settings → Deploy) is:
 
-**Railway change required:** In the frontend Railway service, set the root directory to
-`frontend/` so Railway finds and builds the `Dockerfile`. The service type changes from
-Railway's built-in static server to a Docker-based service.
+```
+npx serve -s dist -l $PORT
+```
+
+`serve` is pinned as a normal dependency in `frontend/package.json` (not installed via `npm install
+-g` at start time) so `npx` resolves it locally instead of re-fetching it from the registry on
+every restart. The `-s` (single-page-app) flag makes `serve` fall back to `index.html` for any
+path that isn't a real file in `dist/`, while still serving real files (JS/CSS bundles, images,
+`sitemap.xml`, `robots.txt`) directly — exactly the same guarantee `try_files` would have given,
+without a custom Docker image. This is documented as the standing configuration in
+`docs/engineering/railway-deployment.md` (Step 7c).
+
+The old `frontend/public/_redirects` file had no effect under `serve` (that syntax is
+Netlify-specific) and has been removed as dead weight.
 
 ### Tasks
 
-- [x] Add `frontend/Dockerfile` (multi-stage: node build → nginx serve)
-- [x] Add `frontend/nginx.conf` (SPA `try_files` + 1-year asset cache)
-- [ ] Update Railway frontend service: set root directory to `frontend/`, trigger redeploy
-- [ ] Verify: hard-navigate to `/admin`, `/privacy`, `/shared/:slug` — all should load correctly
-- [ ] Remove `frontend/public/_redirects` once nginx is confirmed working (it is now unused)
+- [x] ~~Add `frontend/Dockerfile` / `frontend/nginx.conf`~~ — superseded, removed from repo
+- [x] Railway frontend service: root directory `frontend/`, start command `npx serve -s dist -l
+      $PORT` — documented in `docs/engineering/railway-deployment.md`
+- [x] Remove `frontend/public/_redirects` (unused under `serve`)
+- [ ] **Manual verification required** (cannot be checked from this repo): confirm the live
+      Railway frontend service's Start Command matches the above, then hard-navigate to `/about`,
+      `/privacy`, `/terms`, and an existing `/shared/:slug` link — all should load, not 404 or
+      blank-page. Phase stays In Progress until this is done and confirmed.
+
+**Verified:** `npm run build` succeeds locally with the `_redirects` file removed. The Railway
+Start Command itself has not been checked against the live dashboard this session — that's the
+remaining manual step above.
 
 ---
 
