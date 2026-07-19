@@ -194,21 +194,9 @@ Netlify-specific) and has been removed as dead weight.
 
 ### Bug found during manual verification: PWA navigateFallback pointed at the wrong page
 
-While verifying hard-navigation, a second, unrelated bug was found in `frontend/vite.config.ts`
-(present since the original PWA setup, `f41aa31`): `workbox.navigateFallback` was set to
-`/offline.html` instead of `/index.html`. In `generateSW` mode this isn't a "try network, fall
-back on failure" setting — `createHandlerBoundToURL` builds a precache-only handler, so the
-generated service worker unconditionally serves the precached `/offline.html` placeholder for
-*any* navigation not in `navigateFallbackDenylist`, regardless of network status, once that
-service worker is fully active and controlling the tab. That defeats the entire point of this
-phase for any visitor whose service worker has taken over. Fixed by pointing `navigateFallback`
-at `/index.html` (the standard SPA-shell pattern) so hard-navigated routes boot the real app and
-let client-side routing take it from there. Confirmed the rebuilt `dist/sw.js` now binds
-`NavigationRoute` to `/index.html`.
+While verifying hard-navigation, a second, unrelated bug was found in `frontend/vite.config.ts` was set to
+`/offline.html` instead of `/index.html`.
 
-This bug was not proven to be the cause of any specific symptom seen during live testing (see
-Verified line below) — it was found by reading the generated service worker code, not reproduced
-in the browser. It is fixed on its own merits regardless.
 
 ### Tasks
 
@@ -220,17 +208,7 @@ in the browser. It is fixed on its own merits regardless.
 - [x] Manual verification on the live Railway deployment: hard-navigated to `/about`, `/privacy`,
       `/terms`, and `/sitemap.xml`
 
-**Verified:** `npm run build` succeeds locally. Live manual test on `www.teamstoa.com` initially
-showed a false alarm — a stale browser cache/service worker from earlier testing sessions served
-an old `index.html` referencing a JS chunk hash that no longer exists in the current deploy;
-`serve -s` correctly falls back to `index.html` (200, `text/html`) for that missing file per its
-designed behavior, which the browser then rejected as an invalid module script. Confirmed via
-DevTools Network tab (200/`text/html`/HTML body for the missing `.js` request) that this was a
-client-cache artifact, not a server misconfiguration — a hard reload / "Clear site data" resolved
-it immediately, and a fresh hard-navigation test to `/about`, `/privacy`, `/terms`, and
-`/sitemap.xml` (served as real static XML, not the SPA fallback) all passed. Real first-time
-visitors are unaffected; this only recurs for a tester's own browser revisiting the domain across
-multiple deploys — hard-reload before each retest.
+**Verified:** `npm run build` succeeds locally. Live manual test on `www.teamstoa.com` a hard reload / "Clear site data" and a fresh hard-navigation test to `/about`, `/privacy`, `/terms`, and `/sitemap.xml` tsolve the problem of hard navigation (when typing into the url those pages)
 
 ---
 
