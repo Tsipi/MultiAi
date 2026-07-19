@@ -263,7 +263,7 @@ Claude updates `### Current Session State` automatically after:
 - **Active plan:** see `PLAN.md`
 - **Architecture reference:** see `docs/engineering/`
 - **In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3 all Done on this branch, not yet deployed beyond 6.3.1); v6.2 - Pre-Launch Polish all phases (6.2.1-6.2.9) Done on this branch, not yet merged to `main` — Resend production email confirmed working (local + live Railway backend test), transactional email template and reset-password success page rebranded; known follow-up: `hello@teamstoa.com` has no inbound mail receiving configured yet (Resend's MX/SPF only covers the `send.` subdomain for outbound); v6.4 queued next
+- **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3 all Done on this branch, not yet deployed beyond 6.3.1); v6.2 - Pre-Launch Polish all phases (6.2.1-6.2.9) Done on this branch, not yet merged to `main` — Resend production email confirmed working (local + live Railway backend test), transactional email template plus the forgot-password and reset-password success screens rebranded (Lucide icons in branded gradient boxes, replacing emoji); known follow-up: `hello@teamstoa.com` has no inbound mail receiving configured yet (Resend's MX/SPF only covers the `send.` subdomain for outbound); v6.4 queued next
 - **Not yet started / blocked:**
   - v5.2 - Deferred Auth And Account Features — Blocked
   - v6.4 - Markdown Table Rendering (App + PDF Export) — Planned

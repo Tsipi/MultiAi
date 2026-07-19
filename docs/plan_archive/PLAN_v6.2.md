@@ -144,6 +144,9 @@ present in the build output and `dist/_redirects` is gone.
 - [x] Rebrand the "Password updated" success state (`ResetPasswordPage.tsx`): replaced the plain `✅`
       emoji with a Lucide `Check` icon in the same violet-gradient rounded box used for the brand icon
       elsewhere on the page
+- [x] Rebrand the "Check your email" success state (`ForgotPasswordPage.tsx`): replaced the plain
+      `✉️` emoji with a Lucide `Mail` icon in the same violet-gradient rounded box, matching
+      `ResetPasswordPage.tsx`
 
 **Known gap, not a blocker for this phase:** Resend's MX/SPF setup only covers the `send.teamstoa.com`
 subdomain (outbound sending). The root `teamstoa.com` domain has no MX record, so the `hello@teamstoa.com`
@@ -152,11 +155,21 @@ sent there would bounce. Fixing this needs separate mail-receiving setup (e.g. f
 Cloudflare Email Routing/ImprovMX, GoDaddy's own forwarding if available, or a paid mailbox) — tracked as
 a follow-up, not required for transactional sending to work.
 
+**Debugging note (not a bug):** A live test where "forgot password" returned `202 Accepted` but no
+email arrived, and no error/log line appeared anywhere, turned out to be expected fastapi-users
+behavior — `on_after_forgot_password` (and therefore the Resend call) is only invoked when the
+submitted email matches a registered user; unregistered emails still get a generic 202 response so
+the endpoint never reveals which emails exist. Worth remembering before assuming a Resend/deploy
+problem: check the Railway backend Logs tab first for an actual `_send_resend`/exception line before
+suspecting the email provider.
+
 **Verified:** `python -m py_compile backend/services/email.py` and `npx tsc --noEmit` both clean. Manual
 end-to-end test of the password-reset flow (not verification-email specifically — same `_dispatch`/
 `_send_resend` code path, but the verification-email content itself wasn't separately exercised) locally
 and on the live Railway backend: email received via Resend, reset link correct for each environment,
-password change succeeded.
+password change succeeded. `ForgotPasswordPage.tsx` icon change verified via `npx tsc --noEmit`,
+`npm run build`, and a manual test against the live Railway backend (screenshot confirms new icon
+renders correctly).
 
 ---
 
