@@ -257,7 +257,7 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v6.0` (working branch for this version line — commits and pushes for multiple related sub-versions may land here even if a new sub-version's theme differs from the branch's original scope) — last verified 2026-07-16
+### Branch: `PLAN_v6.2` (working branch for the v6.2 line onward — opened 2026-07-19 to replace `PLAN_v6.0`; commits and pushes for multiple related sub-versions may land here even if a new sub-version's theme differs from the branch's original scope) — last verified 2026-07-19
 
 - **Completed work:** see `docs/plan_archive/`
 - **Active plan:** see `PLAN.md`
