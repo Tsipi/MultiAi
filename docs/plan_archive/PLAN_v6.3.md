@@ -1,11 +1,11 @@
 # Version 6.3 - Mobile Follow-up & Debate View Fixes
 
 **Scope:** Bug-fix session covering the mobile follow-up flow, the Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, and sidebar title-generation cost trimming.
-**Status:** Phase 6.3.1 complete. Phase 6.3.2 descoped to sort-only (badge/score plumbing built, reviewed, and reverted). Phase 6.3.3 complete.
+**Status:** Phase 6.3.1 Done. Phase 6.3.2 Done (scope reduced to a sort-only fix — see phase notes). Phase 6.3.3 Done.
 
 ---
 
-## Phase 6.3.1 - Mobile Follow-up & Debate View Fixes — complete
+## Phase 6.3.1 - Mobile Follow-up & Debate View Fixes — Done
 
 ### Tasks
 
@@ -23,7 +23,7 @@
 
 ---
 
-## Phase 6.3.2 - Follow-up Thread History & Ordering — descoped to sort-only
+## Phase 6.3.2 - Follow-up Thread History & Ordering — Done
 
 **Goal:** Let a user with several chained follow-ups see the score and position of every step in the thread, not just the immediate parent's.
 
@@ -36,13 +36,12 @@ A full implementation was built and verified (add `final_score` to `list_session
 ### What shipped
 
 - [x] `groupByThread` (`AnswersPanel.tsx`) now sorts each thread's `runs` chronologically (oldest first) instead of inheriting the newest-first order of the full session list — a small, independent readability fix for the sidebar accordion, kept on its own merit since it doesn't depend on anything else that was reverted.
-- [ ] Position/score visibility across the whole thread — not pursued further this round. If revisited, get UI sign-off on the exact wording/placement before re-wiring the data plumbing.
 
 **Verified:** `tsc --noEmit`, `vitest run` (24/24), `npm run build`, `python -m compileall`, and `pytest tests/` (56/57 — one pre-existing unrelated failure) all clean after the revert.
 
 ---
 
-## Phase 6.3.3 - OpenRouter Call Reliability & Title-Generation Cost Trimming — complete
+## Phase 6.3.3 - OpenRouter Call Reliability & Title-Generation Cost Trimming — Done
 
 ### Tasks
 

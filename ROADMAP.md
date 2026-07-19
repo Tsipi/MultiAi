@@ -104,9 +104,9 @@ Full spec: `docs/plan_archive/PLAN_v6.2.md`
 ### v6.3 - Mobile Follow-up & Debate View Fixes
 Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability, sidebar title-generation cost trimming, and sidebar follow-up chronological ordering.
 
-**Status:** Done — 6.3.1 (Mobile Follow-up & Debate View Fixes) and 6.3.3 (OpenRouter Call Reliability & Title-Generation Cost Trimming) complete; 6.3.2 (Follow-up Thread History & Ordering) descoped to a chronological-sort fix after a "Follow-up N of M" badge was built, reviewed in the live UI, and reverted as unwanted/confusing.
+**Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
-**In production:** 6.3.1 shipped; 6.3.3 and the 6.3.2 sort fix done on branch, not yet deployed.  
+**In production:** 6.3.1 shipped; 6.3.2/6.3.3 done on branch, not yet deployed.  
 **In development:** v6.2's remaining items (6.2.7/6.2.8/6.2.9) still open in parallel; v6.4 queued next.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
