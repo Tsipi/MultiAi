@@ -2,8 +2,9 @@
 
 **In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
 **In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3
-all Done on this branch, not yet deployed beyond 6.3.1); v6.2 remaining items
-6.2.7/6.2.8/6.2.9 still open in parallel; v6.4 queued next
+all Done on this branch, not yet deployed beyond 6.3.1); v6.2's 6.2.7 done on this branch,
+6.2.9 In Progress (code-side done, pending manual Railway verification), 6.2.8 still Blocked;
+v6.4 queued next
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
@@ -24,7 +25,7 @@ all Done on this branch, not yet deployed beyond 6.3.1); v6.2 remaining items
 | v5.2 | Deferred Auth And Account Features | Google OAuth, notification preferences, impersonate/view-as — blocked on infra and approval | Blocked |
 | v6.0 | Mobile UX | Responsive app shell, mobile compose, mobile sessions, mobile run experience | Done |
 | v6.1 | Advanced Setup Panel Redesign | Three-tab (Team/Debate/Sources) redesign of the Advanced Setup drawer | Done |
-| v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix | In Progress (6.2.1-6.2.6 done; 6.2.7 deferred, 6.2.8 blocked, 6.2.9 in progress) |
+| v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix | In Progress (6.2.1-6.2.7 Done; 6.2.9 In Progress; 6.2.8 Blocked) |
 | v6.3 | Mobile Follow-up & Debate View Fixes | Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability and title-generation cost trimming, sidebar follow-up chronological ordering | Done |
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export | Planned |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
@@ -177,9 +178,9 @@ Full spec: `docs/plan_archive/PLAN_v6.2.md`
 | 6.2.4 | Privacy Policy Page | Done |
 | 6.2.5 | Terms of Service Page | Done |
 | 6.2.6 | About Page | Done |
-| 6.2.7 | Sitemap | Planned |
+| 6.2.7 | Sitemap | Done |
 | 6.2.8 | Production Email (Resend) | Blocked |
-| 6.2.9 | SPA Routing Fix (nginx on Railway) | In Progress |
+| 6.2.9 | SPA Routing Fix (Railway) | In Progress (code-side done; pending manual Railway verification) |
 
 ---
 
