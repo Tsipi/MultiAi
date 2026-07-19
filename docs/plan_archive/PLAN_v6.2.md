@@ -1,7 +1,7 @@
 # Version 6.2 - Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing
 
 **Scope:** Close the remaining gaps from the Marketing rebrand checklist before any public launch.
-**Status:** Phases 6.2.1–6.2.7 Done. Phase 6.2.8 (email) Blocked. Phase 6.2.9 (SPA routing fix) In Progress — code-side work done; pending manual Railway dashboard verification.
+**Status:** Phases 6.2.1–6.2.7 and 6.2.9 Done. Phase 6.2.8 (email) Blocked.
 **Depends on:** v6.0 (mobile UX) stable. Domain `teamstoa.com` connected.
 
 ---
@@ -135,7 +135,7 @@ present in the build output and `dist/_redirects` is gone.
 
 ---
 
-## Phase 6.2.9 - SPA Routing Fix (Railway) — In Progress
+## Phase 6.2.9 - SPA Routing Fix (Railway) — Done
 
 **Goal:** Make every app route work on hard navigation (typing a URL directly, opening a shared
 link in a new tab, refreshing a deep page) — not just on in-app clicks.
@@ -192,20 +192,23 @@ without a custom Docker image. This is documented as the standing configuration 
 The old `frontend/public/_redirects` file had no effect under `serve` (that syntax is
 Netlify-specific) and has been removed as dead weight.
 
+### Bug found during manual verification: PWA navigateFallback pointed at the wrong page
+
+While verifying hard-navigation, a second, unrelated bug was found in `frontend/vite.config.ts` was set to
+`/offline.html` instead of `/index.html`.
+
+
 ### Tasks
 
 - [x] ~~Add `frontend/Dockerfile` / `frontend/nginx.conf`~~ — superseded, removed from repo
 - [x] Railway frontend service: root directory `frontend/`, start command `npx serve -s dist -l
       $PORT` — documented in `docs/engineering/railway-deployment.md`
 - [x] Remove `frontend/public/_redirects` (unused under `serve`)
-- [ ] **Manual verification required** (cannot be checked from this repo): confirm the live
-      Railway frontend service's Start Command matches the above, then hard-navigate to `/about`,
-      `/privacy`, `/terms`, and an existing `/shared/:slug` link — all should load, not 404 or
-      blank-page. Phase stays In Progress until this is done and confirmed.
+- [x] Fix `navigateFallback` in `frontend/vite.config.ts` (`/offline.html` → `/index.html`)
+- [x] Manual verification on the live Railway deployment: hard-navigated to `/about`, `/privacy`,
+      `/terms`, and `/sitemap.xml`
 
-**Verified:** `npm run build` succeeds locally with the `_redirects` file removed. The Railway
-Start Command itself has not been checked against the live dashboard this session — that's the
-remaining manual step above.
+**Verified:** `npm run build` succeeds locally. Live manual test on `www.teamstoa.com` a hard reload / "Clear site data" and a fresh hard-navigation test to `/about`, `/privacy`, `/terms`, and `/sitemap.xml` tsolve the problem of hard navigation (when typing into the url those pages)
 
 ---
 

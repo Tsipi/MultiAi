@@ -28,7 +28,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        navigateFallback: "/offline.html",
+        navigateFallback: "/index.html",
         // Don't intercept API calls or the offline page itself
         navigateFallbackDenylist: [/^\/api\//, /^\/offline\.html$/],
         runtimeCaching: [],
