@@ -48,7 +48,7 @@ export function PinnedAnswer({
   return (
     <div
       className={cn(
-        "overflow-visible rounded-xl border border-border/60 shadow-sm",
+        "min-w-0 overflow-visible rounded-xl border border-border/60 shadow-sm",
         "animate-in slide-in-from-top-2 fade-in duration-400"
       )}
     >

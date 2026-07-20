@@ -1,9 +1,10 @@
 # PLAN.md
 
-**In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-**In development:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3
-all Done on this branch, not yet deployed beyond 6.3.1); v6.2 all phases (6.2.1-6.2.9) Done,
-verified live on Railway; v6.4 queued next
+**In production:** v6.2 - Pre-Launch Polish (all phases) and v6.3 - Mobile Follow-up &
+Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed
+**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, plus live-feed and
+mobile-scroll fixes, mobile user-confirmed) — committed on `PLAN_v6.4` branch, not yet merged
+to `main`
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
@@ -26,7 +27,7 @@ verified live on Railway; v6.4 queued next
 | v6.1 | Advanced Setup Panel Redesign | Three-tab (Team/Debate/Sources) redesign of the Advanced Setup drawer | Done |
 | v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix | Done |
 | v6.3 | Mobile Follow-up & Debate View Fixes | Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability and title-generation cost trimming, sidebar follow-up chronological ordering | Done |
-| v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export | Planned |
+| v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
 | Marketing | TeamStoa Brand, Launch, And Growth | In-app rebrand, landing page, content, analytics, Product Hunt, pricing | Planned |
 
@@ -195,14 +196,14 @@ Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
 ---
 
-## v6.4 Markdown Table Rendering (App + PDF Export) - Planned
+## v6.4 Markdown Table Rendering (App + PDF Export) - Done
 
 Full spec: `docs/plan_archive/PLAN_v6.4.md`
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 6.4.1 | Live App: Render Markdown Tables | Planned |
-| 6.4.2 | PDF Export: Render Markdown Tables | Planned |
+| 6.4.1 | Live App: Render Markdown Tables (+ live-feed & mobile-scroll fixes) | Done |
+| 6.4.2 | PDF Export: Render Markdown Tables | Done |
 
 ---
 

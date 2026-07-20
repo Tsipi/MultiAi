@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MobileFollowupSheet } from "@/components/layout/MobileFollowupSheet";
 import { AnswerMode, ConsultResult } from "../../types";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ClarificationBox } from "../session/ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/pdf/exporter";
 import { generateTitle } from "../../services/api";
@@ -279,9 +280,9 @@ export function ChatPanel(props: Props) {
       onSubmit={props.onSubmitFollowup}
       loading={loading}
     />
-    <section className="grid gap-4">
+    <section className="grid min-w-0 gap-4">
       {/* Main content: Question, answer, discussion */}
-      <div className="grid gap-4">
+      <div className="grid min-w-0 gap-4">
         <SessionPromptBlock
           result={result}
           team={team}
@@ -311,8 +312,8 @@ export function ChatPanel(props: Props) {
         )}
 
         {/* 1. Hero: Final Answer — most prominent */}
-        <div className="flex justify-start">
-          <div className="w-full max-w-[880px]">
+        <div className="flex min-w-0 justify-start">
+          <div className="w-full min-w-0 max-w-[880px]">
             <PinnedAnswer
               finalAnswer={result.final_answer}
               score={result.final_score}
@@ -442,7 +443,7 @@ export function ChatPanel(props: Props) {
                         modelId={cast.writer.model}
                         rawText={String(r.answer ?? "")}
                       >
-                        <ReactMarkdown>{String(r.answer ?? "")}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{String(r.answer ?? "")}</ReactMarkdown>
                       </DebateChatBubble>
                       {critiques.map((crit, ci) => {
                         const storedName = result.critic_names?.[ci];
@@ -469,7 +470,7 @@ export function ChatPanel(props: Props) {
                             rawText={crit.text}
                             align={criticAlign}
                           >
-                            <ReactMarkdown>{crit.text}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{crit.text}</ReactMarkdown>
                           </DebateChatBubble>
                         );
                       })}
@@ -480,7 +481,7 @@ export function ChatPanel(props: Props) {
                         tag={`Round ${roundLabel}`}
                         rawText={String(r.summary ?? "")}
                       >
-                        <ReactMarkdown>{String(r.summary ?? "")}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{String(r.summary ?? "")}</ReactMarkdown>
                       </DebateChatBubble>
                     </ol>
                   </article>

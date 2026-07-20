@@ -1,4 +1,5 @@
 import type { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import { PDF } from "./pdfTheme";
 import {
   contentWidth,
@@ -23,8 +24,19 @@ export function renderMarkdown(
   const width = contentWidth(doc);
   let y = startY;
 
-  for (const raw of markdown.split("\n")) {
+  const lines = markdown.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
     const line = raw.trim();
+
+    // GFM table block: a header row, a `|---|---|` separator, then data rows.
+    // Detected before the line renderers because it spans multiple lines.
+    const table = tryParseTable(lines, i);
+    if (table) {
+      y = renderTable(doc, table, y, headerFn);
+      i = table.endIndex;
+      continue;
+    }
 
     if (!line) {
       y += PDF.gap.block;
@@ -143,6 +155,98 @@ export function renderMarkdown(
   }
 
   return y;
+}
+
+/** Compact page-header bottom — must match `drawPageHeader(..., compact=true)`'s return in pdfHeader.ts. */
+const COMPACT_HEADER_BOTTOM = 62;
+
+type ParsedTable = { head: string[]; body: string[][]; endIndex: number };
+
+/** Detects a GFM table starting at `lines[start]`; returns null if it isn't one. */
+function tryParseTable(lines: string[], start: number): ParsedTable | null {
+  const headerLine = lines[start];
+  const separator = lines[start + 1];
+  if (headerLine === undefined || separator === undefined) return null;
+  if (!isTableRow(headerLine) || !isSeparatorRow(separator)) return null;
+
+  const head = splitRow(headerLine);
+  const body: string[][] = [];
+
+  let i = start + 2;
+  for (; i < lines.length; i++) {
+    if (!isTableRow(lines[i])) break;
+    const cells = splitRow(lines[i]);
+    // Normalize ragged rows to the header's column count so autotable stays aligned.
+    while (cells.length < head.length) cells.push("");
+    body.push(cells.slice(0, head.length));
+  }
+
+  return { head, body, endIndex: i - 1 };
+}
+
+function isTableRow(line: string): boolean {
+  return line.includes("|") && /\S/.test(line.replace(/\|/g, ""));
+}
+
+function isSeparatorRow(line: string): boolean {
+  const t = line.trim();
+  if (!t.includes("-") || !t.includes("|")) return false;
+  const cells = t.replace(/^\|/, "").replace(/\|$/, "").split("|");
+  return cells.length > 0 && cells.every((c) => /^\s*:?-+:?\s*$/.test(c));
+}
+
+function splitRow(line: string): string[] {
+  const t = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return t.split("|").map((c) => cleanInline(c.trim()));
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "");
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+/** Renders a parsed table via jspdf-autotable, styled to the PDF theme, and returns the y below it. */
+function renderTable(
+  doc: jsPDF,
+  table: ParsedTable,
+  startY: number,
+  headerFn?: PageHeaderFn
+): number {
+  autoTable(doc, {
+    head: [table.head],
+    body: table.body,
+    startY: startY + 4,
+    theme: "grid",
+    margin: {
+      left: PDF.marginX,
+      right: PDF.marginX,
+      top: headerFn ? COMPACT_HEADER_BOTTOM : PDF.marginY,
+    },
+    styles: {
+      font: PDF.font,
+      fontSize: 9,
+      cellPadding: 4,
+      textColor: hexToRgb(PDF.colors.text),
+      lineColor: hexToRgb(PDF.colors.dividerStrong),
+      lineWidth: 0.4,
+    },
+    headStyles: {
+      fillColor: hexToRgb(PDF.colors.brand),
+      textColor: hexToRgb(PDF.colors.white),
+      fontStyle: "bold",
+    },
+    // Redraw the running page header on tables that span page breaks (pages after the first).
+    didDrawPage: (data) => {
+      if (headerFn && data.pageNumber > 1) headerFn(doc);
+    },
+  });
+
+  const finalY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY;
+  return (finalY ?? startY) + PDF.gap.block;
 }
 
 const LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
