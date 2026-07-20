@@ -2,6 +2,25 @@
 
 import re
 
+# A GFM separator row, e.g. `|---|:--:|`. Used to detect and skip table syntax
+# so raw pipe rows never leak into the plain-text activity feed.
+_TABLE_SEPARATOR_RE = re.compile(r"^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$")
+
+
+def table_headers(text: str) -> list[str]:
+    """Return a GFM table's header column names, or [] if `text` has no table."""
+    lines = text.splitlines()
+    for i in range(len(lines) - 1):
+        if "|" in lines[i] and _TABLE_SEPARATOR_RE.match(lines[i + 1]):
+            cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+            return [clean_text(c) for c in cells if clean_text(c)]
+    return []
+
+
+def strip_table_lines(text: str) -> str:
+    """Drop lines that are table rows or separators (2+ pipes) from `text`."""
+    return "\n".join(ln for ln in text.splitlines() if ln.count("|") < 2)
+
 
 def writer_summary_sentence(answer: str) -> str:
     """Build one sentence summarizing what the writer drafted."""
@@ -13,6 +32,12 @@ def writer_summary_sentence(answer: str) -> str:
             first = f"Writer proposed {count} idea: {cleaned[0]}."
         else:
             first = f"Writer proposed {count} ideas, including {cleaned[0]} and {cleaned[1]}."
+        second = "Draft stays aligned with the requested scope and format."
+        return f"{first} {second}"
+    headers = table_headers(answer)
+    if headers:
+        shown = ", ".join(headers[:3])
+        first = f"Writer drafted a comparison table covering {shown}."
         second = "Draft stays aligned with the requested scope and format."
         return f"{first} {second}"
     first = first_sentence(answer)
@@ -56,8 +81,8 @@ def critique_block(critique: str) -> str:
 
 
 def first_sentence(text: str) -> str:
-    """Return first sentence-like chunk without markdown symbols."""
-    cleaned = clean_text(text)
+    """Return first sentence-like chunk without markdown symbols or table rows."""
+    cleaned = clean_text(strip_table_lines(text))
     if not cleaned:
         return ""
     parts = re.split(r"(?<=[.!?])\s+", cleaned)

@@ -107,7 +107,7 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** 6.3.1 shipped; 6.3.2/6.3.3 done on branch, not yet deployed.  
-**In development:** v6.2 all phases (6.2.1-6.2.9) Done, not yet merged to `main`; v6.4 queued next.
+**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done on branch, mobile user-confirmed, not yet deployed); v6.2 all phases (6.2.1-6.2.9) Done, not yet merged to `main`.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
@@ -121,9 +121,9 @@ Full spec: `docs/plan_archive/PLAN_v6.3.md`
 Full spec: `docs/plan_archive/PLAN_v5.2.md`
 
 ### v6.4 - Markdown Table Rendering (App + PDF Export)
-Render GFM-style markdown tables in the live app and PDF export.
+Render GFM-style markdown tables in the live app and PDF export; also fixes the live activity feed garbling table drafts and the mobile table horizontal-scroll trap.
 
-**Status:** Planned.
+**Status:** Done (on branch, mobile user-confirmed; not yet deployed).
 
 Full spec: `docs/plan_archive/PLAN_v6.4.md`
 
