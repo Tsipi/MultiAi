@@ -1,10 +1,10 @@
 # PLAN.md
 
-**In production:** v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1 shipped)
-**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 both Done on this branch,
-plus live-feed and mobile-scroll fixes, mobile user-confirmed; not yet deployed); v6.3 -
-Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3 all Done on this branch, not yet
-deployed beyond 6.3.1); v6.2 all phases (6.2.1-6.2.9) Done, verified live on Railway
+**In production:** v6.2 - Pre-Launch Polish (all phases) and v6.3 - Mobile Follow-up &
+Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed
+**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, plus live-feed and
+mobile-scroll fixes, mobile user-confirmed) — committed on `PLAN_v6.4` branch, not yet merged
+to `main`
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
