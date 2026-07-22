@@ -86,6 +86,8 @@ export function ChatPanel(props: Props) {
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
   const showPreviousFullDebate = showFullDiscussion && !loading && (result?.full_discussion.length ?? 0) > 0;
+  // In-flight follow-up shows the previous answer collapsed above — suppress the duplicate hero.
+  const suppressHero = Boolean(result?.is_followup && !result.final_answer);
 
   // Scroll to the follow-up composer whenever it opens (desktop inline form)
   useEffect(() => {
@@ -312,7 +314,9 @@ export function ChatPanel(props: Props) {
           </div>
         )}
 
-        {/* 1. Hero: Final Answer — most prominent */}
+        {/* Hero + downloads — suppressed while an in-flight follow-up shows the previous answer above */}
+        {!suppressHero && (
+        <>
         <div className="flex min-w-0 justify-start">
           <div className="w-full min-w-0 max-w-[880px]">
             <PinnedAnswer
@@ -368,6 +372,8 @@ export function ChatPanel(props: Props) {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {/* 4. Debate replay — chatroom */}
         {activity.length > 0 && (

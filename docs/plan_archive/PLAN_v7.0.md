@@ -3,9 +3,9 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** In Progress (7.0.1 Done)
+**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.5 Done; 7.0.4, 7.0.6, 7.0.7, 7.0.8 Planned)
 **Depends on:** v6.4 (Markdown Table Rendering) merged
-**Verified:** 7.0.1 — `npx tsc --noEmit` clean (frontend). Manual UI checks pending user. `npm run build` / `uv run pytest tests/` not run this session.
+**Verified:** 7.0.1/7.0.2/7.0.3/7.0.5 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored). `uv run pytest tests/` not run this session (frontend-only changes).
 
 ## Why this happens
 
@@ -66,7 +66,7 @@ up that post-submit working screen is deferred to Phase 7.0.2 (user confirmed).
 
 ---
 
-## Phase 7.0.2 - Fix the confusing post-submit ("Send follow-up") screen
+## Phase 7.0.2 - Fix the confusing post-submit ("Send follow-up") screen — Done
 
 **Problem (user):** Clicking the purple `Send follow-up` button leads to a confusing screen — the
 transition between "form filled" and "team working / clarification requested" is not legible.
@@ -82,20 +82,21 @@ staying editable alongside a new clarification.
 
 ### Tasks
 
-- [ ] Map the exact state sequence after submit: compose form → loading → (clarification | live
-  debate | final answer). Document what renders at each step and where the visual confusion is
-  introduced.
-- [ ] On submit, collapse or lock the compose form (disable inputs, remove the second textarea
-  focus jump) so the screen has one clear active region.
-- [ ] Ensure the "Team is working…" indicator is prominent and adjacent to where the user's
-  attention is (near the submit button they just clicked), not buried. Tie its visibility to the
-  same `loading` flag used elsewhere. (Coordinate with 7.0.3.)
-- [ ] Manual check: submit a follow-up that goes straight to debate, and one that returns a
-  clarification; confirm both read clearly.
+- [x] Mapped the sequence: `runFollowup` left `followupOpen` true until *after* `await execute`, so
+  the locked compose form stayed on screen beside the clarification/live run for the whole run.
+- [x] Collapse the compose form on submit: moved `setFollowupOpen(false)` to the start of
+  `runFollowup` (values are captured into `mergedInstruction` first) and removed the post-completion
+  one — the form now closes immediately, leaving one active region.
+- [x] Removed the desktop follow-up textarea `onFocus` scrollIntoView jump in both compose panels
+  (`SessionPromptBlock`).
+- [x] "Team is working…" prominence delivered via 7.0.3: with the standalone hero suppressed, the
+  `loading`-tied "Live Follow-up Run" panel is the primary visible section during the run.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds; both paths (straight-to-debate and
+  clarification) user-tested.
 
 ---
 
-## Phase 7.0.3 - Collapse the previous Final Answer into the Question card (after Clarification) so "Live Follow-up Run" is primary
+## Phase 7.0.3 - Live follow-up run shows the follow-up Question card; suppress the duplicate previous answer so "Live Follow-up Run" is primary — Done
 
 **Problem (user):** When a follow-up run starts, the previous run's **Final Answer stays displayed
 in full and prominent** — its heading, body, **score badge, and the entire export/action row
@@ -143,29 +144,34 @@ section below. No standalone full-height previous answer, no duplicate.
 
 ### Tasks
 
-- [ ] In `SessionPromptBlock`'s `followupContextContent`, **move** the collapsed previous-answer
-  `PinnedAnswer` from its current position (before the follow-up instruction) to **immediately
-  after the Clarification block**, and render it **default-collapsed**.
-- [ ] Include the **score and export/stats row** in that collapsed card — the score badge plus the
-  `SessionPromptDownloads` actions (copy · md · pdf · share · "Include full debate") and the
-  `Score · tokens · $cost` line — so the whole answer unit relocates together, matching the user's
-  screenshot. (Reuse `SessionPromptDownloads`; wire its handlers for the previous answer's content.)
-- [ ] **Suppress the standalone Hero Final Answer + downloads row** in `ChatPanel`
-  ([:314-369](frontend/src/components/debate/ChatPanel.tsx#L314-L369)) while showing a follow-up
-  (`result.is_followup`, in-flight and completed-follow-up view) so the previous answer is not
-  displayed twice.
-- [ ] Ensure the "Live Follow-up Run" `CollapsiblePanel` is the open, primary section directly
-  below the Question card once a follow-up run starts.
-- [ ] On completion, the **new** final answer renders as the normal open Final Answer card
-  (`PinnedAnswer` + its own score/downloads); the previous answer remains the collapsed card inside
-  the Question card. Confirm no duplication between the two.
-- [ ] Make "Team is working…" / "Preparing run" a first-class, visible loading state inside the
-  open "Live Follow-up Run" section (consistent with the chatroom typing indicator), visible
-  without scrolling. (Coordinate with 7.0.2.)
-- [ ] Manual check: submit a follow-up; confirm the previous answer (body + score + export buttons)
-  is a single collapsed card sitting right after the Clarification inside the Question card, and
-  "Live Follow-up Run" is the primary section shown. On completion, confirm the new answer is the
-  open Final Answer card and nothing is duplicated.
+**Implementation note:** The root problem was that during a live follow-up run `displayResult` is the
+parent session (not a follow-up), so the Question card rendered `standardContent` and the typed
+follow-up instruction "disappeared." Solved by driving the Question card with a **synthetic
+in-progress follow-up result** so the live run reuses the existing `followupContextContent` (the
+same layout as a saved follow-up) — original question → collapsed previous answer → follow-up
+instruction → clarification. This also naturally satisfies the "no standalone previous answer"
+goal via hero suppression.
+
+- [x] Added `buildInProgressFollowupResult(parent, …)` in `consultHelpers.ts`: a follow-up-shaped
+  result with empty `final_answer` and populated `source_*` / `followup_instruction` /
+  `root_question` / optional clarification Q&A.
+- [x] `App.tsx`: new `liveFollowupResult` state; `displayResult` prefers it; set in `runFollowup`
+  (instruction) and updated in `resumeWithClarification` (answered clarification); cleared on
+  completion (`onRunComplete`), on error, and on fresh navigation (`selectSession`, `/app/new` URL
+  branch, `runConsult`, `startNewQuestion`).
+- [x] `ChatPanel.tsx`: `suppressHero = result.is_followup && !result.final_answer` hides the
+  standalone Hero + downloads row during the in-flight follow-up (previous answer shows collapsed in
+  the Question card). On completion the real answer is present, so the hero returns for the new
+  answer.
+- [x] Result: during the live run the Question card shows the follow-up context and "Live Follow-up
+  Run" is the primary section; on completion the new answer is the open Final Answer card with no
+  duplication. Saved-follow-up view and brand-new-question runs unchanged. User-tested.
+- [x] Extra fix (follow-up control locking): the `Ask follow-up` button in `SessionPromptBlock` now
+  has `disabled={loading}` so it can't be clicked while a run is in progress.
+- [~] **Dropped per user decision ("keep current order"):** moving the collapsed previous answer to
+  *after* the Clarification, and adding the score/export (`SessionPromptDownloads`) row into that
+  collapsed card. The live run mirrors the current saved-view order (previous answer before the
+  follow-up instruction, no export buttons on it), which the user confirmed is what they want.
 
 ---
 
@@ -197,7 +203,7 @@ drops the reasoning subtitle or replaces it with a short, useful framing.
 
 ---
 
-## Phase 7.0.5 - Continue on a follow-up clarification must not drop back to the empty "new run" home screen
+## Phase 7.0.5 - Continue on a follow-up clarification must not drop back to the empty "new run" home screen — Done
 
 **Problem (user):** On a **follow-up** question, after answering the clarification and pressing
 `Continue`, the page **jumps to the empty new-run home screen** — the "Hey, Admin. Ready to Dive
@@ -221,21 +227,19 @@ primary section — and the empty "Ready to Dive in?" compose hero + team picker
 
 ### Tasks
 
-- [ ] In `resumeWithClarification`, do **not** collapse to the empty home hero for a follow-up
-  resume: when `pending?.payload?.is_followup`, keep `displayResult` truthy (preserve the parent
-  session context) so `CommandBar` stays hidden. Confirm whether `setResult(null)` is needed at all
-  here, or whether the previous/parent result should remain mounted through the resume — adjust so
-  the follow-up framing persists.
-- [ ] Verify the non-follow-up (brand-new question) clarification resume still behaves as today —
-  showing the compose hero is acceptable there since there is no session to preserve.
-- [ ] Establish a single clear post-Continue hierarchy: (1) "Live Follow-up Run" / "team working"
-  primary, (2) Question card with clarification Q&A and the collapsed previous answer (7.0.3), no
-  empty hero. Reuse the 7.0.3 collapsed-card treatment.
-- [ ] Remove any duplicate rendering of the clarification block between the live card and the
-  stored `followupContextContent`.
-- [ ] Manual check: full follow-up flow — type follow-up → Send → clarification → answer →
-  Continue — and confirm the empty "Ready to Dive in?" hero never flashes/appears and each
-  transition stays within the session context.
+- [x] In `resumeWithClarification`, guarded the null-out: `const isFollowupResume =
+  Boolean(pending?.payload?.is_followup)` and `if (!isFollowupResume) { setResult(null);
+  setSelectedId(null); }` — a follow-up resume keeps the session mounted.
+- [x] Robust belt-and-suspenders: exposed `isResuming` from `useConsultRun` and gated the hero on
+  `{!displayResult && !isResuming && <CommandBar … />}`, so the home hero cannot render during a
+  follow-up resume even if session state momentarily blanks (e.g. via the `/app/new` URL-sync
+  effect). Brand-new-question resumes keep `isResuming` false, so their hero still shows.
+- [x] Post-Continue hierarchy delivered together with 7.0.3: the live follow-up context Question
+  card on top, "Live Follow-up Run" primary; clarification duplicate avoided (live `clarifyBox`
+  shows while `clarificationPrompt` is set; the synthetic's stored clarification shows only after
+  `Continue` clears it).
+- [x] `npx tsc --noEmit` clean; full flow (Send → clarification → Continue) user-tested — no home
+  hero appears.
 
 ---
 

@@ -122,3 +122,40 @@ export function buildFollowupContext(result: ConsultResult): {
     parentFinalScore: result.final_score,
   };
 }
+
+/**
+ * Synthetic in-progress follow-up result: lets the live run reuse the saved follow-up Question
+ * card. Empty `final_answer` marks it in-progress (the hero is suppressed until the real result).
+ */
+export function buildInProgressFollowupResult(
+  parent: ConsultResult,
+  opts: { rootQuestion: string; instruction: string; clarificationQuestion?: string; clarificationAnswer?: string }
+): ConsultResult {
+  return {
+    ...parent,
+    session_id: "",
+    is_followup: true,
+    parent_session_id: parent.session_id,
+    thread_id: parent.thread_id || parent.session_id,
+    root_question: opts.rootQuestion,
+    source_prompt: opts.rootQuestion,
+    source_final_answer: parent.final_answer,
+    source_final_score: parent.final_score,
+    followup_instruction: opts.instruction,
+    final_answer: "",
+    final_score: 0,
+    full_discussion: [],
+    status: "needs_clarification",
+    needs_clarification: false,
+    clarification_question: opts.clarificationQuestion ?? "",
+    clarification_reason: "",
+    clarification_response: opts.clarificationAnswer ?? "",
+    // Follow-ups never re-run web research — clear the parent's research metadata.
+    web_search_performed: false,
+    web_search_query: "",
+    web_search_sources: [],
+    web_search_summary: "",
+    web_search_warning: "",
+    web_search_retrieved_at: "",
+  };
+}
