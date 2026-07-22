@@ -107,9 +107,16 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** v6.2 (all phases) and v6.3 (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed.  
-**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, mobile user-confirmed) — committed on `PLAN_v6.4`, not yet merged to `main`.
+**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, mobile user-confirmed) and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1 Done) — on `PLAN_v7.0`, not yet merged to `main`.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
+
+### v7.0 - Cleanup & Follow-up Flow Fixes
+Fix the follow-up flow (redundant `Ask follow-up` button, confusing post-submit screen, collapse the previous answer into the Question card, low-value clarification subtitle, Continue reverting to the empty home screen, multi-level follow-up lineage, and locking the team picker mid-run) plus the Scorer badge color/direction confusion.
+
+**Status:** In Progress — 7.0.1 Done (hid redundant `Ask follow-up` button while composing; added desktop `Cancel` button). 7.0.2-7.0.8 Planned.
+
+Full spec: `docs/plan_archive/PLAN_v7.0.md`
 
 ---
 

@@ -302,6 +302,7 @@ export function ChatPanel(props: Props) {
           onFollowupInstructionChange={props.onFollowupInstructionChange}
           onFollowupConstraintsChange={props.onFollowupConstraintsChange}
           onSubmitFollowup={props.onSubmitFollowup}
+          onCloseFollowup={props.onCloseFollowup}
         />
 
         {/* Clarification box — shown below the Question card when a follow-up triggers ambiguity */}

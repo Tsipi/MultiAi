@@ -257,13 +257,14 @@ Claude updates `### Current Session State` automatically after:
 
 ## Current Session State
 
-### Branch: `PLAN_v6.2` (working branch for the v6.2 line onward — opened 2026-07-19 to replace `PLAN_v6.0`; commits and pushes for multiple related sub-versions may land here even if a new sub-version's theme differs from the branch's original scope) — last verified 2026-07-19
+### Branch: `PLAN_v7.0` (working branch for the current line — commits and pushes for multiple related sub-versions may land here even if a new sub-version's theme differs from the branch's original scope) — last verified 2026-07-22
 
 - **Completed work:** see `docs/plan_archive/`
 - **Active plan:** see `PLAN.md`
 - **Architecture reference:** see `docs/engineering/`
 - **In production:** v6.2 - Pre-Launch Polish (all phases 6.2.1-6.2.9) and v6.3 - Mobile Follow-up & Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed. Known follow-up: `hello@teamstoa.com` has no inbound mail receiving configured yet (Resend's MX/SPF only covers the `send.` subdomain for outbound)
 - **In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 both Done, committed on `PLAN_v6.4`, not yet merged to `main`): `remark-gfm` + styled table overrides in `MarkdownView`, `jspdf-autotable` for PDF export, live-feed table-garbling fix in `activity_text.py`, and a mobile horizontal-scroll fix adding `min-w-0` across the full flex/grid chain (`App.tsx` consensus-shell → `ChatPanel` → `PinnedAnswer`) so `<main>`'s `overflow-x-hidden` no longer clips the column — mobile user-confirmed
+- **In development:** v7.0 - Cleanup & Follow-up Flow Fixes (on `PLAN_v7.0` branch). 7.0.1 Done: hid the redundant `Ask follow-up` button when the follow-up compose area is open (gated on `!followupOpen`) and added a desktop `Cancel` button wired to `onCloseFollowup` (threaded `ChatPanel` → `SessionPromptBlock`), in `frontend/src/components/session/SessionPromptBlock.tsx`. 7.0.2-7.0.8 Planned (post-submit screen, collapse previous answer into Question card, clarification subtitle, Continue-reverts-to-home, Scorer badge color, multi-level lineage, team-picker lock)
 - **Not yet started / blocked:**
   - v5.2 - Deferred Auth And Account Features — Blocked
   - v6.4 - Markdown Table Rendering (App + PDF Export) — Planned

@@ -31,6 +31,7 @@ type Props = {
   onFollowupInstructionChange?: (value: string) => void;
   onFollowupConstraintsChange?: (value: string) => void;
   onSubmitFollowup?: () => void | Promise<void>;
+  onCloseFollowup?: () => void;
 };
 
 export function SessionPromptBlock({
@@ -52,6 +53,7 @@ export function SessionPromptBlock({
   onFollowupInstructionChange,
   onFollowupConstraintsChange,
   onSubmitFollowup,
+  onCloseFollowup,
 }: Props) {
   const prompt = promptTextForDisplay(result).trim();
   const files = attachmentListForDisplay(result);
@@ -165,6 +167,17 @@ export function SessionPromptBlock({
             >
               {loading ? "Team is working…" : "Send follow-up"}
             </Button>
+            {onCloseFollowup && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="font-display h-10 rounded-xl px-4 font-semibold"
+                disabled={loading}
+                onClick={onCloseFollowup}
+              >
+                Cancel
+              </Button>
+            )}
             {loading && (
               <p className="text-sm text-muted-foreground m-0 animate-pulse">
                 Your team is working on the follow-up…
@@ -176,7 +189,7 @@ export function SessionPromptBlock({
 
       <SessionAttachmentList files={files} />
 
-      {isSavedAnswer && onAskFollowup ? (
+      {isSavedAnswer && onAskFollowup && !followupOpen ? (
         <div className="mt-2 flex justify-end">
           <Button
             type="button"
@@ -294,6 +307,17 @@ export function SessionPromptBlock({
             >
               {loading ? "Team is working…" : "Send follow-up"}
             </Button>
+            {onCloseFollowup && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="font-display h-10 rounded-xl px-4 font-semibold"
+                disabled={loading}
+                onClick={onCloseFollowup}
+              >
+                Cancel
+              </Button>
+            )}
             {loading && (
               <p className="text-sm text-muted-foreground m-0 animate-pulse">
                 Your team is working on the follow-up…
@@ -305,7 +329,7 @@ export function SessionPromptBlock({
 
       <SessionAttachmentList files={files} />
 
-      {isSavedAnswer && onAskFollowup ? (
+      {isSavedAnswer && onAskFollowup && !followupOpen ? (
         <div className="mt-4 flex justify-end">
           <Button
             type="button"
