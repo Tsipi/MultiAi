@@ -25,9 +25,6 @@ export function ClarificationBox(props: Props) {
         <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300 m-0">
           Clarification Needed
         </p>
-        {props.reason && (
-          <p className="mt-1.5 text-sm text-muted-foreground m-0">{props.reason}</p>
-        )}
         <p className="mt-2 text-sm font-medium text-foreground m-0">{props.question}</p>
       </div>
 

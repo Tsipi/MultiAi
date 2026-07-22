@@ -3,9 +3,9 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.5 Done; 7.0.4, 7.0.6, 7.0.7, 7.0.8 Planned)
+**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.4, 7.0.5 Done; 7.0.6, 7.0.7, 7.0.8 Planned)
 **Depends on:** v6.4 (Markdown Table Rendering) merged
-**Verified:** 7.0.1/7.0.2/7.0.3/7.0.5 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored). `uv run pytest tests/` not run this session (frontend-only changes).
+**Verified:** 7.0.1/7.0.2/7.0.3/7.0.4/7.0.5 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored). `uv run pytest tests/` not run this session (frontend-only changes).
 
 ## Why this happens
 
@@ -175,7 +175,7 @@ goal via hero suppression.
 
 ---
 
-## Phase 7.0.4 - Replace the low-value clarification subtitle
+## Phase 7.0.4 - Replace the low-value clarification subtitle — Done
 
 **Problem (user):** The clarification card's subtitle looks bizarre and is not valuable — it shows
 raw model reasoning like "The term 'matter performance' is ambiguous—it could refer to specific
@@ -192,14 +192,17 @@ drops the reasoning subtitle or replaces it with a short, useful framing.
 
 ### Tasks
 
-- [ ] Remove the `clarification_reason` subtitle entirely from the UI (decision confirmed — no
-  fixed-label replacement); show only the clarification question + options.
-- [ ] Apply consistently across: the live clarification card, the stored-clarification render in
-  `followupContextContent`, and the standard-content clarification render.
-- [ ] Keep `clarification_reason` in the persisted result and PDF/Markdown exports unchanged
-  (decision confirmed — UI-only hide, no backend/data change).
-- [ ] Manual check: trigger a clarification; confirm the card reads as a clear question, no raw
-  model reasoning.
+- [x] Removed the `clarification_reason` render from the live clarification card
+  (`ClarificationBox.tsx`) — the card now leads straight with the question + options.
+- [x] Removed both stored-clarification reason renders in `SessionPromptBlock.tsx`
+  (`followupContextContent` and standard-content) and deleted the now-dead
+  `effectiveClarificationReason` const.
+- [x] Data/exports untouched: no changes to `result.clarification_reason`, `backend/consensus/intent.py`,
+  or the PDF/Markdown export pipeline — reasoning is still persisted and still appears in exports.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds. Manual UI check pending user.
+
+Note: the `clarificationReason` prop is still plumbed `App → ChatPanel → SessionPromptBlock/ClarificationBox`
+but is now unused in the UI; left intact to avoid a cascading prop-chain refactor (harmless).
 
 ---
 

@@ -60,7 +60,6 @@ export function SessionPromptBlock({
   const sharedRole = sharedLeadExpertRole(team);
   const useStoredClarification = !clarificationPrompt && Boolean(result.clarification_question && result.clarification_response);
   const effectiveClarificationQuestion = clarificationPrompt || (useStoredClarification ? result.clarification_question : "");
-  const effectiveClarificationReason = clarificationReason || (useStoredClarification ? result.clarification_reason : "");
   const effectiveClarificationResponse = useStoredClarification ? result.clarification_response : "";
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(prompt);
@@ -112,9 +111,6 @@ export function SessionPromptBlock({
         <div className="grid gap-1.5">
           <p className={sectionLabel}>Clarification</p>
           <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
-            {effectiveClarificationReason && (
-              <p className="m-0 mb-2 text-sm text-muted-foreground">{effectiveClarificationReason}</p>
-            )}
             <p className="m-0 mb-3 whitespace-pre-wrap text-sm font-medium text-foreground">
               {effectiveClarificationQuestion}
             </p>
@@ -226,9 +222,6 @@ export function SessionPromptBlock({
       {effectiveClarificationQuestion ? (
         <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
           <p className={`${sectionLabel} mb-2`}>Clarification</p>
-          {effectiveClarificationReason && (
-            <p className="m-0 mb-2 text-sm text-muted-foreground">{effectiveClarificationReason}</p>
-          )}
           <p className="m-0 mb-3 whitespace-pre-wrap text-sm font-medium text-foreground">{effectiveClarificationQuestion}</p>
           {effectiveClarificationResponse && (
             <div className="clarification-answer-card rounded-lg border p-2">
