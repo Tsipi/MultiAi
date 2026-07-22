@@ -3,9 +3,9 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.4, 7.0.5 Done; 7.0.6, 7.0.7, 7.0.8 Planned)
+**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.4, 7.0.5, 7.0.6 Done; 7.0.7, 7.0.8 Planned)
 **Depends on:** v6.4 (Markdown Table Rendering) merged
-**Verified:** 7.0.1/7.0.2/7.0.3/7.0.4/7.0.5 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored). `uv run pytest tests/` not run this session (frontend-only changes).
+**Verified:** 7.0.1-7.0.6 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored); Scorer badge user-confirmed. `uv run pytest tests/` not run this session (frontend-only changes).
 
 ## Why this happens
 
@@ -246,7 +246,7 @@ primary section — and the empty "Ready to Dive in?" compose hero + team picker
 
 ---
 
-## Phase 7.0.6 - Fix the Scorer badge color/direction confusion
+## Phase 7.0.6 - Fix the Scorer badge color/direction confusion — Done
 
 **Problem (user):** The Scorer shows the score in **red with a `▼` down-arrow** (e.g. "▼ 8.0 / 10")
 while the same round's consensus banner is **green** ("Agreement reached at Round 1 — Score
@@ -266,16 +266,18 @@ is reserved for a genuine drop vs a prior round.
 
 ### Tasks
 
-- [ ] Add a "no prior score" (`previousScore === null`) branch to `ScoreBadge`: neutral styling
-  (e.g. the amber/muted `same` treatment or a dedicated neutral), and a neutral glyph (e.g. `•` or
-  no arrow) instead of `▼`.
-- [ ] Add threshold awareness (decision confirmed): when the score meets/exceeds the consensus
-  threshold, render the badge in the same emerald family as `ConsensusReachedBanner` so score and
-  banner agree. `ScoreBadge` does not currently receive the threshold — pass it in from the caller.
-- [ ] Keep genuine drop (`score < previousScore` with a real `previousScore`) as red `▼`, and
-  improvement as emerald `▲`.
-- [ ] Manual check: Round-1 consensus run shows a non-red, non-down-arrow score consistent with
-  the green banner; a multi-round run still shows ▲/▼ correctly between rounds.
+- [x] Rewrote `ScoreBadge.tsx` around a pure `scoreTrend(score, previousScore, threshold)` helper
+  and a module-level `TONE_STYLES` record. First score (`previousScore === null`) → neutral/muted
+  with a `•` glyph (or emerald if it clears the threshold), not the old red `▼`.
+- [x] Added threshold awareness: new optional `threshold` prop; at/over threshold renders emerald
+  (matching `ConsensusReachedBanner`). Wired from `ChatroomDebateView` — un-underscored the
+  previously-ignored `consensusThreshold` prop (sourced from `form.consensus_score`, default 8) and
+  passed it to `ScoreBadge`.
+- [x] Kept genuine drop (`score < previousScore`) as red `▼` and improvement as emerald `▲`;
+  unchanged score is amber `=` (emerald if it clears the threshold).
+- [x] `ChannelHeader` left as-is — it already falls through to a neutral `text-foreground/80` on a
+  first score, so it never had the red-first-score bug.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds; badge user-confirmed ("looks OK").
 
 ---
 
