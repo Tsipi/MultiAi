@@ -3,9 +3,9 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** In Progress (7.0.1, 7.0.2, 7.0.3, 7.0.4, 7.0.5, 7.0.6 Done; 7.0.7, 7.0.8 Planned)
+**Status:** In Progress (7.0.1-7.0.6, 7.0.8 Done; 7.0.7 Planned)
 **Depends on:** v6.4 (Markdown Table Rendering) merged
-**Verified:** 7.0.1-7.0.6 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored); Scorer badge user-confirmed. `uv run pytest tests/` not run this session (frontend-only changes).
+**Verified:** 7.0.1-7.0.6, 7.0.8 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored); Scorer badge user-confirmed. `uv run pytest tests/` not run this session (frontend-only changes).
 
 ## Why this happens
 
@@ -337,7 +337,7 @@ short follow-up-instruction subtitle) — all without increasing what the debate
 
 ---
 
-## Phase 7.0.8 - Disable the "PICK A TEAM" picker while a run is in flight
+## Phase 7.0.8 - Disable the "PICK A TEAM" picker while a run is in flight — Done
 
 **Problem (user):** After submitting a question, while the run shows "Mission Initializing…" (and
 during the live run), the **"PICK A TEAM" template picker is still interactive** — the chips remain
@@ -358,17 +358,15 @@ no hover popover) until the run finishes, consistent with the rest of the compos
 
 ### Tasks
 
-- [ ] Add a `disabled?: boolean` prop to `TemplateShortcutRow` (and its inner chip component); pass
-  `busy` from `CommandBar` ([:180](frontend/src/components/compose/CommandBar.tsx#L180)).
-- [ ] When disabled: block `onClick` (no template switch), suppress the `onMouseEnter` popover, and
-  apply a disabled visual state (reduced opacity / `cursor-not-allowed`) consistent with the other
-  busy controls.
-- [ ] Confirm the same holds on any other surface that lets the team be changed mid-run (e.g.
-  `AdvancedDrawer` team editing, "Add member") — the team should be locked once a run is in flight.
-  Note: follow-up runs intentionally support "Adjust team" before submit; this lock applies only
-  while `loading`/`busy`, not before submission.
-- [ ] Manual check: submit a question; during "Mission Initializing…" and the live run, confirm the
-  team chips are unclickable and show no hover popover; confirm they re-enable after the run ends.
+- [x] Added a `disabled?: boolean` prop to `TemplateShortcutRow` and its inner `TeamChip`; passed
+  `disabled={busy}` from `CommandBar` ([:180](frontend/src/components/compose/CommandBar.tsx#L180)).
+- [x] When disabled: native `disabled` attribute on the chip `<button>` blocks `onClick`, the
+  `onMouseEnter` popover is guarded (`if (disabled) return`), and disabled classes apply
+  (`opacity-50`, `cursor-not-allowed`, no hover lift/shadow).
+- [x] Confirmed the other team-change surfaces were already locked: "Add member" / "Open advanced"
+  receive `disabled={busy}` via `CommandBarHeaderRow`, and the Advanced drawer is force-closed on
+  submit (`setAdvancedOpen(false)` in `runConsult`/`runFollowup`). The template row was the only gap.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds. Manual check pending user.
 
 ---
 
