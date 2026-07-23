@@ -70,6 +70,21 @@ export function SessionPromptBlock({
   if (!prompt && files.length === 0) return null;
 
   const sectionLabel = "font-display m-0 text-xs font-semibold uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300";
+  const subLabel = "m-0 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80";
+
+  // Clarification Q&A rendered as a subordinate, indented block (nested under the question it refines).
+  const clarificationDetail = effectiveClarificationQuestion ? (
+    <div className="grid gap-1 border-l-2 border-violet-500/25 pl-3">
+      <p className={subLabel}>Clarification</p>
+      <p className="m-0 whitespace-pre-wrap text-sm text-foreground/90">{effectiveClarificationQuestion}</p>
+      {effectiveClarificationResponse && (
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span className={subLabel}>Your answer</span>
+          <span className="text-sm text-foreground">{effectiveClarificationResponse}</span>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   const followupContextContent = (
     <div className="grid gap-4">
@@ -114,38 +129,21 @@ export function SessionPromptBlock({
           />
         ))}
 
-      {/* 3. Follow-up instruction (this session) */}
-      <div className="grid gap-1.5">
-        <div className="flex items-baseline gap-2">
-          <p className={sectionLabel}>Follow-up instruction</p>
-          {result.session_id && (
-            <span className="font-mono text-[0.65rem] text-muted-foreground/55">{result.session_id}</span>
-          )}
-        </div>
-        <p className="m-0 whitespace-pre-wrap text-sm font-semibold leading-snug text-foreground">
-          {result.followup_instruction || "Not provided."}
-        </p>
-      </div>
-
-      {/* 4. Clarification Q&A (stored in result, from a prior clarification step) */}
-      {useStoredClarification && effectiveClarificationQuestion ? (
+      {/* 3. Follow-up instruction (this session) + its clarification, nested underneath */}
+      <div className="grid gap-2">
         <div className="grid gap-1.5">
-          <p className={sectionLabel}>Clarification</p>
-          <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
-            <p className="m-0 mb-3 whitespace-pre-wrap text-sm font-medium text-foreground">
-              {effectiveClarificationQuestion}
-            </p>
-            {effectiveClarificationResponse && (
-              <div className="clarification-answer-card rounded-lg border p-2">
-                <p className="m-0 mb-1 text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
-                  Your answer
-                </p>
-                <p className="m-0 text-sm text-foreground">{effectiveClarificationResponse}</p>
-              </div>
+          <div className="flex items-baseline gap-2">
+            <p className={sectionLabel}>Follow-up instruction</p>
+            {result.session_id && (
+              <span className="font-mono text-[0.65rem] text-muted-foreground/55">{result.session_id}</span>
             )}
           </div>
+          <p className="m-0 whitespace-pre-wrap text-sm font-semibold leading-snug text-foreground">
+            {result.followup_instruction || "Not provided."}
+          </p>
         </div>
-      ) : null}
+        {useStoredClarification && clarificationDetail}
+      </div>
 
       {/* Follow-up compose area — desktop only; mobile uses MobileFollowupSheet */}
       {followupOpen && (
@@ -240,20 +238,7 @@ export function SessionPromptBlock({
         </div>
       )}
 
-      {effectiveClarificationQuestion ? (
-        <div className="rounded-xl border border-violet-500/20 bg-[var(--app-surface)] p-4 shadow-sm">
-          <p className={`${sectionLabel} mb-2`}>Clarification</p>
-          <p className="m-0 mb-3 whitespace-pre-wrap text-sm font-medium text-foreground">{effectiveClarificationQuestion}</p>
-          {effectiveClarificationResponse && (
-            <div className="clarification-answer-card rounded-lg border p-2">
-              <p className="m-0 mb-1 text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400">
-                Your answer
-              </p>
-              <p className="m-0 text-sm text-foreground">{effectiveClarificationResponse}</p>
-            </div>
-          )}
-        </div>
-      ) : null}
+      {clarificationDetail}
 
       {editing ? (
         <div className="grid gap-2">

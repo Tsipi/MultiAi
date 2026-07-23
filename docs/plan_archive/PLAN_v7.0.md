@@ -3,7 +3,7 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** Done (7.0.1-7.0.8) — all phases done on `PLAN_v7.0` branch, not yet merged to `main`
+**Status:** Done (7.0.1-7.0.10) — all phases done on `PLAN_v7.0` branch, not yet merged to `main`
 **Depends on:** v6.4 (Markdown Table Rendering) merged
 **Verified:** 7.0.1-7.0.8 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow, Scorer badge, and multi-level lineage (3-level chain) user-tested with live OpenRouter runs. `uv run pytest tests/` not run this session (frontend-only changes).
 
@@ -367,6 +367,70 @@ no hover popover) until the run finishes, consistent with the rest of the compos
 - [x] Confirmed the other team-change surfaces were already locked: "Add member" / "Open advanced"
   receive `disabled={busy}` via `CommandBarHeaderRow`, and the Advanced drawer is force-closed on
   submit (`setAdvancedOpen(false)` in `runConsult`/`runFollowup`). The template row was the only gap.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds. Manual check pending user.
+
+---
+
+## Phase 7.0.9 - Compact & nest the clarification Q&A (inline answer, subordinate block) — Done
+
+**Problem (user):** In the Question card's stored-clarification block, the user's chosen answer is
+rendered as its own bordered violet card ("Your answer" label on one line, the answer below). It
+takes too much vertical space. The user wants it on **one row**: a violet **"Your Answer"** title
+followed inline by the selected answer text — no card/box.
+
+**Where:** [SessionPromptBlock.tsx](frontend/src/components/session/SessionPromptBlock.tsx) — the
+`clarification-answer-card` block appears twice: in `followupContextContent`
+([:139-143](frontend/src/components/session/SessionPromptBlock.tsx#L139-L143)) and in
+`standardContent` ([:248-252](frontend/src/components/session/SessionPromptBlock.tsx#L248-L252)).
+Both render a `<div className="clarification-answer-card rounded-lg border p-2">` with a "Your
+answer" `<p>` label above the response `<p>`.
+
+**Goal:** Replace the boxed two-line treatment with a single compact row — keep the violet "Your
+Answer" title styling from today, put the selected answer on the same line, drop the border/card
+background. Applies to both render sites.
+
+### Tasks
+
+- [x] Replaced both `clarification-answer-card` blocks in `SessionPromptBlock`
+  (`followupContextContent` + standard-content) with a single wrapping flex row: violet "Your
+  answer" label (`text-violet-600 dark:text-violet-400`) + the answer inline (`items-baseline
+  gap-x-2`, `flex-wrap` for long answers). No border/card.
+- [x] Removed the now-unused `.clarification-answer-card` CSS (light + dark rules) from
+  `frontend/src/index.css`.
+- [x] **Follow-up refinement (user-confirmed "looks great"):** the flat inline row still read as a
+  5th equal violet heading. Reworked into a nested, subordinate block — a shared `clarificationDetail`
+  with **muted** `subLabel` "Clarification"/"Your answer" labels and a thin violet left-rule
+  (`border-l-2 … pl-3`); in `followupContextContent` it's merged **under** the "Follow-up instruction"
+  group so it reads as a detail of it, and the standard-content clarification uses the same block.
+  Also dropped the outer bordered clarification card in both contexts. Net: only two primary violet
+  section labels remain (Original question, Follow-up instruction).
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds. User-confirmed.
+
+---
+
+## Phase 7.0.10 - Remove the low-value "Web research not used" card — Done
+
+**Problem (user):** When a run did not use live web research, `WebResearchStatus` still renders a
+full card ("WEB RESEARCH NOT USED" + an explanatory line). It takes space and adds no UX value.
+
+**Where:** [WebResearchStatus.tsx](frontend/src/components/session/WebResearchStatus.tsx) — the
+"not used" state (`!result.web_search_performed && !failed`) renders the same bordered `section`
+plus the explanatory `<p>` at [:44-50](frontend/src/components/session/WebResearchStatus.tsx#L44-L50).
+The component is used in `SessionPromptBlock` (`followupContextContent` and `standardContent`).
+
+**Goal:** Do not show a card when web research was **not used** — reserve `WebResearchStatus` for the
+states that carry information: **used** (green, with sources) and **unavailable/failed** (amber
+warning). The "not used" case renders nothing.
+
+### Tasks
+
+- [x] `WebResearchStatus` returns `null` for the plain "not used" case
+  (`!result.web_search_performed && !failed`) — no card renders. Also removed the now-dead branches
+  (collapsed `statusClass`/`statusLabel` to used/failed, Globe icon always emerald, dropped the
+  "not used" explanatory paragraph).
+- [x] Kept the **used** (green + source chips) and **failed** (amber warning) states unchanged.
+- [x] This also removes the misleading "not used" card that showed during a live follow-up run
+  (the caveat noted under 7.0.3).
 - [x] `npx tsc --noEmit` clean, `npm run build` succeeds. Manual check pending user.
 
 ---

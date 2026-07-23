@@ -4,7 +4,7 @@
 Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed
 **In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, plus live-feed and
 mobile-scroll fixes, mobile user-confirmed) — committed on `PLAN_v6.4` branch, not yet merged
-to `main`. v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.8 all Done) — on `PLAN_v7.0` branch,
+to `main`. v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10 all Done) — on `PLAN_v7.0` branch,
 not yet merged to `main`.
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
@@ -29,7 +29,7 @@ not yet merged to `main`.
 | v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix | Done |
 | v6.3 | Mobile Follow-up & Debate View Fixes | Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability and title-generation cost trimming, sidebar follow-up chronological ordering | Done |
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
-| v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.8) |
+| v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
 | Marketing | TeamStoa Brand, Launch, And Growth | In-app rebrand, landing page, content, analytics, Product Hunt, pricing | Planned |
 
@@ -223,6 +223,8 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 | 7.0.6 | Fix Scorer badge red `▼` first-score color/direction confusion | Done |
 | 7.0.7 | Multi-level follow-up lineage: true root question + stacked ancestor answers (UI only) | Done |
 | 7.0.8 | Disable "PICK A TEAM" picker while a run is in flight | Done |
+| 7.0.9 | Compact the clarification "Your answer" into a single inline row | Done |
+| 7.0.10 | Remove the low-value "Web research not used" card | Done |
 
 ---
 

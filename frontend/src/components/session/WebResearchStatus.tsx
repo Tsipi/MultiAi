@@ -8,16 +8,14 @@ type Props = {
 export function WebResearchStatus({ result }: Props) {
   const retrievedAt = formatRetrievedAt(result.web_search_retrieved_at);
   const failed = Boolean(result.web_search_warning && !result.web_search_performed);
+  // "Not used" carries no information and just takes space — only render when research ran or failed.
+  if (!result.web_search_performed && !failed) return null;
   const statusClass = result.web_search_performed
     ? "border-emerald-500/25 bg-emerald-500/[0.06]"
-    : failed
-      ? "border-amber-500/25 bg-amber-500/[0.06]"
-      : "border-violet-500/15 bg-card/50";
+    : "border-amber-500/25 bg-amber-500/[0.06]";
   const statusLabel = result.web_search_performed
     ? "Live web research used"
-    : failed
-      ? "Live web research unavailable"
-      : "Web research not used";
+    : "Live web research unavailable";
 
   return (
     <section
@@ -28,10 +26,7 @@ export function WebResearchStatus({ result }: Props) {
         {failed ? (
           <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
         ) : (
-          <Globe2 className={result.web_search_performed
-            ? "h-4 w-4 text-emerald-600 dark:text-emerald-400"
-            : "h-4 w-4 text-violet-600 dark:text-violet-300"
-          } />
+          <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         )}
         <p className="m-0 text-xs font-bold uppercase tracking-wide text-foreground/85">
           {statusLabel}
@@ -40,14 +35,6 @@ export function WebResearchStatus({ result }: Props) {
           <span className="text-[0.68rem] text-muted-foreground">{retrievedAt}</span>
         )}
       </div>
-
-      {!result.web_search_performed && !failed && (
-        <p className="m-0 text-xs leading-snug text-muted-foreground">
-          {result.web_search_mode === "off"
-            ? "This run was configured not to use live web sources."
-            : "Auto mode did not detect a request that required current web sources."}
-        </p>
-      )}
 
       {result.web_search_query && (
         <p className="m-0 break-words text-xs leading-snug text-muted-foreground">
