@@ -8,7 +8,6 @@ type Props = {
 export function WebResearchStatus({ result }: Props) {
   const retrievedAt = formatRetrievedAt(result.web_search_retrieved_at);
   const failed = Boolean(result.web_search_warning && !result.web_search_performed);
-  // "Not used" carries no information and just takes space — only render when research ran or failed.
   if (!result.web_search_performed && !failed) return null;
   const statusClass = result.web_search_performed
     ? "border-emerald-500/25 bg-emerald-500/[0.06]"

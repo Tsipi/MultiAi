@@ -25,9 +25,7 @@ type Props = {
   cast?: { writer: RosterFace; critics: RosterFace[] };
   teamTemplateName?: string;
   label?: string;
-  /** Optional second line under the label — e.g. the follow-up instruction that produced this answer. */
   subtitle?: string;
-  /** When false, the collapsed state shows only the header — no clamped preview text. */
   previewWhenClosed?: boolean;
 };
 

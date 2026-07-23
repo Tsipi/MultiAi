@@ -14,7 +14,7 @@ Items below were added after v4.3 shipped, used as a rough timestamp reference. 
   `
  3. Check the drawParticipants why is it setting the fonts etc... isn't there a better way to write the exporter.ts
 
- 4. When follow up quesstion live debate the main section containing the whole question text area and pick a team all disapear I would like it to behave same as non follow up question
+ 4. ~~When follow up quesstion live debate the main section containing the whole question text area and pick a team all disapear I would like it to behave same as non follow up question ~~ - DONE
 
  5. make the Team Template drawer use the same styling conventions for the "Writer/critics, roles and llm badge for each team member
  
@@ -36,20 +36,34 @@ Items below were added after v4.3 shipped, used as a rough timestamp reference. 
     plan docs (see docs/plan_archive/PLAN_Tests.md for the narrower, plan-doc-driven check already
     done). Low priority, not urgent.
 
- 8. Recheck again the Follow up question flow and fix it ![alt text](../images_archive/TODO_images/image.png)
-      - check what if team is being changed on follow-up question
-      - constraint text area of the follow up
+ 8. ~~Recheck again the Follow up question flow and fix it ~~ - Done
+  ![alt text](../images_archive/TODO_images/image.png)
+   - check what if team is being changed on follow-up question
+   ~~ - constraint text area of the follow up ~~- DONE
 
  9. Recheck the session counters 
 
  10. When hebrew asks for web search
 
- 11. recheck the Fast/balanced if work as defined - ![alt text](../images_archive/TODO_images/image-3.png)
+ 11. recheck the Fast/balanced if work as defined 
+ ![alt text](../images_archive/TODO_images/image-3.png)
 
- 12. score in red when get 10/10 ![alt text](../images_archive/TODO_images/image-1.png)
+ 12. ~~score in red when get 10/10 ~~  - DONE
 
- 13. fix Runs this month ![alt text](../images_archive/TODO_images/image-2.png)
+![alt text](../images_archive/TODO_images/image-1.png)
 
-14. When question submitted "Pick a Team should be also disabled not letting the user change it in the middle of mission initializing or when question delivered ![alt text](../images_archive/TODO_images/image-4.png)
+13. fix the modelling changing the titles of the questions 
 
-15. There is no need for "Round 1 on each of the personas ![alt text](../images_archive/TODO_images/image-5.png)
+![alt text](../images_archive/TODO_images/image-2.png)
+
+14. ~~When question submitted "Pick a Team should be also disabled not letting the user change it in the middle of mission initializing or when question delivered~~ - DONE 
+![alt text](../images_archive/TODO_images/image-4.png)
+
+15. There is no need for "Round 1 on each of the personas 
+![alt text](../images_archive/TODO_images/image-5.png)
+
+16. ~~When clarification was asked I would like to see the users answer in a different styling, don't put it in a violet card, but write: ~~
+~~Your Answer viloet title like today -The selected clarification answer by the userin the same row cause it takes to much space there~~ - DONE
+![alt text](../images_archive/TODO_images/image-6.png)
+
+17. ~~consider removing the "Web Research NOT USED" card cause it takes space and not contributing to UX ~~ - DONE
