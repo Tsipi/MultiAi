@@ -129,7 +129,7 @@ export function buildFollowupContext(result: ConsultResult): {
  */
 export function buildInProgressFollowupResult(
   parent: ConsultResult,
-  opts: { rootQuestion: string; instruction: string; clarificationQuestion?: string; clarificationAnswer?: string }
+  opts: { rootQuestion: string; parentPrompt: string; instruction: string; clarificationQuestion?: string; clarificationAnswer?: string }
 ): ConsultResult {
   return {
     ...parent,
@@ -138,7 +138,7 @@ export function buildInProgressFollowupResult(
     parent_session_id: parent.session_id,
     thread_id: parent.thread_id || parent.session_id,
     root_question: opts.rootQuestion,
-    source_prompt: opts.rootQuestion,
+    source_prompt: opts.parentPrompt,
     source_final_answer: parent.final_answer,
     source_final_score: parent.final_score,
     followup_instruction: opts.instruction,
@@ -158,4 +158,32 @@ export function buildInProgressFollowupResult(
     web_search_warning: "",
     web_search_retrieved_at: "",
   };
+}
+
+/** One prior answer in a follow-up chain: its final answer + score, labelled by the prompt that produced it. */
+export type AncestorAnswer = { sessionId: string; label: string; finalAnswer: string; finalScore: number };
+
+// Follow-up ancestry (newest → oldest), display only. Level 1 comes from the result's `source_*`;
+// deeper levels fetch via `getResult`. Walks to the root; `maxDepth` is a runaway safety cap.
+export async function buildAncestorAnswers(
+  result: ConsultResult,
+  getResult: (id: string) => Promise<ConsultResult | null>,
+  maxDepth = 25
+): Promise<AncestorAnswer[]> {
+  if (!result.is_followup || !result.parent_session_id) return [];
+  const toEntry = (r: ConsultResult): AncestorAnswer => ({
+    sessionId: r.parent_session_id,
+    label: r.source_prompt || r.root_question || "",
+    finalAnswer: r.source_final_answer || "",
+    finalScore: r.source_final_score ?? 0,
+  });
+  const chain: AncestorAnswer[] = [toEntry(result)];
+  let cursor = result;
+  while (chain.length < maxDepth && cursor.parent_session_id) {
+    const parent = await getResult(cursor.parent_session_id);
+    if (!parent || !parent.is_followup || !parent.parent_session_id) break;
+    chain.push(toEntry(parent));
+    cursor = parent;
+  }
+  return chain;
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ConsultResult } from "@/types";
 import type { TeamMember } from "@/data/experts";
+import type { AncestorAnswer } from "@/lib/consultHelpers";
 import { attachmentListForDisplay, promptTextForDisplay, stripAttachmentBlock } from "@/lib/promptDisplay";
 import { sharedLeadExpertRole } from "@/lib/teamSharedRole";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ type Props = {
   team: TeamMember[];
   loading?: boolean;
   teamTemplateName?: string;
+  previousAnswers?: AncestorAnswer[];
   onResendQuestion: (question: string) => void | Promise<void>;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -39,6 +41,7 @@ export function SessionPromptBlock({
   team,
   loading,
   teamTemplateName,
+  previousAnswers,
   onResendQuestion,
   onAskFollowup,
   onStartNewSession,
@@ -70,28 +73,46 @@ export function SessionPromptBlock({
 
   const followupContextContent = (
     <div className="grid gap-4">
-      {/* 1. Original question (parent session) */}
+      {/* 1. Original (root) question — the true first question in the thread, not the immediate parent */}
       <div className="grid gap-1.5">
         <div className="flex items-baseline gap-2">
           <p className={sectionLabel}>Original question</p>
-          {result.parent_session_id && (
-            <span className="font-mono text-[0.65rem] text-muted-foreground/55">{result.parent_session_id}</span>
+          {(result.thread_id || result.parent_session_id) && (
+            <span className="font-mono text-[0.65rem] text-muted-foreground/55">
+              {result.thread_id || result.parent_session_id}
+            </span>
           )}
         </div>
         <p className="m-0 whitespace-pre-wrap text-sm font-semibold leading-snug text-foreground">
-          {stripAttachmentBlock(result.source_prompt || result.base_question || result.question)}
+          {stripAttachmentBlock(result.root_question || result.source_prompt || result.base_question || result.question)}
         </p>
       </div>
 
       <WebResearchStatus result={result} />
 
-      {/* 2. Previous answer — same card treatment as the Final Answer, with its own score badge */}
-      <PinnedAnswer
-        label="Previous Answer"
-        finalAnswer={result.source_final_answer || "Previous answer unavailable."}
-        score={result.source_final_score}
-        previewWhenClosed={false}
-      />
+      {/* 2. Prior answers, oldest → newest (#1 = root), collapsed with the instruction that produced
+          each. Falls back to the immediate parent until the ancestry walk resolves. */}
+      {[...(previousAnswers && previousAnswers.length > 0
+        ? previousAnswers
+        : [
+            {
+              sessionId: result.parent_session_id,
+              label: result.source_prompt || "",
+              finalAnswer: result.source_final_answer || "Previous answer unavailable.",
+              finalScore: result.source_final_score,
+            },
+          ])]
+        .reverse()
+        .map((ans, i) => (
+          <PinnedAnswer
+            key={ans.sessionId || i}
+            label={i === 0 ? "Original Answer #1" : `Follow-up Answer #${i + 1}`}
+            subtitle={ans.label || undefined}
+            finalAnswer={ans.finalAnswer || "Previous answer unavailable."}
+            score={ans.finalScore}
+            previewWhenClosed={false}
+          />
+        ))}
 
       {/* 3. Follow-up instruction (this session) */}
       <div className="grid gap-1.5">

@@ -25,7 +25,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 
 // ─── Lib / data ───────────────────────────────────────────────────────────────
-import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, buildFollowupContext, buildInProgressFollowupResult, type CastSelection } from "./lib/consultHelpers";
+import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, buildFollowupContext, buildInProgressFollowupResult, buildAncestorAnswers, type AncestorAnswer, type CastSelection } from "./lib/consultHelpers";
 import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
@@ -89,6 +89,8 @@ export default function App() {
   const [result, setResult] = useState<ConsultResult | null>(null);
   // Synthetic follow-up result that drives the Question card mid-run; cleared on completion.
   const [liveFollowupResult, setLiveFollowupResult] = useState<ConsultResult | null>(null);
+  // Prior answers in the follow-up chain (newest → oldest), for the stacked "Previous Answer" cards.
+  const [previousAnswers, setPreviousAnswers] = useState<AncestorAnswer[]>([]);
   const [activeRunAnswerMode, setActiveRunAnswerMode] = useState<AnswerMode>(normalizeAnswerMode(form.answer_mode));
   const [activeRunQuestion, setActiveRunQuestion] = useState("");
   const [activeRunTemplateId, setActiveRunTemplateId] = useState<string | null>(null);
@@ -173,6 +175,23 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // ─── Follow-up ancestry (UI only — stacked "Previous Answer" cards) ─────────
+  useEffect(() => {
+    // Clear first so a session switch never flashes the previous chain (card falls back to the parent).
+    setPreviousAnswers([]);
+    if (!displayResult?.is_followup) return;
+    let cancelled = false;
+    void buildAncestorAnswers(displayResult, async (id) => resultsById[id] ?? (await getSession(id).catch(() => null))).then(
+      (chain) => {
+        if (!cancelled) setPreviousAnswers(chain);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayResult?.session_id, displayResult?.parent_session_id, displayResult?.is_followup]);
+
   // ─── Consult orchestration ─────────────────────────────────────────────────
 
   const runConsult = async (clarificationTag = "", questionOverride?: string, clarificationQuestion?: string) => {
@@ -226,7 +245,7 @@ export default function App() {
     setFollowupOpen(false);
     const { rootQuestion, parentPrompt, parentFinalAnswer, parentFinalScore } = buildFollowupContext(displayResult);
     // Drive the Question card with follow-up context while the run streams.
-    setLiveFollowupResult(buildInProgressFollowupResult(displayResult, { rootQuestion, instruction: mergedInstruction }));
+    setLiveFollowupResult(buildInProgressFollowupResult(displayResult, { rootQuestion, parentPrompt, instruction: mergedInstruction }));
     const followupQuestion = [
       "Original prompt:", rootQuestion, "",
       "Previous final answer:", parentFinalAnswer, "",
@@ -473,6 +492,7 @@ export default function App() {
   const panelProps = {
     teamTemplateName,
     result: displayResult,
+    previousAnswers,
     showFullDiscussion: true,
     loading,
     activity,

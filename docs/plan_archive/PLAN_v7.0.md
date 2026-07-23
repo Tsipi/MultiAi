@@ -3,9 +3,9 @@
 **Scope:** Fix the follow-up composition/run flow (redundant button, confusing post-submit
 screen, stale final answer at the bottom, low-value clarification subtitle, clarification
 continue screen) and resolve the Scorer badge color/direction confusion.
-**Status:** In Progress (7.0.1-7.0.6, 7.0.8 Done; 7.0.7 Planned)
+**Status:** Done (7.0.1-7.0.8) — all phases done on `PLAN_v7.0` branch, not yet merged to `main`
 **Depends on:** v6.4 (Markdown Table Rendering) merged
-**Verified:** 7.0.1-7.0.6, 7.0.8 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow user-tested with live OpenRouter run (credit restored); Scorer badge user-confirmed. `uv run pytest tests/` not run this session (frontend-only changes).
+**Verified:** 7.0.1-7.0.8 — `npx tsc --noEmit` clean and `npm run build` succeeds (frontend). Follow-up + clarification flow, Scorer badge, and multi-level lineage (3-level chain) user-tested with live OpenRouter runs. `uv run pytest tests/` not run this session (frontend-only changes).
 
 ## Why this happens
 
@@ -281,7 +281,7 @@ is reserved for a genuine drop vs a prior round.
 
 ---
 
-## Phase 7.0.7 - Multi-level follow-up lineage: true root question + stacked ancestor answers (UI only)
+## Phase 7.0.7 - Multi-level follow-up lineage: true root question + stacked ancestor answers (UI only) — Done
 
 **Problem (user):** With a chain of follow-ups (`#153 "Compare in a table Full Stack…"` →
 `#154 "what about AI engineer"` → `#155 "What about QA Engineer"`), the Question card for `#155`
@@ -313,27 +313,28 @@ short follow-up-instruction subtitle) — all without increasing what the debate
 
 ### Tasks
 
-- [ ] **Fix the "Original question" display:** in `followupContextContent`, source the "Original
-  question" from `result.root_question` first (fall back to `source_prompt`/`base_question`/
-  `question`). Verify the backend persists and returns `root_question` for saved follow-ups; if it
-  does not, thread/persist it (data already computed on the client at submit time).
-- [ ] **Add a short subtitle to the closed "Previous Answer" card:** show the follow-up instruction
-  that produced that answer (e.g. "What about AI Engineer") on the collapsed header, so the closed
-  card is identifiable without expanding.
-- [ ] **Stack ancestor answers (UI only):** reconstruct the ancestry by walking `parent_session_id`
-  across saved sessions, and render each ancestor's final answer + score inside the collapsible
-  card, each with its instruction subtitle. Reuse the collapsed-card treatment from 7.0.3.
-  Ordering (oldest → newest vs newest → oldest) is **deferred to visual review** — implement one,
-  show the user, adjust.
-- [ ] **Confirm the debate context is unchanged:** verify `buildFollowupContext` / `runFollowup`
-  still send only root question + immediate parent answer + instruction (no ancestor stacking into
-  the LLM payload).
-- [ ] **Bound the UI depth** for very long chains (e.g. show the most recent N ancestors with a
-  "show earlier" affordance) so the card does not grow unbounded. Exact N is **deferred to visual
-  review** — start with a sensible default (e.g. 2-3), show the user, adjust.
-- [ ] Manual check: build a 3-level chain; confirm the true root shows as "Original question", the
-  closed card shows the instruction subtitle, and expanding lists each prior answer with its score;
-  confirm token usage/cost of the debate run did not grow from the ancestry display.
+- [x] **Fixed the "Original question" display:** `followupContextContent` now sources
+  `result.root_question` first (fallback `source_prompt`/`base_question`/`question`); the id chip
+  uses `thread_id`. Backend already persists/returns `root_question` (schemas/app/models) — no
+  backend change needed.
+- [x] **Subtitle on the collapsed cards:** added an optional `subtitle` prop to `PinnedAnswer`,
+  rendered under the label; each card shows the instruction that produced that answer
+  (`AncestorAnswer.label`, from each level's `source_prompt`).
+- [x] **Stacked ancestor answers (UI only):** new `buildAncestorAnswers()` walker + `AncestorAnswer`
+  type in `consultHelpers.ts` (level 1 free from `source_*`, deeper levels cache-first via
+  `resultsById` else `getSession`); `previousAnswers` state + effect in `App.tsx`, threaded through
+  `ChatPanel` to `SessionPromptBlock`, which renders a stack of collapsed `PinnedAnswer` cards.
+  Order (user-chosen): **oldest → newest**, labelled **"Original Answer #1", "Follow-up Answer #2",
+  …**.
+- [x] **Debate context confirmed unchanged:** the engine builds follow-up context from root question
+  + immediate parent answer + instruction (`engine.py`); `runFollowup`'s LLM payload is untouched.
+  The ancestry is display-only.
+- [x] **Depth (user decision "N on track"):** the walk goes all the way to the root so absolute
+  numbering (#1 = original) is always correct; `maxDepth` raised 3 → 25 as a runaway safety cap
+  (no "show earlier" needed for realistic chains).
+- [x] Also fixed: the live follow-up run's `ChatroomDebateView` now passes `teamTemplateName`, so the
+  run header shows the selected team instead of the "Team Debate" fallback.
+- [x] `npx tsc --noEmit` clean, `npm run build` succeeds; 3-level chain user-tested.
 
 ---
 

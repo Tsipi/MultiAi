@@ -17,6 +17,7 @@ import { PinnedAnswer } from "../session/PinnedAnswer";
 import { SessionPromptBlock } from "../session/SessionPromptBlock";
 import { SessionPromptDownloads } from "../session/SessionPromptDownloads";
 import { type TeamMember } from "@/data/experts";
+import { type AncestorAnswer } from "@/lib/consultHelpers";
 import { MODEL_OPTIONS } from "@/data/models";
 import { TEAM_TEMPLATES, roleSummaryFromText } from "@/data/templates";
 
@@ -56,6 +57,7 @@ type Props = {
   followupError: string;
   onResendQuestion: (question: string) => void | Promise<void>;
   teamTemplateName?: string;
+  previousAnswers?: AncestorAnswer[];
   isSavedAnswer?: boolean;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -289,6 +291,7 @@ export function ChatPanel(props: Props) {
           result={result}
           team={team}
           loading={loading}
+          previousAnswers={props.previousAnswers}
           onResendQuestion={props.onResendQuestion}
           teamTemplateName={props.teamTemplateName}
           isSavedAnswer={props.isSavedAnswer}
@@ -393,6 +396,7 @@ export function ChatPanel(props: Props) {
                     maxRounds={maxRounds}
                     consensusThreshold={consensusThreshold}
                     answerMode={answerMode}
+                    teamTemplateName={props.teamTemplateName}
                     prominent={loading}
                   />
                 </div>

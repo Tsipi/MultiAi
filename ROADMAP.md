@@ -107,14 +107,14 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** v6.2 (all phases) and v6.3 (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed.  
-**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, mobile user-confirmed) and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.6/7.0.8 Done) — on `PLAN_v7.0`, not yet merged to `main`.
+**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, mobile user-confirmed) and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.8 all Done) — on `PLAN_v7.0`, not yet merged to `main`.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
 ### v7.0 - Cleanup & Follow-up Flow Fixes
 Fix the follow-up flow (redundant `Ask follow-up` button, confusing post-submit screen, collapse the previous answer into the Question card, low-value clarification subtitle, Continue reverting to the empty home screen, multi-level follow-up lineage, and locking the team picker mid-run) plus the Scorer badge color/direction confusion.
 
-**Status:** In Progress — Done: 7.0.1 (hid redundant `Ask follow-up` button + desktop `Cancel`), 7.0.2 (collapse compose form on submit), 7.0.5 (`Continue` no longer reverts to the home hero), 7.0.3 (live follow-up run reuses the follow-up Question card via a synthetic in-progress result; duplicate hero suppressed), 7.0.4 (removed the low-value clarification reasoning subtitle from the UI; data/exports unchanged), 7.0.6 (Scorer badge: first score is neutral/emerald instead of a misleading red down-arrow; threshold-aware), 7.0.8 (lock the "PICK A TEAM" picker while a run is in flight). Planned: 7.0.7.
+**Status:** Done — all phases (7.0.1-7.0.8) on `PLAN_v7.0`, not yet merged to `main`.
 
 Full spec: `docs/plan_archive/PLAN_v7.0.md`
 

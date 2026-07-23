@@ -25,6 +25,8 @@ type Props = {
   cast?: { writer: RosterFace; critics: RosterFace[] };
   teamTemplateName?: string;
   label?: string;
+  /** Optional second line under the label — e.g. the follow-up instruction that produced this answer. */
+  subtitle?: string;
   /** When false, the collapsed state shows only the header — no clamped preview text. */
   previewWhenClosed?: boolean;
 };
@@ -35,6 +37,7 @@ export function PinnedAnswer({
   cast,
   teamTemplateName,
   label = "Final Answer",
+  subtitle,
   previewWhenClosed = true,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
@@ -59,13 +62,20 @@ export function PinnedAnswer({
           onClick={() => setExpanded((v) => !v)}
           className="relative flex h-auto w-full justify-start whitespace-normal rounded-none border-b border-border/45 px-4 py-3 pr-12 text-left font-normal hover:bg-muted/25 focus-visible:ring-offset-0"
         >
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-            <span className="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-              {label}
-            </span>
-            <span className="rounded-full px-2 py-0.5 text-[0.65rem] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-              Score {score.toFixed(1)} / 10
-            </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-display text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                {label}
+              </span>
+              <span className="rounded-full px-2 py-0.5 text-[0.65rem] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                Score {score.toFixed(1)} / 10
+              </span>
+            </div>
+            {subtitle && (
+              <span className="truncate text-[0.7rem] font-normal normal-case tracking-normal text-muted-foreground">
+                {subtitle}
+              </span>
+            )}
           </div>
 
           {faces.length > 0 && (
