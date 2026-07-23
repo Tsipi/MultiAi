@@ -177,7 +177,7 @@ export function CommandBar({
         </div>
       </div>
 
-      <TemplateShortcutRow activeTemplateId={activeTemplateId} onSelect={onSelectTemplate} />
+      <TemplateShortcutRow activeTemplateId={activeTemplateId} onSelect={onSelectTemplate} disabled={busy} />
       <CommandContextFooter
         attachments={attachments}
         onRemoveAttachment={(idx) => onAttachmentsChange(attachments.filter((_, i) => i !== idx))}

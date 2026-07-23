@@ -112,7 +112,7 @@ export function ChatroomDebateView({
   team,
   loading,
   maxRounds,
-  consensusThreshold: _consensusThreshold,
+  consensusThreshold,
   answerMode,
   teamTemplateName,
   prominent,
@@ -246,7 +246,7 @@ export function ChatroomDebateView({
                       const prevScore = accumulatedScore;
                       const extracted = extractScoreFromMessage(msg.text);
                       if (extracted) accumulatedScore = extracted.consensus;
-                      return <ScoreBadge key={msg.id} text={replaceSeatLabels(msg.text, cast)} previousScore={prevScore} />;
+                      return <ScoreBadge key={msg.id} text={replaceSeatLabels(msg.text, cast)} previousScore={prevScore} threshold={consensusThreshold} />;
                     }
                     if (msg.type === "system") {
                       return <SystemMessage key={msg.id} text={replaceSeatLabels(msg.text, cast)} isNew={isNew} />;

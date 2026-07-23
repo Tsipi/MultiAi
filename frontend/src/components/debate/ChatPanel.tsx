@@ -17,6 +17,7 @@ import { PinnedAnswer } from "../session/PinnedAnswer";
 import { SessionPromptBlock } from "../session/SessionPromptBlock";
 import { SessionPromptDownloads } from "../session/SessionPromptDownloads";
 import { type TeamMember } from "@/data/experts";
+import { type AncestorAnswer } from "@/lib/consultHelpers";
 import { MODEL_OPTIONS } from "@/data/models";
 import { TEAM_TEMPLATES, roleSummaryFromText } from "@/data/templates";
 
@@ -56,6 +57,7 @@ type Props = {
   followupError: string;
   onResendQuestion: (question: string) => void | Promise<void>;
   teamTemplateName?: string;
+  previousAnswers?: AncestorAnswer[];
   isSavedAnswer?: boolean;
   onAskFollowup?: () => void;
   onStartNewSession?: () => void;
@@ -86,6 +88,8 @@ export function ChatPanel(props: Props) {
   const showActivity = !props.suppressActivityFeed && (loading || activity.length > 0);
   const showClarify = Boolean(props.clarificationPrompt && props.clarificationOptions.length);
   const showPreviousFullDebate = showFullDiscussion && !loading && (result?.full_discussion.length ?? 0) > 0;
+  // In-flight follow-up shows the previous answer collapsed above — suppress the duplicate hero.
+  const suppressHero = Boolean(result?.is_followup && !result.final_answer);
 
   // Scroll to the follow-up composer whenever it opens (desktop inline form)
   useEffect(() => {
@@ -287,6 +291,7 @@ export function ChatPanel(props: Props) {
           result={result}
           team={team}
           loading={loading}
+          previousAnswers={props.previousAnswers}
           onResendQuestion={props.onResendQuestion}
           teamTemplateName={props.teamTemplateName}
           isSavedAnswer={props.isSavedAnswer}
@@ -302,6 +307,7 @@ export function ChatPanel(props: Props) {
           onFollowupInstructionChange={props.onFollowupInstructionChange}
           onFollowupConstraintsChange={props.onFollowupConstraintsChange}
           onSubmitFollowup={props.onSubmitFollowup}
+          onCloseFollowup={props.onCloseFollowup}
         />
 
         {/* Clarification box — shown below the Question card when a follow-up triggers ambiguity */}
@@ -311,7 +317,9 @@ export function ChatPanel(props: Props) {
           </div>
         )}
 
-        {/* 1. Hero: Final Answer — most prominent */}
+        {/* Hero + downloads — suppressed while an in-flight follow-up shows the previous answer above */}
+        {!suppressHero && (
+        <>
         <div className="flex min-w-0 justify-start">
           <div className="w-full min-w-0 max-w-[880px]">
             <PinnedAnswer
@@ -367,6 +375,8 @@ export function ChatPanel(props: Props) {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {/* 4. Debate replay — chatroom */}
         {activity.length > 0 && (
@@ -386,6 +396,7 @@ export function ChatPanel(props: Props) {
                     maxRounds={maxRounds}
                     consensusThreshold={consensusThreshold}
                     answerMode={answerMode}
+                    teamTemplateName={props.teamTemplateName}
                     prominent={loading}
                   />
                 </div>

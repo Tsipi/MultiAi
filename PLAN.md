@@ -4,7 +4,8 @@
 Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed
 **In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, plus live-feed and
 mobile-scroll fixes, mobile user-confirmed) — committed on `PLAN_v6.4` branch, not yet merged
-to `main`
+to `main`. v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10 all Done) — on `PLAN_v7.0` branch,
+not yet merged to `main`.
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
@@ -28,6 +29,7 @@ to `main`
 | v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | PDF rebrand, OG/Twitter tags, robots.txt/canonical, Privacy/Terms/About pages, sitemap, production email, SPA routing fix | Done |
 | v6.3 | Mobile Follow-up & Debate View Fixes | Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-session team labeling, OpenRouter call reliability and title-generation cost trimming, sidebar follow-up chronological ordering | Done |
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
+| v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
 | Marketing | TeamStoa Brand, Launch, And Growth | In-app rebrand, landing page, content, analytics, Product Hunt, pricing | Planned |
 
@@ -207,6 +209,25 @@ Full spec: `docs/plan_archive/PLAN_v6.4.md`
 
 ---
 
+## v7.0 Cleanup & Follow-up Flow Fixes - Done
+
+Full spec: `docs/plan_archive/PLAN_v7.0.md`
+
+| Phase | Goal | Status |
+|-------|------|--------|
+| 7.0.1 | Hide redundant `Ask follow-up` button while composing (+ desktop Cancel button) | Done |
+| 7.0.2 | Fix the confusing post-submit ("Team is working…") screen — collapse form on submit | Done |
+| 7.0.3 | Live follow-up run shows the follow-up Question card; suppress duplicate previous answer | Done |
+| 7.0.4 | Remove low-value clarification reasoning subtitle (UI only) | Done |
+| 7.0.5 | Continue on follow-up clarification must not revert to empty home hero | Done |
+| 7.0.6 | Fix Scorer badge red `▼` first-score color/direction confusion | Done |
+| 7.0.7 | Multi-level follow-up lineage: true root question + stacked ancestor answers (UI only) | Done |
+| 7.0.8 | Disable "PICK A TEAM" picker while a run is in flight | Done |
+| 7.0.9 | Compact the clarification "Your answer" into a single inline row | Done |
+| 7.0.10 | Remove the low-value "Web research not used" card | Done |
+
+---
+
 ## v_SEO Next.js + SEO - Planned
 
 Full spec: `docs/plan_archive/PLAN_SEO.md`
@@ -247,5 +268,6 @@ Full spec: `docs/plan_archive/PLAN_SEO.md`
 | v6.2 | Pre-Launch Polish: Rebrand, SEO Foundation, Legal Pages, and OG Sharing | `docs/plan_archive/PLAN_v6.2.md` |
 | v6.3 | Mobile Follow-up & Debate View Fixes | `docs/plan_archive/PLAN_v6.3.md` |
 | v6.4 | Markdown Table Rendering (App + PDF Export) | `docs/plan_archive/PLAN_v6.4.md` |
+| v7.0 | Cleanup & Follow-up Flow Fixes | `docs/plan_archive/PLAN_v7.0.md` |
 | v_SEO | Next.js + SEO | `docs/plan_archive/PLAN_SEO.md` |
 | Marketing | TeamStoa Brand, Launch, And Growth | `docs/local_only/PLAN_Marketing.md` |

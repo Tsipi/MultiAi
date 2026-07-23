@@ -236,18 +236,6 @@ body {
   background-color: color-mix(in srgb, var(--app-accent) 8%, var(--app-elevated));
 }
 
-.clarification-answer-card {
-  border-color: var(--brand-200);
-  background-color: color-mix(in srgb, var(--app-accent) 5%, var(--card));
-  outline: none;
-  box-shadow: none;
-}
-
-.dark .clarification-answer-card {
-  border-color: var(--app-accent);
-  background-color: color-mix(in srgb, var(--app-accent) 13%, var(--card));
-}
-
 .strip-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));

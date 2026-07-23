@@ -7,6 +7,7 @@ import { TEAM_TEMPLATES, TEMPLATE_ICONS, roleSummaryFromText, type TeamTemplate 
 type Props = {
   activeTemplateId: string | null;
   onSelect: (template: TeamTemplate) => void;
+  disabled?: boolean;
 };
 
 function TeamChip({
@@ -14,11 +15,13 @@ function TeamChip({
   active,
   onSelect,
   Icon,
+  disabled,
 }: {
   template: TeamTemplate;
   active: boolean;
   onSelect: () => void;
   Icon?: LucideIcon;
+  disabled?: boolean;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -28,8 +31,10 @@ function TeamChip({
       <button
         ref={ref}
         type="button"
+        disabled={disabled}
         onClick={onSelect}
         onMouseEnter={() => {
+          if (disabled) return;
           if (!window.matchMedia("(hover: hover)").matches) return;
           if (ref.current) {
             const r = ref.current.getBoundingClientRect();
@@ -40,6 +45,7 @@ function TeamChip({
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer",
           "shadow-sm hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm",
+          "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:shadow-none",
           active
             ? "border-violet-500 bg-violet-500/20 text-violet-700 dark:text-violet-300 shadow-violet-200/60 dark:shadow-none"
             : "border-slate-200 bg-white text-slate-600 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:border-violet-500/50 dark:hover:bg-violet-900/30 dark:hover:text-violet-300"
@@ -107,7 +113,7 @@ function TeamChip({
   );
 }
 
-export function TemplateShortcutRow({ activeTemplateId, onSelect }: Props) {
+export function TemplateShortcutRow({ activeTemplateId, onSelect, disabled }: Props) {
   return (
     <div className="mt-2 flex flex-wrap gap-1.5 items-center">
       <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground self-center mr-1.5 whitespace-nowrap">
@@ -120,6 +126,7 @@ export function TemplateShortcutRow({ activeTemplateId, onSelect }: Props) {
           active={activeTemplateId === t.id}
           onSelect={() => onSelect(t)}
           Icon={TEMPLATE_ICONS[t.id]}
+          disabled={disabled}
         />
       ))}
     </div>

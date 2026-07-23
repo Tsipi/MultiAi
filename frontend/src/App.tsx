@@ -25,7 +25,7 @@ import { useAuth } from "./hooks/useAuth";
 import { useConsultRun, applyRunResult } from "./hooks/useConsultRun";
 
 // ─── Lib / data ───────────────────────────────────────────────────────────────
-import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, buildFollowupContext, type CastSelection } from "./lib/consultHelpers";
+import { mergeTeamIntoPayload, selectCastFromTeam, castToTeam, buildRunSignature, buildFollowupContext, buildInProgressFollowupResult, buildAncestorAnswers, type AncestorAnswer, type CastSelection } from "./lib/consultHelpers";
 import { deleteSession, getSession, shareSession, unshareSession } from "./services/api";
 import { MODEL_OPTIONS } from "./data/models";
 import { inferTeamTemplateId, TEAM_TEMPLATES, type TeamTemplate } from "./data/templates";
@@ -87,6 +87,10 @@ export default function App() {
 
   // ─── Run engine ────────────────────────────────────────────────────────────
   const [result, setResult] = useState<ConsultResult | null>(null);
+  // Synthetic follow-up result that drives the Question card mid-run; cleared on completion.
+  const [liveFollowupResult, setLiveFollowupResult] = useState<ConsultResult | null>(null);
+  // Prior answers in the follow-up chain (newest → oldest), for the stacked "Previous Answer" cards.
+  const [previousAnswers, setPreviousAnswers] = useState<AncestorAnswer[]>([]);
   const [activeRunAnswerMode, setActiveRunAnswerMode] = useState<AnswerMode>(normalizeAnswerMode(form.answer_mode));
   const [activeRunQuestion, setActiveRunQuestion] = useState("");
   const [activeRunTemplateId, setActiveRunTemplateId] = useState<string | null>(null);
@@ -95,7 +99,7 @@ export default function App() {
 
   const resultSetters = { setResult, setResultsById, setCastBySession, setSelectedId: setSelectedId as (id: string) => void, setHistory, setSessionTitles };
 
-  const { loading, setLoading, activity, setActivity, setIsResuming, execute } = useConsultRun({
+  const { loading, setLoading, activity, setActivity, isResuming, setIsResuming, execute } = useConsultRun({
     onClarificationNeeded: (data, pending) => {
       pendingClarificationRef.current = pending;
       setClarificationPrompt(data.question);
@@ -105,12 +109,14 @@ export default function App() {
       chooseClarification(data.options[0] ?? "");
     },
     onRunComplete: (next, cast, title) => {
+      setLiveFollowupResult(null);
       applyRunResult(next, cast, title, navigate, resultSetters);
     },
   });
 
   // ─── Derived values ────────────────────────────────────────────────────────
-  const displayResult = selectedId ? resultsById[selectedId] ?? result : result;
+  // Live follow-up's synthetic result wins; else the selected/saved or last-run result.
+  const displayResult = liveFollowupResult ?? (selectedId ? resultsById[selectedId] ?? result : result);
 
   // When viewing a saved session with no explicit template, prefer the id recorded on the session
   // itself; fall back to inferring it from the cast names for older sessions saved before that field existed.
@@ -162,11 +168,29 @@ export default function App() {
     } else if (location.pathname === "/app/new" || location.pathname === "/") {
       setSelectedId(null);
       setResult(null);
+      setLiveFollowupResult(null);
       setActivity([]);
       clearFollowupState();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  // ─── Follow-up ancestry (UI only — stacked "Previous Answer" cards) ─────────
+  useEffect(() => {
+    // Clear first so a session switch never flashes the previous chain (card falls back to the parent).
+    setPreviousAnswers([]);
+    if (!displayResult?.is_followup) return;
+    let cancelled = false;
+    void buildAncestorAnswers(displayResult, async (id) => resultsById[id] ?? (await getSession(id).catch(() => null))).then(
+      (chain) => {
+        if (!cancelled) setPreviousAnswers(chain);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayResult?.session_id, displayResult?.parent_session_id, displayResult?.is_followup]);
 
   // ─── Consult orchestration ─────────────────────────────────────────────────
 
@@ -174,6 +198,7 @@ export default function App() {
     const questionText = (questionOverride ?? form.question).trim();
     if (!questionText) return;
     clearFollowupState();
+    setLiveFollowupResult(null);
     setAdvancedOpen(false);
     setRunsSidebarOpen(true);
     setLoading(true);
@@ -216,7 +241,11 @@ export default function App() {
     setLoading(true);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     const mergedInstruction = [followupInstruction.trim(), followupConstraints.trim()].filter(Boolean).join("\n\n");
+    // Collapse the compose form on submit — values captured above; leaves one "team working" region.
+    setFollowupOpen(false);
     const { rootQuestion, parentPrompt, parentFinalAnswer, parentFinalScore } = buildFollowupContext(displayResult);
+    // Drive the Question card with follow-up context while the run streams.
+    setLiveFollowupResult(buildInProgressFollowupResult(displayResult, { rootQuestion, parentPrompt, instruction: mergedInstruction }));
     const followupQuestion = [
       "Original prompt:", rootQuestion, "",
       "Previous final answer:", parentFinalAnswer, "",
@@ -254,8 +283,8 @@ export default function App() {
     if (followupChangedSinceOpen) setActivity((prev) => [...prev, "Using updated team/settings"]);
     try {
       await execute(payload, cast, mergedInstruction);
-      setFollowupOpen(false);
     } catch (error) {
+      setLiveFollowupResult(null);
       setFollowupError(String(error));
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
     } finally {
@@ -268,12 +297,24 @@ export default function App() {
     const questionAsked = clarificationPrompt;
     pendingClarificationRef.current = null;
     const resumeTemplateId = resolvedTemplateId;
+    const isFollowupResume = Boolean(pending?.payload?.is_followup);
     clearFollowupState();
-    if (pending?.payload?.is_followup) setIsResuming(true);
+    if (isFollowupResume) {
+      setIsResuming(true);
+      // Add the answered clarification so its Q&A shows in the Question card.
+      setLiveFollowupResult((prev) =>
+        prev
+          ? { ...prev, clarification_question: questionAsked, clarification_reason: "", clarification_response: answer }
+          : prev
+      );
+    }
     setLoading(true);
     setActiveRunTemplateId(resumeTemplateId);
-    setResult(null);
-    setSelectedId(null);
+    // Follow-up resume: keep the parent mounted so the home hero can't appear. New questions clear.
+    if (!isFollowupResume) {
+      setResult(null);
+      setSelectedId(null);
+    }
     clearClarification();
     setActivity(["Resuming with your clarification…"]);
     requestAnimationFrame(() => mainPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -292,6 +333,7 @@ export default function App() {
     try {
       await execute(nextPayload, baseCast, baseTitle);
     } catch (error) {
+      setLiveFollowupResult(null);
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
     } finally {
       setLoading(false);
@@ -303,6 +345,7 @@ export default function App() {
 
   const selectSession = async (id: string) => {
     setSelectedId(id);
+    setLiveFollowupResult(null);
     // A saved session's team label must come from its own recorded cast, never from
     // whatever template happened to be active in the compose picker beforehand.
     setActiveTemplateId(null);
@@ -393,6 +436,7 @@ export default function App() {
     navigate("/app/new");
     setSelectedId(null);
     setResult(null);
+    setLiveFollowupResult(null);
     setActivity([]);
     setActiveRunQuestion("");
     clearFollowupState();
@@ -448,6 +492,7 @@ export default function App() {
   const panelProps = {
     teamTemplateName,
     result: displayResult,
+    previousAnswers,
     showFullDiscussion: true,
     loading,
     activity,
@@ -580,7 +625,7 @@ export default function App() {
                 </div>
               )}
 
-              {!displayResult && (
+              {!displayResult && !isResuming && (
                 <CommandBar
                   value={commandBarValue}
                   greetingName={greetingName}
