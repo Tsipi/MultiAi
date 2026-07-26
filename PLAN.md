@@ -1,11 +1,11 @@
 # PLAN.md
 
-**In production:** v6.2 - Pre-Launch Polish (all phases) and v6.3 - Mobile Follow-up &
-Debate View Fixes (6.3.1/6.3.2/6.3.3) — merged to `main` and deployed
-**In development:** v6.4 - Markdown Table Rendering (6.4.1/6.4.2 Done, plus live-feed and
-mobile-scroll fixes, mobile user-confirmed) — committed on `PLAN_v6.4` branch, not yet merged
-to `main`. v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10 all Done) — on `PLAN_v7.0` branch,
-not yet merged to `main`.
+**In production:** v6.2 - Pre-Launch Polish, v6.3 - Mobile Follow-up & Debate View Fixes,
+v6.4 - Markdown Table Rendering, and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10) —
+merged to `main` and deployed.
+**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch). Build phase 1 (Section 12 —
+free-tier quota counter, live + correct) Done; landing page / analytics / template SEO pages next.
+Launching free (billing deferred).
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
@@ -31,7 +31,7 @@ not yet merged to `main`.
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
 | v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
-| Marketing | TeamStoa Brand, Launch, And Growth | In-app rebrand, landing page, content, analytics, Product Hunt, pricing | Planned |
+| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Landing page, persona pages, analytics, content, free-tier quota; billing deferred | In Progress (Section 12 quota counter Done) |
 
 ---
 
@@ -225,6 +225,24 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 | 7.0.8 | Disable "PICK A TEAM" picker while a run is in flight | Done |
 | 7.0.9 | Compact the clarification "Your answer" into a single inline row | Done |
 | 7.0.10 | Remove the low-value "Web research not used" card | Done |
+
+---
+
+## v8.0 Marketing & Launch - In Progress
+
+Full spec: `docs/plan_archive/PLAN_v8.0.md` (sections, not X.Y.Z phases). Grounded-data build plan:
+`docs/local_only/Plan_grounded_sources.md`.
+
+| Item | Goal | Status |
+|------|------|--------|
+| Pre-marketing rebrand (Sec. 2) | Replace MultiAi→TeamStoa across app, manifest, OG, PDF, emails | Done (from v6.2; Railway service rename outstanding, cosmetic) |
+| SEO foundation (Sec. 7) | Domain, canonical, OG, robots.txt, sitemap | Done (from v6.2; per-shared-run OG needs SSR) |
+| Build phase 1 (Sec. 12) | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | Done |
+| Landing page (Sec. 3/11) | Persona-driven multi-page marketing site, honest copy | Planned |
+| Analytics (Sec. 6) | Plausible, ~1h; update Privacy copy | Planned |
+| Template SEO / persona pages (Sec. 4/11) | 6 template landing pages | Planned |
+| Grounded data sources | SEC EDGAR + academic APIs (product dependency for "grounded" claims) | Planned |
+| Billing / Pro tier (Sec. 5) | Deferred — launching free | Planned |
 
 ---
 

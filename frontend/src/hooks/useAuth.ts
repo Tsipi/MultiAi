@@ -31,29 +31,30 @@ export function useAuth() {
     setUserProfile(null);
   }, []);
 
-  // Fetch user profile whenever the token changes
-  useEffect(() => {
+  const refreshProfile = useCallback(async (): Promise<void> => {
     if (!token) {
       setUserProfile(null);
       return;
     }
-    fetch(`${getApiBaseUrl()}/api/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          logout();
-          return null;
-        }
-        return res.json() as Promise<UserProfile>;
-      })
-      .then((data) => {
-        if (data) setUserProfile(data);
-      })
-      .catch(() => {
-        // Network failure — keep token, profile will retry on next render
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      const data = (await res.json()) as UserProfile;
+      if (data) setUserProfile(data);
+    } catch {
+      // Network failure — keep token, profile will retry on next refresh
+    }
   }, [token, logout]);
+
+  // Fetch user profile whenever the token changes
+  useEffect(() => {
+    void refreshProfile();
+  }, [refreshProfile]);
 
   const login = async (email: string, password: string): Promise<void> => {
     const res = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
@@ -144,5 +145,6 @@ export function useAuth() {
     updateProfile,
     changePassword,
     savePreferences,
+    refreshProfile,
   };
 }

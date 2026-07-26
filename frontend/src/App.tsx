@@ -55,7 +55,7 @@ function answerModeLabel(mode: AnswerMode): string {
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
-  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword, savePreferences } = useAuth();
+  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword, savePreferences, refreshProfile } = useAuth();
 
   const emailLocal = email?.split("@")[0];
   const greetingName = userProfile?.display_name
@@ -111,6 +111,7 @@ export default function App() {
     onRunComplete: (next, cast, title) => {
       setLiveFollowupResult(null);
       applyRunResult(next, cast, title, navigate, resultSetters);
+      void refreshProfile();
     },
   });
 
@@ -218,6 +219,7 @@ export default function App() {
       await execute(payload, cast, questionText);
     } catch (error) {
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
     }
@@ -287,6 +289,7 @@ export default function App() {
       setLiveFollowupResult(null);
       setFollowupError(String(error));
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
     }
@@ -335,6 +338,7 @@ export default function App() {
     } catch (error) {
       setLiveFollowupResult(null);
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
       setIsResuming(false);
