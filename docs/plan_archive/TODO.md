@@ -41,7 +41,7 @@ Items below were added after v4.3 shipped, used as a rough timestamp reference. 
    - check what if team is being changed on follow-up question
    ~~ - constraint text area of the follow up ~~- DONE
 
- 9. Recheck the session counters 
+ 9. ~~Recheck the session counters~~ - DONE on 8.0.12 
 
  10. When hebrew asks for web search
 

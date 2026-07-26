@@ -3,9 +3,10 @@
 **In production:** v6.2 - Pre-Launch Polish, v6.3 - Mobile Follow-up & Debate View Fixes,
 v6.4 - Markdown Table Rendering, and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10) —
 merged to `main` and deployed.
-**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch). Build phase 1 (Section 12 —
-free-tier quota counter, live + correct) Done; landing page / analytics / template SEO pages next.
-Launching free (billing deferred).
+**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch), split into per-subphase docs
+(`PLAN_v8.1`..`PLAN_v8.4`) + a strategy-reference doc (`docs/local_only/PLAN_v8.0_marketing_suggestions.md`);
+`PLAN_v8.0.md` is the index. v8.1 (free-tier quota counter) Done; v8.2 (landing page) next.
+Launching free (billing deferred; analytics deferred).
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
 
@@ -31,7 +32,7 @@ Launching free (billing deferred).
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
 | v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
-| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Landing page, persona pages, analytics, content, free-tier quota; billing deferred | In Progress (Section 12 quota counter Done) |
+| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Free-tier quota (v8.1), landing page (v8.2), team role refinements (v8.3), shared-run OG (v8.4); analytics + billing deferred | In Progress (v8.1 Done; v8.2 next) |
 
 ---
 
@@ -230,19 +231,20 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 
 ## v8.0 Marketing & Launch - In Progress
 
-Full spec: `docs/plan_archive/PLAN_v8.0.md` (sections, not X.Y.Z phases). Grounded-data build plan:
-`docs/local_only/Plan_grounded_sources.md`.
+Index: `docs/plan_archive/PLAN_v8.0.md`. Strategy reference:
+`docs/local_only/PLAN_v8.0_marketing_suggestions.md`. Grounded-data build plan:
+`docs/local_only/Plan_grounded_sources.md`. Each subphase has its own doc.
 
-| Item | Goal | Status |
-|------|------|--------|
-| Pre-marketing rebrand (Sec. 2) | Replace MultiAi→TeamStoa across app, manifest, OG, PDF, emails | Done (from v6.2; Railway service rename outstanding, cosmetic) |
-| SEO foundation (Sec. 7) | Domain, canonical, OG, robots.txt, sitemap | Done (from v6.2; per-shared-run OG needs SSR) |
-| Build phase 1 (Sec. 12) | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | Done |
-| Landing page (Sec. 3/11) | Persona-driven multi-page marketing site, honest copy | Planned |
-| Analytics (Sec. 6) | Plausible, ~1h; update Privacy copy | Planned |
-| Template SEO / persona pages (Sec. 4/11) | 6 template landing pages | Planned |
-| Grounded data sources | SEC EDGAR + academic APIs (product dependency for "grounded" claims) | Planned |
-| Billing / Pro tier (Sec. 5) | Deferred — launching free | Planned |
+| Subphase | Goal | Doc | Status |
+|----------|------|-----|--------|
+| v8.1 | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | `PLAN_v8.1.md` | Done |
+| v8.2 | Landing page — persona-driven marketing surface at `/`, honest copy, reuses existing templates | `PLAN_v8.2.md` | Planned — next |
+| v8.3 | Team role refinements (user supplies wording; sharpen `role` text in `templates.ts`) | `PLAN_v8.3.md` | Planned |
+| v8.4 | Shared-run per-question OG (interim SSR/edge for `/shared/:slug`) | `PLAN_v8.4.md` | Planned (higher effort) |
+
+Deferred (not current subphases): analytics (Plausible, Sec. 6) — user decision 2026-07-26; billing /
+Pro tier (Sec. 5) — launching free; template SEO / persona pages (Sec. 4/11) and grounded data sources
+— v_SEO / later. Context: pre-marketing rebrand (Sec. 2) and SEO foundation (Sec. 7) done from v6.2.
 
 ---
 
