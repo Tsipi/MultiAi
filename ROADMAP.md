@@ -107,7 +107,7 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** v6.2, v6.3, v6.4, and v7.0 (7.0.1-7.0.10) — merged to `main` and deployed.  
-**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). Build phase 1 (free-tier quota counter) Done; billing deferred (launching free).
+**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). v8.1 (free-tier quota counter) and v8.2 (landing page) Done; billing deferred (launching free).
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
@@ -121,7 +121,7 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 ### v8.0 - Marketing & Launch (TeamStoa Brand, Launch, Growth)
 Persona-driven landing/marketing site, analytics, template SEO pages, and the free-tier quota — launching **free** (billing deferred). Grounded-data sources (SEC EDGAR + academic APIs) tracked separately as a product dependency (`docs/local_only/Plan_grounded_sources.md`).
 
-**Status:** In Progress — build phase 1 (Section 12: free-tier quota counter — live update + month rollover + clarification double-count all fixed) Done. Landing page / analytics / template SEO pages next.
+**Status:** In Progress — v8.1 (free-tier quota counter — live update + month rollover + clarification double-count all fixed) Done; v8.2 (public landing page at `/` — hero, How it works stepper, persona cards + team chips, honest copy, login/register routing) Done. v8.3 team role refinements / analytics / template SEO pages next.
 
 Full spec: `docs/plan_archive/PLAN_v8.0.md`
 

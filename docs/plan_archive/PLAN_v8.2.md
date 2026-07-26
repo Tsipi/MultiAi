@@ -1,4 +1,4 @@
-# v8.2 — Landing page — Planned (next up)
+# v8.2 — Landing page — Done
 
 Part of v8.0 Marketing & Launch. Strategy context: `docs/local_only/PLAN_v8.0_marketing_suggestions.md`
 (Sections 3, 9, 10, 11). Index: `PLAN_v8.0.md`.
@@ -46,27 +46,53 @@ phase ships with the current role text; sharpening it is not a blocker.
   there is nothing to receive captured emails yet).
 
 ## Tasks (frontend)
-- [ ] Create [LandingPage.tsx](frontend/src/pages/LandingPage.tsx) — a public, no-auth page. Sections
-  per suggestions doc Section 3 / 11: Hero + CTA (hero line locked above), How it works (5 steps: pick
-  team -> ask -> debate -> verdict -> follow-up), persona strip (the four personas mapped to existing
+- [x] Create [LandingPage.tsx](frontend/src/pages/LandingPage.tsx) — a public, no-auth page. Sections:
+  Hero + CTA (hero line locked above), How it works, persona strip (the four personas mapped to existing
   templates per the table above), "Why not just ask one AI?", a Pricing note ("Free while we launch —
   no credit card", no email box), Footer reusing the existing About/Privacy/Terms links.
-- [ ] Add an optional `initialMode?: "login" | "register"` prop to
-  [LoginPage.tsx](frontend/src/pages/LoginPage.tsx) (default `"login"`); use it to seed the `mode`
-  state.
-- [ ] In the public-route block of [App.tsx:563-572](frontend/src/App.tsx#L563-L572), add — all
-  **before** the `!isLoggedIn` fallback:
+- [x] Add an optional `initialMode?: "login" | "register"` prop to
+  [LoginPage.tsx](frontend/src/pages/LoginPage.tsx) (default `"login"`); seeds the `mode` state.
+- [x] In the public-route block of [App.tsx](frontend/src/App.tsx), added — all **before** the
+  `!isLoggedIn` fallback:
   - `/` -> `<LandingPage />` when logged out; when logged in, redirect to `/app/new`.
-  - `/login` -> `<LoginPage initialMode="login" ... />`.
-  - `/register` -> `<LoginPage initialMode="register" ... />`.
-- [ ] Wire the landing CTAs with `useNavigate`: "Start for free" -> `/register`; "Sign in" -> `/login`.
-- [ ] Persona card CTAs pre-select the mapped template `id` (per the table above) then route to
-  `/register` (Everyday = default team, no pre-select).
-- [ ] Reuse existing UI primitives ([components/ui/](frontend/src/components/ui/)) and the brand-violet
-  theme; keep it responsive (mobile matters for Product Hunt — Section 9) and dark-mode aware
-  (`.dark` class model).
-- [ ] Optional: a 15-20s debate GIF/screenshot placeholder slot (Section 3) — leave an `<img>` with a
-  TODO source if the asset isn't ready; do not block the phase on it.
+  - `/login` -> `<LoginPage initialMode="login" ... />`; redirect to `/app/new` when logged in.
+  - `/register` -> `<LoginPage initialMode="register" ... />`; redirect to `/app/new` when logged in.
+- [x] Wire the landing CTAs with `useNavigate`: "Start for free" -> `/register`; "Sign in" -> `/login`.
+- [x] Persona card CTAs pre-select the mapped template `id` (per the table above) then route to
+  `/register` (Everyday = default team, no pre-select). Carried through signup/login via a
+  `pending_team_template` localStorage key consumed by the prefs effect in `App.tsx`.
+- [x] Reuse existing UI primitives ([components/ui/](frontend/src/components/ui/)) and the brand-violet
+  theme; responsive and dark-mode aware (`.dark` class model).
+- [x] Debate preview placeholder slot — `<img>` pointing at `/landing-debate-preview.png` with a TODO
+  source; self-hides on 404 until the real asset lands. (Asset not yet shipped — see Known follow-up.)
+
+### Refinements added during build (beyond the original spec)
+- [x] **How it works redesign** — reworked from a flat 5-step row into a connected numbered stepper
+  (4 steps: Pick a team -> Ask -> They debate -> You get the answer), with a per-step **actor tag**
+  ("You" / "Your AI team") so visitors can't read "Debate" as something they do. Follow-up pulled out
+  of the step sequence into a separate loop callout below the stepper (follow-up icon + share icon,
+  bulleted): follow up with the same team (context carried over) or share the result via permalink.
+- [x] **Copy** — removed the word "rival" everywhere ("independent"/"other" models); removed the word
+  "verdict" everywhere ("answer that holds up" / "You get the answer"). Hero badge changed to
+  "Frontier models from OpenAI, Anthropic & Google" with the TeamStoa icon in a gradient chip.
+- [x] **Persona section** — headline "Built for the moment you can't afford to be wrong." with quote
+  cards (Investor/Researcher/Founder/Everyday); "Start here" hint small + right-aligned. Added an
+  "Or pick a team" chip strip rendering all `TEAM_TEMPLATES` (icon + name), each pre-selecting that
+  team and routing to `/register` — reuses the same `pending_team_template` mechanism.
+- [x] **"Why not just ask one AI?"** — converted to a two-column card grid (Comparing isn't checking /
+  Most "AI debates" still argue from memory / One guess, stated with confidence / on-the-record).
+- [x] **Pricing** — restyled the note into a full-bleed brand-violet banner (honest copy: no
+  grounded-data or Pro-tier claims).
+- [x] **Layout polish** — extra top space above the landing navbar and bottom space in the footer
+  (both stack the safe-area inset); section separators between How it works / persona.
+- [x] **Login/register routing bug fix** — `/login` and `/register` returned `<LoginPage>`
+  unconditionally, so a successful login left the form on screen until a browser Back. Both now
+  redirect to `/app/new` when `isLoggedIn`.
+- [x] **Back-to-landing links** — the TeamStoa brand on [LoginPage.tsx](frontend/src/pages/LoginPage.tsx)
+  is now a `Link` to `/`, plus an explicit "← Back to home" link below the card.
+
+**Verified:** `cd frontend && npx tsc --noEmit` clean after each change. Manual browser checks
+(below) are pending the user.
 
 ## Verify (user runs these)
 - In your terminal: `cd frontend && npm run dev`.

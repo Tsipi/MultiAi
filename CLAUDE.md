@@ -161,7 +161,8 @@ The engine accepts `writers: list[str]` and `critics: list[str]` (1–6 each). B
 | `frontend/src/data/models.ts` | Model options list |
 | `frontend/src/data/templates.ts` | `TEAM_TEMPLATES`, `TEMPLATE_ICONS`, role-summary/description helpers |
 | `frontend/src/hooks/useAuth.ts` | Auth state — JWT in localStorage, `/api/me` profile fetch, login/register/logout/updateProfile/changePassword |
-| `frontend/src/pages/LoginPage.tsx` | Login + register form (TeamStoa branded) |
+| `frontend/src/pages/LandingPage.tsx` | Public marketing landing page at `/` (logged-out) — hero, How it works stepper, persona cards + team-template chip strip, pricing banner |
+| `frontend/src/pages/LoginPage.tsx` | Login + register form (TeamStoa branded); `initialMode` prop seeds login vs register; brand + "Back to home" link to `/` |
 | `frontend/src/pages/ForgotPasswordPage.tsx` | Request password-reset email |
 | `frontend/src/pages/ResetPasswordPage.tsx` | Set new password via token from email |
 | `frontend/src/pages/SettingsPage.tsx` | User settings — display name, usage quota, change password |
@@ -263,7 +264,7 @@ Claude updates `### Current Session State` automatically after:
 - **Active plan:** see `PLAN.md`
 - **Architecture reference:** see `docs/engineering/`
 - **In production:** v6.2 - Pre-Launch Polish, v6.3 - Mobile Follow-up & Debate View Fixes, v6.4 - Markdown Table Rendering, and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.1-7.0.10) — merged to `main` and deployed. Known follow-up: `hello@teamstoa.com` has no inbound mail receiving configured yet (Resend's MX/SPF only covers the `send.` subdomain for outbound)
-- **In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch; full spec `docs/plan_archive/PLAN_v8.0.md`). Launching **free** (billing deferred). Pre-marketing rebrand + SEO foundation already shipped in v6.2. **Build phase 1 (Section 12 — free-tier quota counter) Done:** exposed `refreshProfile()` in `useAuth` and call it on run complete/error so the sidebar counter updates live; `/api/me` applies the monthly rollover via a new `_runs_reset_due` helper; split `_check_and_increment_quota` into `_check_quota` (before the engine) + `_increment_quota` (after, only when `not session.needs_clarification`) so a clarification no longer double-counts a run. Next: landing page, analytics, template/persona SEO pages.
+- **In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch; full spec `docs/plan_archive/PLAN_v8.0.md`). Launching **free** (billing deferred). Pre-marketing rebrand + SEO foundation already shipped in v6.2. **v8.1 (free-tier quota counter) Done:** live sidebar counter via `refreshProfile()`, `/api/me` monthly rollover (`_runs_reset_due`), split quota check/increment so a clarification no longer double-counts. **v8.2 (landing page) Done:** new public `LandingPage.tsx` at `/` (logged-out marketing surface; logged-in redirect to `/app/new`); `/login` + `/register` routes with `initialMode` on `LoginPage`; persona cards + an "Or pick a team" chip strip pre-select a template via a `pending_team_template` localStorage key; redesigned "How it works" 4-step stepper with per-step actor tags; copy scrubbed of "rival"/"verdict"; fixed a login-routing bug where `/login`/`/register` rendered the form even when already logged in; back-to-landing links on `LoginPage`. Debate preview image asset (`/landing-debate-preview.png`) not yet supplied — slot self-hides until it lands. Next: v8.3 team role refinements.
 - **Not yet started / blocked:**
   - v5.2 - Deferred Auth And Account Features — Blocked
   - v_SEO - Next.js + SEO — Planned
