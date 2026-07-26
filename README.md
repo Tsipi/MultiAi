@@ -1,123 +1,114 @@
-# MultiAI 
-Design your own AI thinking team.
+# TeamStoa
 
-Multiple AI agents debate, critique, and refine answers until consensus is reached.
+**Better answers through AI teamwork.**
 
-Multi-agent LLM consensus app with a React frontend and FastAPI backend.
+TeamStoa is a full-stack multi-agent AI application where users configure a team of Writer and Critic agents, assign different LLM models and roles to each agent, ask a question, and receive a synthesized answer after structured debate, critique, scoring, and refinement.
 
-![Hero Screenshot](/docs/images/hero.png)
+Live app: https://www.teamstoa.com
 
-## Product summary
-A configurable multi-agent orchestration platform where LLMs collaborate through iterative critique and consensus workflows.
+![TeamStoa workspace screenshot](/docs/images/hero.png)
 
-MultiAI is a React + FastAPI multi-agent LLM orchestration app. The user sends a question or mission to a configurable AI team. The team can include one or more Writer agents and one or more Critic agents. Each agent can be assigned a model and role context from the UI. The backend runs the team through a structured debate/refinement loop until the answer reaches the configured agreement score or the maximum debate round limit is reached.
+## Why This Project Matters
 
-The product direction is **Agents Studio**: a workspace where users define an AI team, give each member a role and model, attach context files, run the team, inspect the debate, and save the final answer.
+Most AI apps return a single model response. TeamStoa explores a more deliberate workflow: multiple AI agents with different roles review the same question, challenge the answer, and converge on a final response with visible debate history and usage metadata.
 
-**Status: Work in Progress**
-Core local architecture and multi-agent orchestration are implemented. 
-UI/UX, deployment hardening, and advanced multi-agent capabilities are still evolving.
+This is a full-stack product built end to end: UX design, React implementation, authenticated FastAPI APIs, PostgreSQL persistence, multi-agent LLM orchestration, live progress streaming, public sharing, exports, and Railway deployment.
 
-## Tech Stack
+## Highlights
 
-### Frontend at `localhost:5173`
-- React
-- TypeScript
-- Vite
+- **Multi-agent orchestration:** configurable Writer and Critic agents run through a structured debate loop.
+- **Team templates:** users can quickly start from preconfigured teams for common use cases.
+- **Per-agent LLM selection:** each team member can run on a different OpenRouter model, with its own display identity and role/expertise prompt.
+- **Consensus workflow:** critic revisions are scored, summarized, and used to refine the final answer.
+- **Live progress:** users can follow the debate as the team drafts, critiques, and converges.
+- **Saved sessions:** authenticated users can revisit previous runs and follow-up threads.
+- **Public sharing:** selected answers can be shared through public read-only links.
+- **Exports:** final answers and debate transcripts can be exported for later use.
+- **Usage visibility:** token, cost, model, and timing metadata are surfaced in the UI.
+- **Production deployment:** frontend and backend are deployed on Railway with PostgreSQL persistence.
 
-### Backend at `localhost:8000` 
-- FastAPI
-- Python
-
-### AI / LLM
-- OpenRouter (one key → GPT, Claude, Gemini, Deepseek)
-- Multi-agent orchestration
-- Consensus scoring
-- Structured debate workflows
-
-### Infrastructure
-- Railway
-- JSON session persistence - JSON files in `sessions/`
-
-## Features
-The frontend supports a team-based setup and sends writers[] and critics[] arrays to the backend. The backend debate runner supports multiple writers drafting in parallel and multiple critics reviewing the answer in each round.
-
-- User enters a question/mission in the main command area.
-- User can open advanced setup.
-- User can define team members as either `Writer` or `Critic`.
-- Each team member has:
-  - display name/avatar,
-  - duty/seat: Writer or Critic,
-  - selected LLM model,
-  - role/expertise text.
-- User can attach context files/images.
-- Frontend builds a run payload from the configured team.
-- Backend runs a multi-round debate loop.
-- Writer drafts the opening answer.
-- If there are multiple writers, they draft opening answers in parallel.
-- Critics critique the current answer in parallel.
-- The system scores agreement between revised answers.
-- The primary writer rewrites based on all critic feedback.
-- Each round is summarized into rolling context.
-- The loop stops when consensus/relevance passes the threshold or max rounds are reached.
-- Final answer is synthesized by the primary writer.
-- Session metadata is saved, including question, final answer, rounds, model usage, cost, tokens, follow-up data, and attachments.
-- UI displays:
-  - saved sessions in the left sidebar,
-  - final answer,
-  - agreement score,
-  - full debate / “Director’s Cut”,
-  - session insights with token/cost usage by model.
-
-## How It Works - The Flow
-
-User question + context files
-        ↓
-User-defined AI team
-        ↓
-Configurable Writer and Critic agents
-        ↓
-Structured debate / critique / refinement loop
-        ↓
-Agreement score + relevance validation
-        ↓
-Final synthesized answer
-        ↓
-Saved session with debate transcript, cost, tokens, and model usage
-
-The backend and frontend both support N writers and N critics (1–6 each). Writers draft in parallel in round 1; critics critique in parallel every round. The UI team builder supports adding and configuring each agent individually.
-
-### Frontend
-
-The frontend is a Vite React app written in TypeScript.
-
-Main responsibilities:
-
-- Team setup UI
-- Prompt input / command bar
-- Attachments UI
-- Session sidebar
-- Result display
-- Debate transcript display
-- Session insights drawer
-- Dark mode support
-- API calls to the FastAPI backend
-
-Key frontend areas:
+## Product Flow
 
 ```text
-frontend/src/App.tsx                    Main app state and orchestration
-frontend/src/components/                UI components
-frontend/src/components/AdvancedDrawer  Team setup, roles, files, rounds, models
-frontend/src/components/InsightsDrawer  Cost, token, and per-model usage
-frontend/src/components/ChatPanel       Final answer and full debate view
-frontend/src/components/ConsensusRunsSidebar  Saved sessions sidebar
-frontend/src/data/experts.ts            Team member structure and presets
-frontend/src/data/models.ts             Model options
-frontend/src/lib/consultHelpers.ts      Converts team setup into API payload
-frontend/src/services/api.ts            Backend API wrapper
-frontend/src/types.ts                   Shared frontend types
+Question + optional context
+        |
+Configurable AI team
+        |
+Writer draft
+        |
+Critic reviews
+        |
+Consensus scoring
+        |
+Writer refinement
+        |  repeat until score threshold or max rounds
+Final synthesis
+        |
+Saved answer, debate transcript, and usage metadata
 ```
+
+The app supports 1-6 Writer agents and 1-6 Critic agents. Multiple writers draft in parallel, critics review in parallel each round, and the primary writer handles refinement and final synthesis. The debate loop continues until the team reaches the user-defined consensus score or the run hits the user-defined maximum number of rounds.
+
+## Core Features
+
+### AI Debate Engine
+
+- Writer/Critic debate loop with configurable max rounds and agreement threshold.
+- Fast, Balanced, and Deep answer modes.
+- Optional live web research for current questions.
+- Relevance validation and final repair pass when needed.
+- Rolling summaries to keep later rounds focused.
+
+### Team Configuration
+
+- Team templates for common use cases.
+- Per-agent model selection through OpenRouter.
+- Seat-specific `writer_roles` and `critic_roles`.
+- Shared role fallback for older saved sessions and legacy clients.
+- Context attachments, including extracted document text and limited image input.
+
+### Account And Session UX
+
+- Registration, login, password reset, and email verification.
+- Saved run history scoped to the authenticated user.
+- Follow-up sessions with thread context.
+- Public share/unshare controls.
+- Free-tier monthly quota support.
+- Admin tools for user and account operations.
+
+### Output And Insight
+
+- Final answer view with agreement score.
+- Full debate transcript.
+- Session insights for cost, tokens, timing, and model usage.
+- PDF and Markdown-style export surfaces.
+- Mobile-responsive app shell and debate view.
+
+## Technical Stack
+
+| Area | Technology |
+|---|---|
+| Frontend | React, TypeScript, Vite |
+| Styling/UI | Tailwind CSS, Radix primitives, Lucide icons |
+| Backend | FastAPI, Python, Pydantic |
+| Auth | fastapi-users, JWT |
+| Database | PostgreSQL, SQLAlchemy, Alembic |
+| LLM access | OpenRouter |
+| Email | Resend or SMTP |
+| Deployment | Railway |
+| Testing | Pytest, Vitest |
+
+## Architecture Highlights
+
+- **API-first contract:** typed request/response schemas keep the frontend and backend aligned.
+- **Database-backed sessions:** full debate sessions are persisted with user ownership and public sharing state.
+- **Streaming progress updates:** long-running AI debates stream live status messages to the UI, so users can follow each stage instead of waiting on a blank loading state.
+- **Model abstraction:** OpenRouter model IDs allow multiple providers to be used behind one integration.
+- **Cost tracking:** usage is collected per model and exposed at the session level.
+- **Auth-aware session scoping:** private sessions are owner-scoped, while shared sessions use read-only public slugs.
+- **Backward compatibility:** legacy single-writer/single-critic payload fields are still accepted where needed.
+
+## Project Structure
 
 ### Backend
 
@@ -125,102 +116,95 @@ The backend is a FastAPI Python service.
 
 Main responsibilities:
 
-- Receive consult requests
-- Manage clarification flow
-- Handle context attachments
-- Run the debate/refinement loop
-- Call OpenRouter models
-- Score agreement
-- Validate relevance
-- Summarize rounds into rolling context
-- Synthesize the final answer
-- Track model usage/costs/tokens
-- Save sessions as JSON files
+- Receive consult requests.
+- Manage authentication and user-scoped sessions.
+- Handle clarification flow.
+- Normalize context attachments.
+- Run the debate/refinement loop.
+- Call OpenRouter models.
+- Score agreement between critic revisions.
+- Validate answer relevance.
+- Summarize rounds into rolling context.
+- Synthesize the final answer.
+- Track model usage, cost, tokens, and timing.
+- Save sessions to PostgreSQL.
 
 Key backend areas:
 
 ```text
-backend/api/app.py                  FastAPI routes
-backend/consensus/engine.py         Main orchestration entry point
-backend/consensus/debate_runner.py  Multi-round writer/critic loop
-backend/consensus/prompts.py        Prompt templates
-backend/consensus/scorer.py         Agreement scoring
-backend/consensus/summarizer.py     Round summarization
-backend/consensus/validator.py      Relevance validation
-backend/consensus/usage_tracker.py  Token and cost tracking
-backend/consensus/models.py         DebateSession and DebateRound models
-backend/storage/session_store.py    JSON session persistence
-backend/config.py                   App configuration and env values
+api/app.py                  FastAPI routes
+api/auth.py                 Authentication setup
+api/schemas.py              Request/response contracts
+api/sessions.py             Private session routes
+api/shared.py               Public shared-session routes
+consensus/engine.py         Main orchestration entry point
+consensus/debate_runner.py  Multi-round writer/critic loop
+consensus/prompts.py        Prompt templates
+consensus/scorer.py         Agreement scoring
+consensus/summarizer.py     Round summarization
+consensus/validator.py      Relevance validation
+consensus/usage_tracker.py  Token and cost tracking
+consensus/models.py         DebateSession and DebateRound models
+consensus/web_research.py   Optional live research support
+storage/db_session_store.py Database-backed session persistence
+config.py                   App configuration and env values
 ```
 
+### Frontend
 
-## Debate loop — current behavior
+The frontend is a Vite React app written in TypeScript.
 
-1. User submits question, role context, team setup, max rounds, agreement threshold, and attachments.
-2. Backend normalizes attachments and adds extracted text to the question context.
-3. If image input is used, unsupported Deepseek image model selections are switched to Gemini Flash.
-4. Intent is assessed. If the question is too ambiguous, the app returns a clarification state instead of running the debate.
-5. Writer phase:
-   - one writer drafts the opening answer, or
-   - multiple writers draft opening answers in parallel.
-6. Critic phase:
-   - all critics critique the current answer in parallel.
-7. Agreement scoring:
-   - revised answers are extracted from critic outputs,
-   - the scorer produces a consensus score and reason.
-8. Refinement:
-   - primary writer rewrites the answer using all critic feedback.
-9. Relevance validation:
-   - refined answer is checked against the original question.
-10. Summarization:
-   - round summary is appended to rolling context.
-11. Loop continues until:
-   - agreement score reaches threshold and relevance is acceptable, or
-   - max rounds is reached.
-12. Primary writer synthesizes the final answer.
-13. Session is saved to JSON storage.
+Main responsibilities:
 
-## What is currently user-configurable
+- Team setup UI.
+- Prompt input and command bar.
+- Attachment controls.
+- Session history and follow-up navigation.
+- Live debate progress display.
+- Final answer and full debate transcript views.
+- Share and export actions.
+- Session insights for cost, token, timing, and model usage.
+- Auth, account, and admin screens.
+- Dark mode and responsive mobile layout.
 
-| Area | Current status |
-|---|---|
-| Question / mission | Implemented |
-| Lead expert role | Implemented |
-| Context files | Implemented / in progress |
-| Team members | Implemented in UI |
-| Add/remove team members | In progress / UI direction exists |
-| Agent seat: Writer/Critic | Implemented |
-| Model per agent | Implemented |
-| Agent expertise/role text | Implemented in UI, but backend currently sends mainly the selected writer role as global role context |
-| Max debate rounds | Implemented |
-| Consensus/agreement score | Implemented |
-| Session history | Implemented through JSON sessions |
-| Cost/token insights | Implemented |
-| Full debate view | Implemented |
-| Follow-up sessions | Implemented / in progress |
-| Authentication / real SaaS accounts | Not implemented yet |
-| Database persistence | Not implemented; current v1 uses JSON session storag |
+Key frontend areas:
 
-## Known definition gap
-
-The UI is moving toward true **per-agent role/tone/model configuration**, but the backend is not fully using every per-agent role/tone field yet. The current backend accepts arrays of writer models and critic models, but the role context is still mostly treated as one shared role/domain string.
+```text
+App.tsx                         Main app state and routing
+components/compose/             Prompt input and command bar
+components/drawers/AdvancedDrawer.tsx  Team setup, roles, sources, rounds, and models
+components/drawers/InsightsDrawer.tsx  Cost, token, timing, and per-model usage
+components/debate/ChatPanel.tsx         Final answer, full debate view, sharing, and export actions
+components/layout/ConsensusRunsSidebar.tsx  Saved sessions sidebar
+components/team/                Team member editing and template UI
+data/experts.ts                 Team member structure and avatar options
+data/templates.ts               Team templates and presets
+data/models.ts                  Model options
+lib/consultHelpers.ts           Team-to-API payload helpers
+services/api.ts                 Backend API wrapper
+services/pdf/                   Export generation
+types.ts                        Shared frontend types
+```
 
 ## Screenshots
 
-### 1. Team Workspace
-![Hero Screenshot](/docs/images/hero.png)
+### Team Workspace
 
-### 2. Configure Your Agent Team
-![Team set up screenshot](/docs/images/team-setup.png)
+![Team workspace screenshot](/docs/images/Team-Stoa-main-question.png)
 
-### 3. Debate & Consensus Process
+### Configure Your Agent Team
+
+![Team setup screenshot](/docs/images/team-setup.png)
+
+### Debate And Consensus Process
+
 ![Debate screenshot](/docs/images/debate.png)
 
-### 4. Usage & Agreement Metrics
-![session insights screenshot](/docs/images/session-insights.png)
+### Usage And Agreement Metrics
 
+![Session insights screenshot](/docs/images/session-insights.png)
 
-## Run locally
+## Run Locally
 
 ### Backend
 
@@ -238,3 +222,11 @@ npm run dev
 ```
 
 Open `http://localhost:5173`.
+
+## Tests
+
+```bash
+.venv/Scripts/python.exe -m pytest
+cd frontend
+npm test
+```
