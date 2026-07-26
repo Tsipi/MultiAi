@@ -196,6 +196,10 @@ types.ts                        Shared frontend types
 
 ![Team setup screenshot](/docs/images/team-setup.png)
 
+### Pick an already pre-set team template
+
+![Team template screenshot](/docs/images/team-template-screen.png)
+
 ### Debate And Consensus Process
 
 ![Debate screenshot](/docs/images/debate.png)
