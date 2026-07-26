@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 
 // ─── Components ───────────────────────────────────────────────────────────────
 import { ConsensusRunsSidebar } from "./components/layout/ConsensusRunsSidebar";
@@ -34,6 +34,7 @@ import type { AnswerMode, ConsultPayload, ConsultResult } from "./types";
 
 // ─── Pages ────────────────────────────────────────────────────────────────────
 import { LoginPage } from "./pages/LoginPage";
+import { LandingPage } from "./pages/LandingPage";
 import { SharedRunPage } from "./pages/SharedRunPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
@@ -55,7 +56,7 @@ function answerModeLabel(mode: AnswerMode): string {
 
 export default function App() {
   // ─── Auth ──────────────────────────────────────────────────────────────────
-  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword, savePreferences } = useAuth();
+  const { isLoggedIn, email, token, logout, login, register, userProfile, isAdmin, updateProfile, changePassword, savePreferences, refreshProfile } = useAuth();
 
   const emailLocal = email?.split("@")[0];
   const greetingName = userProfile?.display_name
@@ -111,6 +112,7 @@ export default function App() {
     onRunComplete: (next, cast, title) => {
       setLiveFollowupResult(null);
       applyRunResult(next, cast, title, navigate, resultSetters);
+      void refreshProfile();
     },
   });
 
@@ -218,6 +220,7 @@ export default function App() {
       await execute(payload, cast, questionText);
     } catch (error) {
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
     }
@@ -287,6 +290,7 @@ export default function App() {
       setLiveFollowupResult(null);
       setFollowupError(String(error));
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
     }
@@ -335,6 +339,7 @@ export default function App() {
     } catch (error) {
       setLiveFollowupResult(null);
       setActivity((prev) => [...prev, `Stream error: ${String(error)}`]);
+      void refreshProfile();
     } finally {
       setLoading(false);
       setIsResuming(false);
@@ -548,10 +553,15 @@ export default function App() {
     // Only pre-select the default team for a fresh compose — never override the
     // team label of a saved run opened directly via URL (e.g. a reload or deep link).
     const viewingExistingRun = /^\/app\/run\//.test(location.pathname);
-    if (userProfile.pref_team_template && !viewingExistingRun) {
-      const tpl = TEAM_TEMPLATES.find((t) => t.id === userProfile.pref_team_template);
+    // A persona CTA on the landing page stashes a template id to pre-select after
+    // signup/login; it takes priority over the saved preference for this session.
+    const pendingTemplate = localStorage.getItem("pending_team_template");
+    const templateId = pendingTemplate || userProfile.pref_team_template;
+    if (templateId && !viewingExistingRun) {
+      const tpl = TEAM_TEMPLATES.find((t) => t.id === templateId);
       if (tpl) { setTeam(tpl.members); setActiveTemplateId(tpl.id); }
     }
+    if (pendingTemplate) localStorage.removeItem("pending_team_template");
   }, [userProfile]);
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -564,6 +574,19 @@ export default function App() {
   if (location.pathname === "/privacy") return <PrivacyPage />;
   if (location.pathname === "/terms") return <TermsPage />;
   if (location.pathname === "/about") return <AboutPage />;
+
+  if (location.pathname === "/login") {
+    if (isLoggedIn) return <Navigate to="/app/new" replace />;
+    return <LoginPage onLogin={login} onRegister={register} initialMode="login" />;
+  }
+  if (location.pathname === "/register") {
+    if (isLoggedIn) return <Navigate to="/app/new" replace />;
+    return <LoginPage onLogin={login} onRegister={register} initialMode="register" />;
+  }
+  if (location.pathname === "/") {
+    if (isLoggedIn) return <Navigate to="/app/new" replace />;
+    return <LandingPage />;
+  }
 
   if (!isLoggedIn) return <LoginPage onLogin={login} onRegister={register} />;
 

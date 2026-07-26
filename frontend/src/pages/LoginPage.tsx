@@ -6,11 +6,12 @@ import { Link, useNavigate } from "react-router-dom";
 type Props = {
   onLogin: (email: string, password: string) => Promise<void>;
   onRegister: (email: string, password: string) => Promise<void>;
+  initialMode?: "login" | "register";
 };
 
-export function LoginPage({ onLogin, onRegister }: Props) {
+export function LoginPage({ onLogin, onRegister, initialMode = "login" }: Props) {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,7 +39,7 @@ export function LoginPage({ onLogin, onRegister }: Props) {
       <div className="w-full max-w-sm">
 
         {/* Brand */}
-        <div className="flex items-center gap-3 mb-8">
+        <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition">
           <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-700 to-violet-400 font-display text-[13px] font-bold text-white shadow-md select-none"
                 aria-hidden
@@ -49,7 +50,7 @@ export function LoginPage({ onLogin, onRegister }: Props) {
             <div className="font-bold text-lg tracking-tight text-foreground">Team<span className="font-display font-bold text-base sm:text-lg tracking-tight text-foreground text-violet-700">Stoa</span></div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Your AI decision council</div>
           </div>
-        </div>
+        </Link>
 
         {/* Card */}
         <div className="rounded-2xl border border-border bg-[var(--app-surface)] p-6 shadow-xl">
@@ -152,7 +153,13 @@ export function LoginPage({ onLogin, onRegister }: Props) {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+        <div className="mt-6 text-center">
+          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground transition">
+            ← Back to home
+          </Link>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground/60">
           © {new Date().getFullYear()} TeamStoa. All rights reserved.
         </p>
       </div>

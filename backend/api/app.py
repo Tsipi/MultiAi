@@ -129,6 +129,11 @@ app.include_router(admin_router)
 
 # ── Extended /api/me — user profile + usage ───────────────────────────────────
 
+def _runs_reset_due(reset_at: datetime | None, now: datetime) -> bool:
+    """Whether the monthly run counter should reset (never set, or a new month/year)."""
+    return reset_at is None or reset_at.year != now.year or reset_at.month != now.month
+
+
 @app.get("/api/me")
 async def me(
     user: User = Depends(current_active_user),
@@ -136,13 +141,15 @@ async def me(
 ) -> dict:
     """Return the current user's profile, usage info, and run stats."""
     total_runs = await db.scalar(select(sqlfunc.count()).where(Run.user_id == user.id)) or 0
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    runs_this_month = 0 if _runs_reset_due(user.runs_reset_at, now) else user.runs_this_month
     return {
         "id": str(user.id),
         "email": user.email,
         "display_name": user.display_name,
         "is_superuser": user.is_superuser,
         "is_verified": user.is_verified,
-        "runs_this_month": user.runs_this_month,
+        "runs_this_month": runs_this_month,
         "runs_quota": None if user.is_superuser else CFG.free_tier_quota,
         "total_runs": total_runs,
         "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -243,8 +250,8 @@ async def delete_account(
 
 # ── Quota helpers ─────────────────────────────────────────────────────────────
 
-async def _check_and_increment_quota(user: User) -> None:
-    """Raise 429 if user is over quota; otherwise increment their monthly counter."""
+async def _check_quota(user: User) -> None:
+    """Raise 429 if the user is at their monthly quota. Applies the rollover; does not increment."""
     if user.is_superuser:
         return
     async with _get_session_maker()() as db:
@@ -253,14 +260,10 @@ async def _check_and_increment_quota(user: User) -> None:
         if fresh is None:
             return
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        reset_needed = (
-            fresh.runs_reset_at is None
-            or fresh.runs_reset_at.year != now.year
-            or fresh.runs_reset_at.month != now.month
-        )
-        if reset_needed:
+        if _runs_reset_due(fresh.runs_reset_at, now):
             fresh.runs_this_month = 0
             fresh.runs_reset_at = now
+            await db.commit()
         if fresh.runs_this_month >= CFG.free_tier_quota:
             raise HTTPException(
                 status_code=429,
@@ -269,6 +272,21 @@ async def _check_and_increment_quota(user: User) -> None:
                     "Upgrade to Pro for unlimited runs."
                 ),
             )
+
+
+async def _increment_quota(user: User) -> None:
+    """Count one completed run against the monthly quota (applying the rollover first)."""
+    if user.is_superuser:
+        return
+    async with _get_session_maker()() as db:
+        result = await db.execute(select(User).where(User.id == user.id))
+        fresh = result.scalar_one_or_none()
+        if fresh is None:
+            return
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        if _runs_reset_due(fresh.runs_reset_at, now):
+            fresh.runs_this_month = 0
+            fresh.runs_reset_at = now
         fresh.runs_this_month += 1
         await db.commit()
 
@@ -352,7 +370,7 @@ async def consult(
     user: User | None = Depends(optional_current_user),
 ) -> ConsultResponse:
     if user:
-        await _check_and_increment_quota(user)
+        await _check_quota(user)
     session = await ENGINE.consult(
         question=payload.question,
         domain=payload.role,
@@ -379,6 +397,9 @@ async def consult(
         web_search_mode=payload.web_search_mode,
         answer_mode=payload.answer_mode,
     )
+    # Only a real debate counts — a clarification request runs no debate.
+    if user and not session.needs_clarification:
+        await _increment_quota(user)
     async with _get_session_maker()() as db:
         await save_session_db(session, db, user_id=user.id if user else None)
     return _to_response(session)
@@ -391,7 +412,7 @@ async def consult_stream(
 ) -> StreamingResponse:
     """Stream activity events and final payload as NDJSON."""
     if user:
-        await _check_and_increment_quota(user)
+        await _check_quota(user)
 
     queue: asyncio.Queue[dict] = asyncio.Queue()
     user_id = user.id if user else None
@@ -428,6 +449,9 @@ async def consult_stream(
                 answer_mode=payload.answer_mode,
                 progress_hook=activity,
             )
+            # Only a real debate counts — a clarification request runs no debate.
+            if user and not session.needs_clarification:
+                await _increment_quota(user)
             async with _get_session_maker()() as db:
                 await save_session_db(session, db, user_id=user_id)
             await queue.put({"type": "final", "data": _to_response(session).model_dump()})
