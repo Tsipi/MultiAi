@@ -2,7 +2,7 @@
 
 **Better answers through AI teamwork.**
 
-TeamStoa is a full-stack multi-agent AI application where users configure a team of Writer and Critic agents, assign different LLM models and roles to each agent, ask a question, and receive a synthesized answer after structured debate, critique, scoring, and refinement.
+TeamStoa is a full-stack multi-agent AI application where users configure a team of agents, assign different LLM models and roles to each agent, ask a question, and receive a synthesized answer from the team after structured debate, critique, scoring, and refinement. The loop continues until the team reaches the target consensus score or the user-defined round limit.
 
 Live app: https://www.teamstoa.com
 
