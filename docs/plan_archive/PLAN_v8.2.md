@@ -90,6 +90,17 @@ phase ships with the current role text; sharpening it is not a blocker.
   redirect to `/app/new` when `isLoggedIn`.
 - [x] **Back-to-landing links** — the TeamStoa brand on [LoginPage.tsx](frontend/src/pages/LoginPage.tsx)
   is now a `Link` to `/`, plus an explicit "← Back to home" link below the card.
+- [x] **Search + share metadata** ([index.html](frontend/index.html)) — Google was scraping the login
+  page's visible text as the result description (no `<meta name="description">` existed and `/` used to
+  render the login form). Added a real `<meta name="description">`, a descriptive `<title>`
+  ("TeamStoa — Multi-model AI debate for answers that hold up"), and `<meta name="robots">`; aligned the
+  Open Graph / Twitter title + description with the landing page's honest debate copy; added
+  `og:image:alt`. Replaced the share image `MascotTeamStoa.png` with a corrected **1200×630** asset
+  (previous file was 766×418 with a "DESCISION" typo; `og:image:width/height` now match) and bumped the
+  homepage `lastmod` in [sitemap.xml](frontend/public/sitemap.xml). Post-deploy the user must request
+  re-indexing in Google Search Console for the snippet to refresh (scrapers cache aggressively).
+  Note: SPA serves one shared title/description/OG for all routes — per-page and per-`/shared/:slug`
+  cards remain the job of v8.4 (shared-run OG) / v_SEO (Next.js).
 
 **Verified:** `cd frontend && npx tsc --noEmit` clean after each change. Manual browser checks
 (below) are pending the user.
@@ -111,6 +122,8 @@ phase ships with the current role text; sharpening it is not a blocker.
 - `cd frontend && npx tsc --noEmit` clean.
 
 ## Deploy (Railway)
-Frontend-only (`LandingPage.tsx`, `LoginPage.tsx`, `App.tsx`). Push; only the **Frontend** service
-rebuilds (if Watch Paths set). No new deps unless you add a form/animation library — if so, name it
-and commit `package.json` + `package-lock.json`. No env vars, no dashboard change.
+Frontend-only (`LandingPage.tsx`, `LoginPage.tsx`, `App.tsx`, `index.html`,
+`public/MascotTeamStoa.png`, `public/sitemap.xml`). Push; only the **Frontend** service rebuilds (if
+Watch Paths set). No new deps. No env vars, no dashboard change. Post-deploy (user-only): request
+re-indexing of `https://www.teamstoa.com/` in Google Search Console, and re-scrape the URL in the
+Facebook / LinkedIn / X card debuggers so the cached share preview picks up the new image + copy.
