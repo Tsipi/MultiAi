@@ -238,7 +238,7 @@ Index: `docs/plan_archive/PLAN_v8.0.md`. Strategy reference:
 | Subphase | Goal | Doc | Status |
 |----------|------|-----|--------|
 | v8.1 | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | `PLAN_v8.1.md` | Done |
-| v8.2 | Landing page — persona-driven marketing surface at `/`, honest copy, reuses existing templates | `PLAN_v8.2.md` | Done |
+| v8.2 | Landing page — persona-driven marketing surface at `/`, honest copy, reuses existing templates; plus search/share metadata (title, `<meta description>`, OG/Twitter copy, 1200×630 share image) | `PLAN_v8.2.md` | Done |
 | v8.3 | Team role refinements (user supplies wording; sharpen `role` text in `templates.ts`) | `PLAN_v8.3.md` | Planned |
 | v8.4 | Shared-run per-question OG (interim SSR/edge for `/shared/:slug`) | `PLAN_v8.4.md` | Planned (higher effort) |
 
