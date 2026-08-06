@@ -53,6 +53,9 @@ class AppConfig:
     max_rounds_default: int = 2
     consensus_default: int = 8
     min_relevance_score: float = 7.0
+    validator_question_chars: int = 700
+    validator_answer_chars: int = 6000
+    validator_min_overlap: float = 0.15
     summary_max_tokens: int = 200
     round_call_max_tokens: int = 800
     scorer_max_tokens: int = 100
