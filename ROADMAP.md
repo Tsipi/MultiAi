@@ -107,7 +107,7 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
 **In production:** v6.2, v6.3, v6.4, and v7.0 (7.0.1-7.0.10) — merged to `main` and deployed.  
-**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). v8.1 (free-tier quota counter) and v8.2 (landing page) Done; billing deferred (launching free).
+**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). v8.1 (free-tier quota counter) and v8.2 (landing page) Done; v8.2.1 (follow-up relevance bug fix) In Progress; billing deferred (launching free).
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
@@ -121,7 +121,7 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 ### v8.0 - Marketing & Launch (TeamStoa Brand, Launch, Growth)
 Persona-driven landing/marketing site, analytics, template SEO pages, and the free-tier quota — launching **free** (billing deferred). Grounded-data sources (SEC EDGAR + academic APIs) tracked separately as a product dependency (`docs/local_only/Plan_grounded_sources.md`).
 
-**Status:** In Progress — v8.1 (free-tier quota counter — live update + month rollover + clarification double-count all fixed) Done; v8.2 (public landing page at `/` — hero, How it works stepper, persona cards + team chips, honest copy, login/register routing; plus search/share metadata — `<title>`/`<meta description>`, OG/Twitter copy, 1200×630 share image) Done. v8.3 team role refinements / analytics / template SEO pages next.
+**Status:** In Progress — v8.1 (free-tier quota counter — live update + month rollover + clarification double-count all fixed) Done; v8.2 (public landing page at `/` — hero, How it works stepper, persona cards + team chips, honest copy, login/register routing; plus search/share metadata — `<title>`/`<meta description>`, OG/Twitter copy, 1200×630 share image — and Google Search Console verification via HTML meta-tag) Done; v8.2.1 (follow-up relevance check overwrote the final answer with the parent session's answer — validation and repair now target the follow-up instruction, and repair reuses `FINAL_SYNTHESIS` instead of regenerating) In Progress, Tasks 1-3 Done and Tasks 4-5 deferred. Finish v8.2.1, then v8.3 team role refinements / analytics / template SEO pages.
 
 Full spec: `docs/plan_archive/PLAN_v8.0.md`
 

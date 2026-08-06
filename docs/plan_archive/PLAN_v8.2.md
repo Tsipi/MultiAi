@@ -101,6 +101,14 @@ phase ships with the current role text; sharpening it is not a blocker.
   re-indexing in Google Search Console for the snippet to refresh (scrapers cache aggressively).
   Note: SPA serves one shared title/description/OG for all routes — per-page and per-`/shared/:slug`
   cards remain the job of v8.4 (shared-run OG) / v_SEO (Next.js).
+- [x] **Google Search Console ownership verification** ([index.html](frontend/index.html)) — the
+  HTML-**file** method failed: Railway's static host 301-redirects any `.html` URL to its
+  extension-less form, which the SPA catch-all then serves as `index.html` (logged-out unknown route →
+  LoginPage), so Google saw "wrong content." Switched to the HTML-**tag** method: added
+  `<meta name="google-site-verification" content="…">` to the `<head>` (in the static HTML, immune to
+  the `.html` redirect) and deleted the dead `frontend/public/googlee6ff2c260d85bf58.html`. Ownership
+  now verified. Indexing request + card-debugger re-scrapes remain user actions in Search Console /
+  the social debuggers.
 
 **Verified:** `cd frontend && npx tsc --noEmit` clean after each change. Manual browser checks
 (below) are pending the user.

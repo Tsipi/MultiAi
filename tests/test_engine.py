@@ -334,6 +334,177 @@ def test_followup_final_synthesis_keeps_parent_answer_and_clarification(monkeypa
     assert "Verona" in final_prompt
 
 
+PARENT_ANSWER = (
+    "Comparison of the 10 Largest Market Capitalization Stocks in the USA: 2016 vs. 2026\n"
+    + "\n".join(f"{i}. ExxonMobil placeholder row padding to exceed the validator window" for i in range(20))
+)
+FOLLOWUP_INSTRUCTION = "Prove why an ETF beats a single stock, with pros and cons."
+FOLLOWUP_PACKET = (
+    "Original prompt:\nCompare the top 10 US stocks 2026 vs 2016\n\n"
+    f"Previous final answer:\n{PARENT_ANSWER}\n\n"
+    f"Follow-up instruction:\n{FOLLOWUP_INSTRUCTION}"
+)
+
+
+def _clear_assessment():
+    class Assessment:
+        is_ambiguous = False
+        reason = ""
+        clarification_question = ""
+        clarification_options = []
+        intent_scope = "clear follow-up"
+
+    return Assessment()
+
+
+def test_followup_validation_uses_instruction_not_parent_answer(monkeypatch, tmp_path: Path):
+    """Relevance is judged against the follow-up instruction, never the embedded parent answer."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    validated_questions: list[str] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "etf draft", "etf critique", 8.0, "ok", "summary"))
+        return "etf draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "etf final answer"
+
+    async def fake_validate(question, *_args, **_kwargs):
+        validated_questions.append(question)
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    asyncio.run(
+        engine.consult(
+            question=FOLLOWUP_PACKET,
+            domain="investment analyst",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="Compare the top 10 US stocks 2026 vs 2016",
+            source_final_answer=PARENT_ANSWER,
+            followup_instruction=FOLLOWUP_INSTRUCTION,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert validated_questions
+    validated = validated_questions[0]
+    assert FOLLOWUP_INSTRUCTION in validated
+    assert "ExxonMobil" not in validated
+    assert "Original prompt:" not in validated
+
+
+def test_followup_repair_targets_instruction_and_keeps_synthesized_answer(monkeypatch, tmp_path: Path):
+    """A repair pass rewrites the synthesized answer toward the instruction, not the parent answer."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    prompts: list[str] = []
+    validate_calls = 0
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "etf draft", "etf critique", 8.0, "ok", "summary"))
+        return "etf draft", "rolling"
+
+    async def fake_call(prompt, *_args, **_kwargs):
+        prompts.append(prompt)
+        return f"synthesized answer {len(prompts)}"
+
+    async def fake_validate(*_args, **_kwargs):
+        nonlocal validate_calls
+        validate_calls += 1
+        return validate_calls > 1, 5.0 if validate_calls == 1 else 9.0, "needs focus"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    session = asyncio.run(
+        engine.consult(
+            question=FOLLOWUP_PACKET,
+            domain="investment analyst",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="Compare the top 10 US stocks 2026 vs 2016",
+            source_final_answer=PARENT_ANSWER,
+            followup_instruction=FOLLOWUP_INSTRUCTION,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert len(prompts) == 2
+    repair_prompt = prompts[1]
+    assert f"Rewrite it to answer exactly: {FOLLOWUP_INSTRUCTION}" in repair_prompt
+    assert "synthesized answer 1" in repair_prompt
+    assert "The Bottom Line" in repair_prompt
+    assert session.final_answer == "synthesized answer 2"
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert phases["repair"]["status"] == "passed"
+
+
+def test_plain_run_validates_against_base_question(monkeypatch, tmp_path: Path):
+    """Non-follow-up runs validate against the user's question, not appended attachment context."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    validated_questions: list[str] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(question, *_args, **_kwargs):
+        validated_questions.append(question)
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    asyncio.run(
+        engine.consult(
+            question="How should I decide between two job offers?",
+            domain="",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert validated_questions == ["How should I decide between two job offers?"]
+
+
 def test_user_facing_llm_error_for_openrouter_credit_limit():
     """OpenRouter 402 token/credit errors should be actionable and concise."""
     raw = (
