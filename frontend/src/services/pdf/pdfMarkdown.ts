@@ -1,6 +1,8 @@
 import type { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PDF } from "./pdfTheme";
+import { activeFontFamily } from "./pdfFont";
+import { hasNonLatinScript, isRtlParagraph } from "./pdfText";
 import {
   contentWidth,
   divider,
@@ -227,7 +229,7 @@ function renderTable(
       top: headerFn ? COMPACT_HEADER_BOTTOM : PDF.marginY,
     },
     styles: {
-      font: PDF.font,
+      font: activeFontFamily(),
       fontSize: 9,
       cellPadding: 4,
       textColor: hexToRgb(PDF.colors.text),
@@ -443,11 +445,17 @@ function writeLines(
   font(doc, style, size);
   textColor(doc, PDF.colors.text);
 
+  // Wrapping runs on logical order; the bidi reorder happens per line inside doc.text.
   const lines = doc.splitTextToSize(text, width) as string[];
+  const rtl = isRtlParagraph(text);
 
   for (const line of lines) {
     y = ensurePageSpace(doc, y, lineHeight, headerFn);
-    doc.text(line, x, y);
+    if (rtl) {
+      doc.text(line, x + width, y, { align: "right" });
+    } else {
+      doc.text(line, x, y);
+    }
     y += lineHeight;
   }
 
@@ -495,12 +503,25 @@ export function ensurePageSpace(
     return y;
   }
 
+  // The page header draws in its own font and colour and does not restore the caller's,
+  // so without this the first line after every page break inherited the header's small
+  // bold face. Saved and restored here rather than at each call site.
+  const { fontName, fontStyle } = doc.getFont();
+  const fontSize = doc.getFontSize();
+  const color = doc.getTextColor();
+
   doc.addPage();
-  return headerFn ? headerFn(doc) : PDF.marginY;
+  const nextY = headerFn ? headerFn(doc) : PDF.marginY;
+
+  doc.setFont(fontName, fontStyle);
+  doc.setFontSize(fontSize);
+  doc.setTextColor(color);
+
+  return nextY;
 }
 
-function cleanInline(value: string): string {
-  return value
+export function cleanInline(value: string): string {
+  const cleaned = value
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1 ($2)")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
@@ -508,5 +529,9 @@ function cleanInline(value: string): string {
     .replace(/\u00a0/g, " ")
     .replace(/[\u2192\u21d2\u2794\u279c\u27a1]/g, "->")
     .replace(/[\u2190\u21d0]/g, "<-")
-    .replace(/[\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/g, "");
+    .replace(/[\u200b\u200c\u200d\u2060\ufeff]/g, "");
+
+  // Bidi marks carry direction and must survive for the reorderer to place runs correctly.
+  // Latin-only text still strips them, so its output stays identical to before this change.
+  return hasNonLatinScript(cleaned) ? cleaned : cleaned.replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "");
 }

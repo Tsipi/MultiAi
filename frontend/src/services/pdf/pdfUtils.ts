@@ -1,10 +1,11 @@
 import type { jsPDF } from "jspdf";
 import { PDF } from "./pdfTheme";
+import { activeFontFamily } from "./pdfFont";
 
 export type FontStyle = "normal" | "bold" | "italic";
 
 export function font(doc: jsPDF, style: FontStyle, size: number): void {
-  doc.setFont(PDF.font, style);
+  doc.setFont(activeFontFamily(), style);
   doc.setFontSize(size);
 }
 
