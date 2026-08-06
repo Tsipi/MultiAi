@@ -13,7 +13,7 @@ from backend.consensus.debate_runner import run_rounds
 from backend.consensus.llm_clients import LLMCallError, call_openrouter
 from backend.consensus.models import DebateSession
 from backend.consensus.intent import assess_intent
-from backend.consensus.prompts import FINAL_SYNTHESIS, WRITER_REFINEMENT
+from backend.consensus.prompts import FINAL_SYNTHESIS
 from backend.consensus.usage_tracker import start_usage_collection, stop_usage_collection
 from backend.consensus.validator import _token_overlap, validate_relevance
 from backend.consensus.web_research import build_research_context, research_web, should_search
@@ -183,7 +183,7 @@ class ConsensusEngine:
         try:
             await report("Your Writer and both Critics are in session — drafting, challenging, then converging.")
             phase_started = perf_counter()
-            answer, rolling = await run_rounds(
+            answer, _rolling = await run_rounds(
                 session,
                 question_with_context,
                 domain,
@@ -219,6 +219,12 @@ class ConsensusEngine:
             else:
                 synthesis_question = question_with_context
                 synthesis_scope = session.intent_scope
+            user_request = _build_user_request(
+                is_followup=is_followup,
+                followup_instruction=followup_instruction,
+                question=question,
+                clarification=clarification,
+            )
             primary_writer_role = _role_for(writer_roles or [], 0, domain)
             final_prompt = FINAL_SYNTHESIS.format(
                 question=synthesis_question, current_answer=answer, critique=final_critique, role_context=primary_writer_role, intent_scope=synthesis_scope
@@ -231,12 +237,12 @@ class ConsensusEngine:
             record_phase("final_synthesis", phase_started, model=writers[0])
             session.final_score = session.rounds[-1].consensus_score if session.rounds else 0.0
             phase_started = perf_counter()
-            if answer_mode == "fast" and _token_overlap(question_with_context, session.final_answer) >= 0.05:
+            if answer_mode == "fast" and _token_overlap(user_request, session.final_answer) >= 0.05:
                 await report("Fast mode: skipping final relevance validation.")
                 is_ok, rel_score, rel_reason = True, 0.0, ""
                 record_phase("relevance_validation", phase_started, status="skipped_fast_mode")
             else:
-                is_ok, rel_score, rel_reason = await validate_relevance(question_with_context, session.final_answer, self.cfg)
+                is_ok, rel_score, rel_reason = await validate_relevance(user_request, session.final_answer, self.cfg)
                 record_phase(
                     "relevance_validation",
                     phase_started,
@@ -246,14 +252,17 @@ class ConsensusEngine:
             if not is_ok:
                 await report("Quality check: adding one final pass to better match your request.")
                 phase_started = perf_counter()
-                repair = f"The answer drifted from user intent. Rewrite it to answer exactly: {question_with_context}"
-                refined = WRITER_REFINEMENT.format(
-                    rolling_context=rolling, question=question_with_context, critique=repair, role_context=primary_writer_role, intent_scope=session.intent_scope
+                repair = f"The answer drifted from user intent. Rewrite it to answer exactly: {user_request}"
+                refined = FINAL_SYNTHESIS.format(
+                    question=synthesis_question,
+                    current_answer=session.final_answer,
+                    critique=f"{repair}\n\n{final_critique}",
+                    intent_scope=synthesis_scope,
                 )
                 session.final_answer = await call_openrouter(
                     refined, writers[0], self.cfg, max_tokens=self.cfg.round_call_max_tokens
                 )
-                is_ok, _, _ = await validate_relevance(question_with_context, session.final_answer, self.cfg)
+                is_ok, _, _ = await validate_relevance(user_request, session.final_answer, self.cfg)
                 record_phase("repair", phase_started, status="passed" if is_ok else "failed")
                 if not is_ok:
                     retry = await assess_intent(question_with_context, domain, clarification, self.cfg)
@@ -288,6 +297,20 @@ def _fallback_for_image(model: str) -> str:
 def _role_for(roles: list[str], index: int, fallback: str) -> str:
     """Return a seat-specific role, falling back to the shared role."""
     return roles[index] if index < len(roles) and roles[index].strip() else fallback
+
+
+def _build_user_request(
+    *,
+    is_followup: bool,
+    followup_instruction: str,
+    question: str,
+    clarification: str,
+) -> str:
+    """Return what the user actually asked for, without parent answer or evidence context."""
+    base = followup_instruction if is_followup and followup_instruction else question
+    if clarification:
+        return f"{base}\n\nClarification: {clarification[:500]}"
+    return base
 
 
 def _build_followup_synthesis_context(

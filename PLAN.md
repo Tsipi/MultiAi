@@ -32,7 +32,7 @@ Launching free (billing deferred; analytics deferred).
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
 | v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
-| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Free-tier quota (v8.1), landing page (v8.2), team role refinements (v8.3), shared-run OG (v8.4); analytics + billing deferred | In Progress (v8.1, v8.2 Done; v8.3 next) |
+| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Free-tier quota (v8.1), landing page (v8.2), follow-up relevance bug fix (v8.2.1), team role refinements (v8.3), shared-run OG (v8.4); analytics + billing deferred | In Progress (v8.1, v8.2 Done; v8.2.1 Tasks 1-3 Done) |
 
 ---
 
@@ -239,6 +239,7 @@ Index: `docs/plan_archive/PLAN_v8.0.md`. Strategy reference:
 |----------|------|-----|--------|
 | v8.1 | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | `PLAN_v8.1.md` | Done |
 | v8.2 | Landing page — persona-driven marketing surface at `/`, honest copy, reuses existing templates; plus search/share metadata (title, `<meta description>`, OG/Twitter copy, 1200×630 share image) and Google Search Console ownership verification (HTML meta-tag) | `PLAN_v8.2.md` | Done |
+| v8.2.1 | Follow-up relevance check overwrote the final answer with the parent answer — validation and repair now target the follow-up instruction instead of the packet; repair reuses `FINAL_SYNTHESIS` so it refines the team answer instead of regenerating it | `PLAN_v8.2.1.md` | In Progress (Tasks 1-3 Done; 4-5 deferred) |
 | v8.3 | Team role refinements (user supplies wording; sharpen `role` text in `templates.ts`) | `PLAN_v8.3.md` | Planned |
 | v8.4 | Shared-run per-question OG (interim SSR/edge for `/shared/:slug`) | `PLAN_v8.4.md` | Planned (higher effort) |
 
