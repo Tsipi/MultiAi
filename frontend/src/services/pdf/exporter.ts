@@ -1,11 +1,13 @@
 import { jsPDF } from "jspdf";
 import { TEAM_TEMPLATES, TEMPLATE_ICONS, roleDescriptionFromText } from "@/data/templates";
-import { renderMarkdown, type PageHeaderFn } from "./pdfMarkdown";
+import { ensurePageSpace, renderMarkdown, type PageHeaderFn } from "./pdfMarkdown";
 import { drawPageHeader, drawPageNumbers, drawWatermarks } from "./pdfHeader";
 import { drawParticipants, drawMessageHeader, drawRoundDivider, type ExportParticipant, type ExportDebateMessage } from "./pdfParticipants";
-import { loadIconDataUrl } from "./pdfIcons";
+import { loadBrandMarkDataUrl, loadIconDataUrl } from "./pdfIcons";
 import { PDF } from "./pdfTheme";
-import { divider, drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
+import { enableUnicodeFont, resetFontFamily } from "./pdfFont";
+import { documentNeedsUnicodeFont } from "./pdfText";
+import { contentWidth, divider, drawSectionLabel, font, resetColor, textColor } from "./pdfUtils";
 import AgentStudioLogo from "../../../avatars/AgentStudioAssistant.png";
 
 export type { ExportParticipant, ExportDebateMessage };
@@ -55,6 +57,20 @@ export function exportDateLocal(): string {
   ].join("-");
 }
 
+/**
+ * Human-readable stamp for the page header: `DD/MM/YYYY hh:mm`.
+ * Kept separate from `exportDateLocal`, which feeds the filename and must stay
+ * filesystem-safe — slashes and colons are not valid there.
+ */
+export function exportTimestampLabel(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ` +
+    `${pad(now.getHours())}:${pad(now.getMinutes())}`
+  );
+}
+
 export function exportFileStem(titlePhrase: string, isoLocalDate: string): string {
   return `${safe(titlePhrase)}_${isoLocalDate}`;
 }
@@ -89,23 +105,55 @@ export async function downloadPdf(data: ExportData): Promise<void> {
 
   const activeTemplate = data.teamName ? TEAM_TEMPLATES.find((t) => t.name === data.teamName) : undefined;
 
-  const [logoDataUrl, watermarkDataUrl] = await Promise.all([
-    loadImageDataUrl(AgentStudioLogo, 1),
+  const [brandMarkDataUrl, watermarkDataUrl] = await Promise.all([
+    loadBrandMarkDataUrl(96),
     loadImageDataUrl(AgentStudioLogo, 0.05),
   ]);
+  const headerMark = brandMarkDataUrl ?? (await loadImageDataUrl(AgentStudioLogo, 1));
+  const exportedAt = exportTimestampLabel();
 
   const doc = new jsPDF({
     unit: "pt",
     format: "a4",
   });
 
-  let y = drawPageHeader(doc, logoDataUrl, title, false, exportDate);
+  resetFontFamily();
+  if (documentNeedsUnicodeFont([title, role, prompt, answer, data.followup?.originalPrompt, data.followup?.previousFinalAnswer])) {
+    await enableUnicodeFont(doc);
+  }
+
+  let y = drawPageHeader(doc, headerMark, title, false, exportedAt);
 
   const headerFn: PageHeaderFn = (d) => {
-    return drawPageHeader(d, logoDataUrl, title, true);
+    return drawPageHeader(d, headerMark, title, true);
   };
 
+  y = drawSectionLabel(doc, data.followup ? "Follow-up Prompt" : "Prompt", y) + 6;
   y = renderMarkdown(doc, `# ${capitalizeFirst(title)}`, y, headerFn);
+
+  // Parent question as a compact muted line, mirroring "Follow-up to:" on the shared page.
+  const followupParent = data.followup ? data.followup.originalPrompt || prompt : "";
+  if (followupParent) {
+    font(doc, "normal", PDF.fontSize.meta);
+    textColor(doc, PDF.colors.gray);
+
+    for (const line of doc.splitTextToSize(`Follow-up to: ${followupParent}`, contentWidth(doc)) as string[]) {
+      y = ensurePageSpace(doc, y, 12, headerFn);
+      doc.text(line, PDF.marginX, y);
+      y += 12;
+    }
+
+    resetColor(doc);
+  }
+
+  /** Horizontal rule between major sections, with breathing room on both sides. */
+  const sectionBreak = (at: number): number => {
+    const ruleY = ensurePageSpace(doc, at + 10, 24, headerFn);
+    divider(doc, ruleY, PDF.colors.dividerStrong, 0.5);
+    return ruleY + 16;
+  };
+
+  y = sectionBreak(y);
 
   if (data.participants?.length) {
     const templateIcon = activeTemplate ? TEMPLATE_ICONS[activeTemplate.id] : undefined;
@@ -124,22 +172,18 @@ export async function downloadPdf(data: ExportData): Promise<void> {
     y = renderMarkdown(doc, `*${role || "Not provided"}*`, y, headerFn);
   }
 
+  // The heading carries the question and the "Follow-up to:" line above carries the parent
+  // prompt, so neither is repeated here. Only the parent's answer still needs a section.
   if (data.followup) {
-    y = drawSectionLabel(doc, "Original Prompt", y + 8);
-    y = renderMarkdown(doc, data.followup.originalPrompt || prompt || "Not provided", y, headerFn);
-
-    y = drawSectionLabel(doc, "Previous Final Answer", y + 8);
+    y = drawSectionLabel(doc, "Previous Final Answer", y + 8) + 6;
     y = renderMarkdown(doc, data.followup.previousFinalAnswer || "Not provided", y, headerFn);
-  } else {
-    y = drawSectionLabel(doc, "Prompt", y + 8);
-    y = renderMarkdown(doc, prompt || "Not provided", y, headerFn);
   }
 
-  y = drawSectionLabel(doc, data.followup?.revisedAnswerLabel || "Answer", y + 8);
-  y = renderMarkdown(doc, `${answer || "Not provided"}`, y + 8, headerFn);
+  y = drawSectionLabel(doc, data.followup?.revisedAnswerLabel || "Answer", sectionBreak(y)) + 6;
+  y = renderMarkdown(doc, `${answer || "Not provided"}`, y, headerFn);
 
   if (data.debateRounds?.length) {
-    y = drawSectionLabel(doc, "Full Debate", y + 12);
+    y = drawSectionLabel(doc, "Full Debate", sectionBreak(y));
 
     for (const round of data.debateRounds) {
       y = drawRoundDivider(doc, round.round_num, data.roundCount, y + 8, headerFn);
@@ -357,13 +401,16 @@ function getPageCount(doc: jsPDF): number {
 }
 
 function safe(value: string): string {
-  return (
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .slice(0, 80) || "consensus_result"
-  );
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80);
+
+  // A fully non-Latin title (e.g. Hebrew) reduces to separators, which would produce a
+  // filename like "__2026-08-06.pdf". Fall back to a readable ASCII stem instead.
+  return /[a-z0-9]/.test(slug) ? slug : "teamstoa_export";
 }
 
 function clean(value: unknown, fallback = ""): string {

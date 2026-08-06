@@ -287,16 +287,25 @@ User-confirmed 2026-08-06, desktop and mobile — plus sidebar title capitalisat
 - [x] Compose chip no longer deletes on a filename click; saved-session PDF chip opens the file
       instead of a blank tab.
 
-Still open:
-
 - [x] Export a run whose parent had a PDF attachment: `Original Prompt` shows only the question, and
-      the PDF title has no file text in it (Task 9). User-confirmed 2026-08-06, both cases.
-- [ ] Share a non-follow-up run that had a file attachment: the extracted file text no longer
-      appears; the file name shows as an attachment chip. Deferred by user — to be checked with the
-      attachment work.
-- [ ] Social/OG preview for a shared link. Deferred by user — needs production.
-- [ ] Footer About / Privacy / Terms links resolve, and `Try for free` opens the register form.
-- [ ] Dark mode: question text uses `text-foreground`, so confirm light-on-dark rather than black.
+      the PDF title has no file text in it (Task 9).
+
+Verified in production after deploy:
+
+- [x] Shared non-follow-up run with a file attachment: extracted file text no longer appears; the
+      file shows as a downloadable chip under `Additional files`.
+- [x] Social/OG preview for a shared link renders the TeamStoa card correctly (per-question OG stays
+      v8.4 scope).
+- [x] Footer About / Privacy / Terms links resolve; `Try for free` opens the register form.
+- [x] Dark mode reads correctly. User note: the body grey could be lighter — cosmetic, not now.
+
+Two follow-ups raised by that pass, neither in this subphase:
+- The shared page offers the **source attachment itself** for download, because `attachment_files`
+  carries base64 data in the public payload. **Decision 2026-08-06: keep it downloadable** — a
+  shared run stays self-contained evidence. Noted here so the exposure is a recorded choice rather
+  than an accident.
+- PDF export mangles Hebrew and any non-Latin script. Pre-existing and unrelated to this subphase;
+  the app's own view renders it correctly. Planned as `PLAN_v8.2.3.md`.
 
 ---
 

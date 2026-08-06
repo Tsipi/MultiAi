@@ -13,6 +13,7 @@ deferred). Pre-marketing rebrand and SEO foundation were done in v6.2.
 | `PLAN_v8.2.md` | Build subphase — Landing page (incl. persona-to-template mapping) |
 | `PLAN_v8.2.1.md` | Unplanned bug fix — follow-up relevance check overwrote the final answer |
 | `PLAN_v8.2.2.md` | Unplanned bug fix — shared page, sidebar, attachment and export text leaks |
+| `PLAN_v8.2.3.md` | Bug fix — PDF export mangles Hebrew and other non-Latin scripts; PDF presentation pass |
 | `PLAN_v8.3.md` | Build subphase — Team role refinements |
 | `PLAN_v8.4.md` | Build subphase — Shared-run per-question OG (SSR) |
 
@@ -24,6 +25,7 @@ deferred). Pre-marketing rebrand and SEO foundation were done in v6.2.
 | **v8.2** | Landing page | **Done** | frontend | Persona cards reuse existing templates (no `TEAM_TEMPLATES` change); plus search/share metadata and Search Console verification |
 | **v8.2.1** | Follow-up relevance check overwrote the final answer | **Done** | backend | Unplanned bug fix. Task 4 (intent assessment reads the packet) deferred |
 | **v8.2.2** | Shared page, sidebar, attachment and export text leaks | **Done** | frontend | Unplanned bug fix. Task 3 (repair note in stored answers) deferred |
+| **v8.2.3** | PDF export mangles Hebrew / non-Latin scripts | **Done** | frontend (`services/pdf/`) | Embedded Unicode font + real bidi; grew into a PDF presentation pass. Adds one dep + a font package |
 | **v8.3** | Team role refinements | Planned | frontend (`templates.ts`) | Done after the landing page; user supplies refined role wording, Claude applies it |
 | **v8.4** | Shared-run per-question OG | Planned (higher effort) | backend + infra | Needs SSR/edge for `/shared/:slug`; do after the landing page |
 
