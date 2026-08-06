@@ -7,7 +7,7 @@ import { ClarificationBox } from "../session/ClarificationBox";
 import { downloadMarkdown, downloadPdf, exportDateLocal, type ExportDebateMessage } from "../../services/pdf/exporter";
 import { generateTitle } from "../../services/api";
 import { CollapsiblePanel } from "../primitives/CollapsiblePanel";
-import { promptTextForExport } from "@/lib/promptDisplay";
+import { promptTextForExport, stripAttachmentBlock } from "@/lib/promptDisplay";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -231,7 +231,9 @@ export function ChatPanel(props: Props) {
         : undefined;
       const followupExport = result.is_followup
         ? {
-            originalPrompt: result.source_prompt || result.root_question || result.base_question || result.question,
+            originalPrompt: stripAttachmentBlock(
+              result.source_prompt || result.root_question || result.base_question || result.question
+            ),
             previousFinalAnswer: result.source_final_answer || "",
             revisedAnswerLabel: "Revised Answer",
           }
@@ -264,10 +266,9 @@ export function ChatPanel(props: Props) {
 
   /** Up to 20 words of the original question — readable as a PDF document heading. */
   function pdfTitleFromResult(r: NonNullable<typeof result>): string {
-    const raw = (r.is_followup
-      ? r.followup_instruction || r.source_prompt || r.question
-      : r.question
-    )?.trim().replace(/\s+/g, " ") ?? "";
+    const raw = stripAttachmentBlock(
+      (r.is_followup ? r.followup_instruction || r.source_prompt || r.question : r.question) ?? ""
+    ).trim().replace(/\s+/g, " ");
     const words = raw.split(" ");
     return words.length <= 20 ? raw : words.slice(0, 20).join(" ") + "…";
   }

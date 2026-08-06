@@ -3,6 +3,7 @@ import { ChevronDown, Link2Off, Share2, Trash2, type LucideIcon } from "lucide-r
 import { ChatPanel } from "../debate/ChatPanel";
 import { ChatroomDebateView } from "../debate/ChatroomDebateView";
 import { cn } from "@/lib/utils";
+import { capitaliseFirst } from "@/lib/textCase";
 import { panelHeadingClass } from "@/lib/panelStyles";
 import { AnswerMode, ConsultResult, SessionPreview } from "../../types";
 import { type CastSelection } from "@/lib/consultHelpers";
@@ -184,10 +185,10 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
           >
             <AccordionItem
               session={thread.parent}
-              title={
+              title={capitaliseFirst(
                 sessionTitles[thread.parent.id] ||
-                (thread.parent.run_title || thread.parent.question || "Untitled run").slice(0, 70)
-              }
+                  (thread.parent.run_title || thread.parent.question || "Untitled run").slice(0, 70)
+              )}
               sessionNumber={sessionNumberMap[thread.parent.id] ?? 0}
               isExpanded={!compact && expandedId === thread.parent.id}
               isSelected={compact && selectedId === thread.parent.id}
@@ -209,9 +210,9 @@ export const AnswersPanel = forwardRef<HTMLElement, Props>(function AnswersPanel
               <AccordionItem
                 key={run.id}
                 session={run}
-                title={
+                title={capitaliseFirst(
                   sessionTitles[run.id] || (run.run_title || run.question || "Untitled run").slice(0, 70)
-                }
+                )}
                 sessionNumber={sessionNumberMap[run.id] ?? 0}
                 isExpanded={!compact && expandedId === run.id}
                 isSelected={compact && selectedId === run.id}

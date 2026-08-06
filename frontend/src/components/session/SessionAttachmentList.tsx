@@ -1,5 +1,6 @@
 import { FileText } from "lucide-react";
 import type { AttachmentFileRef } from "@/types";
+import { openAttachment } from "@/lib/openAttachment";
 import { Button } from "@/components/ui/button";
 
 type Props = { files: AttachmentFileRef[] };
@@ -18,7 +19,7 @@ export function SessionAttachmentList({ files }: Props) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => f.data && window.open(f.data, "_blank", "noopener,noreferrer")}
+              onClick={() => openAttachment(f)}
               disabled={!f.data}
               className="h-auto w-full justify-start gap-2 whitespace-normal rounded-lg border-violet-400/25 bg-violet-500/[0.07] px-2.5 py-1.5 text-left text-xs font-normal text-foreground hover:bg-violet-500/[0.12] disabled:cursor-default disabled:opacity-75"
               title={f.data ? `Open ${f.name}` : `${f.name} (no preview available)`}
