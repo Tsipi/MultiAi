@@ -56,6 +56,9 @@ class AppConfig:
     validator_question_chars: int = 700
     validator_answer_chars: int = 6000
     validator_min_overlap: float = 0.15
+    scorer_excerpt_chars: int = 600
+    intent_parent_anchor_chars: int = 300
+    search_parent_anchor_chars: int = 300
     summary_max_tokens: int = 200
     round_call_max_tokens: int = 800
     scorer_max_tokens: int = 100

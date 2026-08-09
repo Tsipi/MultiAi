@@ -4,6 +4,7 @@ import re
 
 from backend.config import AppConfig
 from backend.consensus.llm_clients import call_openrouter
+from backend.consensus.text_excerpt import excerpt
 
 VALIDATOR_PROMPT = """Score how relevant the answer is to the user request.
 
@@ -30,21 +31,12 @@ def _token_overlap(question: str, answer: str) -> float:
     return len(q.intersection(a)) / len(q)
 
 
-def _excerpt(text: str, limit: int) -> str:
-    """Shorten to limit while keeping both ends, so a trailing conclusion is never lost."""
-    if len(text) <= limit:
-        return text
-    head = limit // 2
-    tail = limit - head
-    return f"{text[:head]}\n[...]\n{text[-tail:]}"
-
-
 async def validate_relevance(question: str, answer: str, cfg: AppConfig) -> tuple[bool, float, str]:
     """Validate relevance with lexical + LLM scoring."""
     overlap = _token_overlap(question, answer)
     prompt = VALIDATOR_PROMPT.format(
         question=question[: cfg.validator_question_chars],
-        answer=_excerpt(answer, cfg.validator_answer_chars),
+        answer=excerpt(answer, cfg.validator_answer_chars),
     )
     response = await call_openrouter(prompt, cfg.validator_model, cfg, max_tokens=cfg.scorer_max_tokens)
     score_match = re.search(r"SCORE:\s*([0-9]+(?:\.[0-9]+)?)", response)

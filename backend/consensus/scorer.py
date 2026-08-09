@@ -6,6 +6,7 @@ import re
 
 from backend.config import AppConfig
 from backend.consensus.llm_clients import call_openrouter
+from backend.consensus.text_excerpt import excerpt
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,10 @@ def _parse_score(response: str) -> tuple[float, str]:
 
 async def score_consensus(answer_a: str, answer_b: str, cfg: AppConfig) -> tuple[float, str]:
     """Score alignment and return score plus reason."""
-    prompt = SCORER_PROMPT.format(answer_a=answer_a[:600], answer_b=answer_b[:600])
+    prompt = SCORER_PROMPT.format(
+        answer_a=excerpt(answer_a, cfg.scorer_excerpt_chars),
+        answer_b=excerpt(answer_b, cfg.scorer_excerpt_chars),
+    )
     response = await call_openrouter(prompt, cfg.scorer_model, cfg, max_tokens=cfg.scorer_max_tokens)
     return _parse_score(response)
 
@@ -74,6 +78,9 @@ async def score_consensus_multi(answers: list[str], cfg: AppConfig) -> tuple[flo
 
 async def score_relevance(question: str, answer: str, cfg: AppConfig) -> tuple[float, str]:
     """Score relevance against original user request."""
-    prompt = RELEVANCE_PROMPT.format(question=question[:600], answer=answer[:600])
+    prompt = RELEVANCE_PROMPT.format(
+        question=excerpt(question, cfg.scorer_excerpt_chars),
+        answer=excerpt(answer, cfg.scorer_excerpt_chars),
+    )
     response = await call_openrouter(prompt, cfg.scorer_model, cfg, max_tokens=cfg.scorer_max_tokens)
     return _parse_score(response)

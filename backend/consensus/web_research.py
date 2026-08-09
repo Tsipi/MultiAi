@@ -34,6 +34,28 @@ IMPERATIVE_SEARCH_RE = re.compile(
     r")",
     re.IGNORECASE,
 )
+_TARGET = r"(?:it|this|that|the\s+(?:answer|response|text|reply|output))"
+_SHAPE = (
+    r"(?:table|bullets?|bullet\s+points?|numbered\s+list|list|summary|tl;?dr|"
+    r"headings?|sections?|paragraphs?)"
+)
+# Matched against the WHOLE instruction: a request that only reshapes an existing answer has
+# nothing to research. Anything with trailing topic words ("add a table of 2026 prices") falls
+# through and still searches.
+META_INSTRUCTION_RE = re.compile(
+    r"^\s*(?:(?:please|can\s+you|could\s+you|just|now|also)\s+)*(?:"
+    rf"(?:make|keep|render)\s+{_TARGET}\s+"
+    r"(?:(?:much|way|far|more|less|even|slightly|a\s+bit|a\s+little)\s+)*"
+    r"(?:short(?:er)?|long(?:er)?|brief(?:er)?|concise|tight(?:er)?|simpler|clearer|denser)|"
+    r"(?:shorten|condense|compress|trim|tighten|expand|lengthen|rephrase|reword|reformat|"
+    rf"restructure|summari[sz]e|simplify|polish)(?:\s+{_TARGET})?|"
+    r"(?:add|include|use|put\s+it\s+in|convert\s+to|turn\s+into|present\s+as|format\s+as|"
+    rf"show\s+as|rewrite\s+as|make\s+it)\s+(?:an?\s+|the\s+)?{_SHAPE}|"
+    rf"(?:in|as)\s+(?:an?\s+)?{_SHAPE}|"
+    rf"{_SHAPE}"
+    r")[\s.!,]*$",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -48,10 +70,17 @@ class WebResearchResult:
     warning: str = ""
 
 
+def is_meta_instruction(question: str) -> bool:
+    """Return whether a request only reshapes an existing answer, leaving nothing to research."""
+    return bool(META_INSTRUCTION_RE.match(question or ""))
+
+
 def should_search(question: str, mode: str) -> bool:
     """Return whether a request should receive live web research."""
     normalized_mode = mode.strip().lower()
     if normalized_mode == "off":
+        return False
+    if is_meta_instruction(question):
         return False
     if normalized_mode == "on":
         return True
@@ -133,8 +162,8 @@ async def research_web(
             summary=summary,
             warning="" if sources else "Live search completed, but no source citations were returned.",
         )
-    except Exception as exc:  # noqa: BLE001
-        raise LLMCallError(f"Live web research failed: {exc}") from exc
+    except Exception as exc: 
+        raise LLMCallError(f"Live web research f # noqa: BLE001ailed: {exc}") from exc
 
 
 def build_research_context(result: WebResearchResult) -> str:

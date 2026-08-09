@@ -5,8 +5,8 @@ follow-up chain. Index: `PLAN_v8.0.md`.
 
 **Scope:** Backend only. No prompt-template edits (`prompts.py` stays locked). No frontend change.
 
-**Status:** Done (Tasks 1-3, 5, 6). Task 4 — intent assessment still reads the packet — was
-deliberately deferred by the user and is carried forward as separate scope, not unfinished work.
+**Status:** Done. Tasks 1-3, 5, 6 shipped here. Task 4 — intent assessment still reads the packet —
+was deliberately deferred by the user and shipped later in `PLAN_v8.2.4.md`.
 
 **Verified:** `pytest tests/` — 64 passed, 1 pre-existing unrelated failure
 (`test_session_store.py::test_load_legacy_session_without_list_fields`, a legacy `model_writer`
@@ -198,13 +198,16 @@ final-synthesis path — a follow-up repair needs parent context. What changed i
 it now says `Rewrite it to answer exactly: <follow-up instruction>` instead of pointing at the whole
 packet. The parent answer is context to revise, no longer the thing being asked for.
 
-### Task 4 — Stop feeding the packet to intent assessment — Not done (deferred by user)
-- [ ] For follow-ups, call `assess_intent` with the instruction plus a short parent anchor
-      (`source_prompt` truncated to ~300 chars), not the full packet.
-- [ ] Anchor is required: a bare short instruction ("make it shorter", "add a table") looks ambiguous
+### Task 4 — Stop feeding the packet to intent assessment — Done in v8.2.4
+Deferred by the user when this subphase shipped; completed 2026-08-09 in `PLAN_v8.2.4.md`, which
+carries the full write-up.
+
+- [x] For follow-ups, `assess_intent` receives the instruction plus a short parent anchor
+      (`source_prompt` truncated to `intent_parent_anchor_chars` = 300), not the full packet.
+      Built by `_build_intent_subject` in `engine.py`; the post-repair retry reuses the same string.
+- [x] Anchor is required: a bare short instruction ("make it shorter", "add a table") looks ambiguous
       in isolation and would trigger spurious clarification prompts. This changes clarification
-      behavior, so it needs its own verification pass.
-- [ ] Separable — can be deferred to a follow-on if we want Tasks 1-3 shipped first.
+      behavior, so it needs its own verification pass — see the Verify list in `PLAN_v8.2.4.md`.
 
 ### Task 5 — Validator truncation and scoring calibration — Done
 Started as a magic-number cleanup. Live diagnosis on 2026-08-06 showed the `900` was not cosmetic —
@@ -312,8 +315,8 @@ Suite result: 59 passed, 1 failed. The failure is
 - [ ] Confirm no `Note: Relevance remained imperfect after repair.` is appended.
 - [ ] Non-follow-up regression: run a plain question, and a question with a file attachment, and
       confirm both still validate and read normally (Task 2's flagged change).
-- [ ] If Task 4 ships: confirm a short follow-up instruction ("make it shorter") does not trigger a
-      spurious clarification.
+- [ ] Task 4 shipped in v8.2.4: confirm a short follow-up instruction ("make it shorter") does not
+      trigger a spurious clarification.
 
 ---
 

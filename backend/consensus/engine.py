@@ -132,7 +132,15 @@ class ConsensusEngine:
             session.clarification_response = clarification
         usage_token = start_usage_collection()
         phase_started = perf_counter()
-        assessment = await assess_intent(question_with_context, domain, clarification, self.cfg)
+        intent_subject = _build_intent_subject(
+            is_followup=is_followup,
+            followup_instruction=followup_instruction,
+            source_prompt=source_prompt,
+            root_question=root_question,
+            question_with_context=question_with_context,
+            anchor_chars=self.cfg.intent_parent_anchor_chars,
+        )
+        assessment = await assess_intent(intent_subject, domain, clarification, self.cfg)
         record_phase(
             "intent_assessment",
             phase_started,
@@ -149,6 +157,14 @@ class ConsensusEngine:
             finalize_timings(session)
             return session
         search_subject = followup_instruction or question
+        search_query = _build_search_query(
+            is_followup=is_followup,
+            followup_instruction=followup_instruction,
+            source_prompt=source_prompt,
+            root_question=root_question,
+            question=question,
+            anchor_chars=self.cfg.search_parent_anchor_chars,
+        )
         phase_started = perf_counter()
         if should_search(search_subject, web_search_mode):
             await report("Searching the live web for current sources.")
@@ -158,7 +174,7 @@ class ConsensusEngine:
                     if answer_mode == "fast"
                     else self.cfg.web_search_timeout_seconds
                 )
-                research = await research_web(search_subject, self.cfg, timeout_seconds=search_timeout)
+                research = await research_web(search_query, self.cfg, timeout_seconds=search_timeout)
                 session.web_search_performed = research.performed
                 session.web_search_query = research.query
                 session.web_search_retrieved_at = research.retrieved_at
@@ -265,7 +281,7 @@ class ConsensusEngine:
                 is_ok, _, _ = await validate_relevance(user_request, session.final_answer, self.cfg)
                 record_phase("repair", phase_started, status="passed" if is_ok else "failed")
                 if not is_ok:
-                    retry = await assess_intent(question_with_context, domain, clarification, self.cfg)
+                    retry = await assess_intent(intent_subject, domain, clarification, self.cfg)
                     options = retry.clarification_options or []
                     if retry.is_ambiguous and retry.clarification_question and options:
                         session.needs_clarification = True
@@ -311,6 +327,46 @@ def _build_user_request(
     if clarification:
         return f"{base}\n\nClarification: {clarification[:500]}"
     return base
+
+
+def _build_search_query(
+    *,
+    is_followup: bool,
+    followup_instruction: str,
+    source_prompt: str,
+    root_question: str,
+    question: str,
+    anchor_chars: int,
+) -> str:
+    """Return the retrieval query: a follow-up instruction carries no topic without its parent."""
+    if not (is_followup and followup_instruction.strip()):
+        return question
+    anchor = (source_prompt or root_question).strip()[:anchor_chars]
+    if not anchor:
+        return followup_instruction
+    return f"{followup_instruction} (follow-up to an earlier request about: {anchor})"
+
+
+def _build_intent_subject(
+    *,
+    is_followup: bool,
+    followup_instruction: str,
+    source_prompt: str,
+    root_question: str,
+    question_with_context: str,
+    anchor_chars: int,
+) -> str:
+    """Return what intent assessment should judge: the follow-up instruction, anchored by its parent."""
+    if not (is_followup and followup_instruction.strip()):
+        return question_with_context
+    anchor = (source_prompt or root_question).strip()[:anchor_chars]
+    if not anchor:
+        return followup_instruction
+    return (
+        f"Follow-up instruction: {followup_instruction}\n\n"
+        f"It continues this earlier request: {anchor}\n"
+        "Judge only whether the follow-up instruction is clear enough to act on."
+    )
 
 
 def _build_followup_synthesis_context(
