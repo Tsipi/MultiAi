@@ -3,7 +3,7 @@
 import asyncio
 
 from backend.config import AppConfig
-from backend.consensus.validator import _excerpt, validate_relevance
+from backend.consensus.validator import validate_relevance
 
 
 def test_validator_passes_with_high_mock_score(monkeypatch):
@@ -79,19 +79,3 @@ def test_validator_sees_the_end_of_a_structured_answer(monkeypatch):
     assert captured
     assert "DEADBEEF" in captured[0]
     assert "The Bottom Line" in captured[0]
-
-
-def test_excerpt_keeps_both_ends_when_shortening():
-    """Over-long answers keep head and tail rather than truncating the conclusion away."""
-    text = "START" + ("x" * 500) + "END"
-    out = _excerpt(text, 100)
-
-    assert out.startswith("START")
-    assert out.endswith("END")
-    assert "[...]" in out
-    assert len(out) < len(text)
-
-
-def test_excerpt_returns_short_text_unchanged():
-    """Answers within the limit are passed through verbatim."""
-    assert _excerpt("short answer", 6000) == "short answer"

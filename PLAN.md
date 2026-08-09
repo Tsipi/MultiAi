@@ -5,7 +5,8 @@ v6.4 - Markdown Table Rendering, and v7.0 - Cleanup & Follow-up Flow Fixes (7.0.
 merged to `main` and deployed.
 **In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0` branch), split into per-subphase docs
 (`PLAN_v8.1`..`PLAN_v8.4`) + a strategy-reference doc (`docs/local_only/PLAN_v8.0_marketing_suggestions.md`);
-`PLAN_v8.0.md` is the index. v8.1 (free-tier quota counter) Done; v8.2 (landing page) Done; v8.3 (team role refinements) next.
+`PLAN_v8.0.md` is the index. v8.1 (free-tier quota counter) Done; v8.2 (landing page) Done;
+v8.2.1-v8.2.5 (bug-fix subphases) Done; v8.3 (team role refinements) next.
 Launching free (billing deferred; analytics deferred).
 
 **Status governance:** Per-version detail tables are authoritative for phase-level status. When a phase's status changes, update its detail table row and the matching Active roadmap summary row in the same edit.
@@ -32,7 +33,7 @@ Launching free (billing deferred; analytics deferred).
 | v6.4 | Markdown Table Rendering (App + PDF Export) | Render GFM-style markdown tables in the live app and PDF export; also fixes live-feed table garbling and mobile table horizontal-scroll | Done |
 | v7.0 | Cleanup & Follow-up Flow Fixes | Fix follow-up flow (redundant button, post-submit screen, live follow-up Question card, clarification subtitle, Continue reverting to home, multi-level lineage, team-picker lock) and Scorer badge color confusion | Done (7.0.1-7.0.10) |
 | v_SEO | Next.js + SEO | Template pages, public/shared SSR/SSG, metadata, sitemap, SEO architecture | Planned |
-| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Free-tier quota (v8.1), landing page (v8.2), follow-up relevance bug fix (v8.2.1), shared-page/attachment/export text-leak fixes (v8.2.2), Hebrew PDF export + presentation pass (v8.2.3), team role refinements (v8.3), shared-run OG (v8.4); analytics + billing deferred | In Progress (v8.1, v8.2, v8.2.1, v8.2.2, v8.2.3 Done; v8.3 next) |
+| v8.0 | Marketing & Launch (TeamStoa Brand, Launch, Growth) | Free-tier quota (v8.1), landing page (v8.2), follow-up relevance bug fix (v8.2.1), shared-page/attachment/export text-leak fixes (v8.2.2), Hebrew PDF export + presentation pass (v8.2.3), scorer/intent truncation fixes (v8.2.4), follow-up web-research query fix (v8.2.5), team role refinements (v8.3), shared-run OG (v8.4); analytics + billing deferred | In Progress (v8.1, v8.2, v8.2.1, v8.2.2, v8.2.3, v8.2.4, v8.2.5 Done; v8.3 next) |
 
 ---
 
@@ -239,9 +240,11 @@ Index: `docs/plan_archive/PLAN_v8.0.md`. Strategy reference:
 |----------|------|-----|--------|
 | v8.1 | Free-tier quota counter live + correct (3 bugs: no live update, month rollover, clarification double-count) | `PLAN_v8.1.md` | Done |
 | v8.2 | Landing page — persona-driven marketing surface at `/`, honest copy, reuses existing templates; plus search/share metadata (title, `<meta description>`, OG/Twitter copy, 1200×630 share image) and Google Search Console ownership verification (HTML meta-tag) | `PLAN_v8.2.md` | Done |
-| v8.2.1 | Follow-up relevance check overwrote the final answer with the parent answer — validation and repair now target the follow-up instruction instead of the packet; repair reuses `FINAL_SYNTHESIS`; validator now reads the whole answer and the 7.0 threshold means what it says | `PLAN_v8.2.1.md` | Done (Task 4 deferred) |
+| v8.2.1 | Follow-up relevance check overwrote the final answer with the parent answer — validation and repair now target the follow-up instruction instead of the packet; repair reuses `FINAL_SYNTHESIS`; validator now reads the whole answer and the 7.0 threshold means what it says | `PLAN_v8.2.1.md` | Done (Task 4 shipped in v8.2.4) |
 | v8.2.2 | Text-leak fixes across public and export surfaces — shared-run page showed the raw follow-up packet, sidebar titles were lowercase, attachment chips deleted on click and opened blank tabs, PDF/Markdown export dumped extracted attachment text; plus shared-page presentation and footer | `PLAN_v8.2.2.md` | Done (Task 3 deferred) |
 | v8.2.3 | PDF export mangles Hebrew and other non-Latin scripts — embedded Noto Sans Hebrew chosen per document, one bidi pass with jsPDF's own engine disabled, RTL alignment, ASCII filename fallback; plus a PDF presentation pass (brand lockup header, export timestamp, section rules) and a pre-existing page-break font bug | `PLAN_v8.2.3.md` | Done |
+| v8.2.4 | Truncation hid the decisive text in two more places — the scorer graded 600-char preambles instead of conclusions (now head+tail via a shared `excerpt()`), and follow-up intent assessment read the packet instead of the instruction (v8.2.1 Task 4, previously deferred) | `PLAN_v8.2.4.md` | Done |
+| v8.2.5 | Follow-up web research searched for the instruction text — "make it shorter" under Sources=Always returned text-summarizer tools as sources; reformatting instructions now skip research in every mode, and a follow-up's retrieval query carries the parent topic | `PLAN_v8.2.5.md` | Done |
 | v8.3 | Team role refinements (user supplies wording; sharpen `role` text in `templates.ts`) | `PLAN_v8.3.md` | Planned |
 | v8.4 | Shared-run per-question OG (interim SSR/edge for `/shared/:slug`) | `PLAN_v8.4.md` | Planned (higher effort) |
 

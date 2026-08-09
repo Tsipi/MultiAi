@@ -505,6 +505,207 @@ def test_plain_run_validates_against_base_question(monkeypatch, tmp_path: Path):
     assert validated_questions == ["How should I decide between two job offers?"]
 
 
+def test_followup_intent_reads_instruction_with_a_short_parent_anchor(monkeypatch, tmp_path: Path):
+    """Intent must judge the follow-up instruction, anchored by the parent prompt, not the packet."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    assessed: list[str] = []
+
+    async def fake_assess(question, *_args, **_kwargs):
+        assessed.append(question)
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "etf draft", "etf critique", 8.0, "ok", "summary"))
+        return "etf draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "etf final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    asyncio.run(
+        engine.consult(
+            question=FOLLOWUP_PACKET,
+            domain="investment analyst",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="Compare the top 10 US stocks 2026 vs 2016",
+            source_final_answer=PARENT_ANSWER,
+            followup_instruction=FOLLOWUP_INSTRUCTION,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert assessed
+    subject = assessed[0]
+    assert FOLLOWUP_INSTRUCTION in subject
+    assert "Compare the top 10 US stocks 2026 vs 2016" in subject
+    assert "ExxonMobil" not in subject
+    assert len(subject) < len(FOLLOWUP_PACKET)
+
+
+def test_plain_run_intent_still_reads_the_full_question_context(monkeypatch, tmp_path: Path):
+    """Non-follow-up intent assessment is unchanged — it keeps the question plus attachment context."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    assessed: list[str] = []
+
+    async def fake_assess(question, *_args, **_kwargs):
+        assessed.append(question)
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    asyncio.run(
+        engine.consult(
+            question="How should I decide between two job offers?",
+            domain="",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert assessed == ["How should I decide between two job offers?"]
+
+
+def test_followup_search_query_carries_the_parent_topic(monkeypatch, tmp_path: Path):
+    """A follow-up instruction has no topic on its own — the retrieval query must carry the parent."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    queries: list[str] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    async def fake_research(query, *_args, **_kwargs):
+        queries.append(query)
+        from backend.consensus.web_research import WebResearchResult
+
+        return WebResearchResult(performed=True, query=query, retrieved_at="now")
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+    monkeypatch.setattr("backend.consensus.engine.research_web", fake_research)
+
+    asyncio.run(
+        engine.consult(
+            question=FOLLOWUP_PACKET,
+            domain="investment analyst",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="Compare the top 10 US stocks 2026 vs 2016",
+            source_final_answer=PARENT_ANSWER,
+            followup_instruction=FOLLOWUP_INSTRUCTION,
+            web_search_mode="on",
+            answer_mode="balanced",
+        )
+    )
+
+    assert queries, "search should still run for a topical follow-up under mode=on"
+    assert FOLLOWUP_INSTRUCTION in queries[0]
+    assert "Compare the top 10 US stocks 2026 vs 2016" in queries[0]
+    assert "ExxonMobil" not in queries[0]
+
+
+def test_reformatting_followup_skips_search_entirely(monkeypatch, tmp_path: Path):
+    """'make it shorter' under mode=on must not burn a web-plugin call on a topicless query."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    queries: list[str] = []
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    async def fake_research(query, *_args, **_kwargs):
+        queries.append(query)
+        raise AssertionError("research_web must not be called for a reformatting instruction")
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+    monkeypatch.setattr("backend.consensus.engine.research_web", fake_research)
+
+    session = asyncio.run(
+        engine.consult(
+            question="Original prompt:\nHow should I market my app?\n\nFollow-up instruction:\nmake it shorter",
+            domain="marketing",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="How should I market my app?",
+            source_final_answer="A long marketing plan.",
+            followup_instruction="make it shorter",
+            web_search_mode="on",
+            answer_mode="balanced",
+        )
+    )
+
+    assert queries == []
+    assert session.web_search_performed is False
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert phases["web_research"]["status"] == "skipped"
+
+
 def test_user_facing_llm_error_for_openrouter_credit_limit():
     """OpenRouter 402 token/credit errors should be actionable and concise."""
     raw = (
