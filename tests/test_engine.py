@@ -706,6 +706,153 @@ def test_reformatting_followup_skips_search_entirely(monkeypatch, tmp_path: Path
     assert phases["web_research"]["status"] == "skipped"
 
 
+def test_reformatting_followup_skips_the_clarification_check(monkeypatch, tmp_path: Path):
+    """'make it shorter' has nothing to clarify — the intent model should not be asked at all."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    assess_calls: list[str] = []
+
+    async def fake_assess(question, *_args, **_kwargs):
+        assess_calls.append(question)
+        raise AssertionError("assess_intent must not run for a reformatting follow-up")
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "shorter answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    session = asyncio.run(
+        engine.consult(
+            question="Original prompt:\nHow should I market my app?\n\nFollow-up instruction:\nmake it shorter",
+            domain="marketing",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="How should I market my app?",
+            source_final_answer="A long marketing plan.",
+            followup_instruction="make it shorter",
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert assess_calls == []
+    assert session.needs_clarification is False
+    assert session.intent_scope == "make it shorter"
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert phases["intent_assessment"]["status"] == "reshape_only"
+
+
+def test_topical_followup_still_gets_the_clarification_check(monkeypatch, tmp_path: Path):
+    """The skip is narrow: a follow-up carrying a topic must still be assessed."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    assess_calls: list[str] = []
+
+    async def fake_assess(question, *_args, **_kwargs):
+        assess_calls.append(question)
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        return True, 9.0, "ok"
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    session = asyncio.run(
+        engine.consult(
+            question=FOLLOWUP_PACKET,
+            domain="investment analyst",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            is_followup=True,
+            source_prompt="Compare the top 10 US stocks 2026 vs 2016",
+            source_final_answer=PARENT_ANSWER,
+            followup_instruction=FOLLOWUP_INSTRUCTION,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    assert len(assess_calls) == 1
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert phases["intent_assessment"]["status"] == "clear"
+
+
+def test_relevance_failure_records_the_validator_reason(monkeypatch, tmp_path: Path):
+    """The validator explains itself in one sentence — that sentence must survive onto the session."""
+    cfg = AppConfig(sessions_dir=tmp_path)
+    engine = ConsensusEngine(cfg)
+    validate_calls = 0
+
+    async def fake_assess(*_args, **_kwargs):
+        return _clear_assessment()
+
+    async def fake_run_rounds(*_args, **_kwargs):
+        session = _args[0]
+        session.rounds.append(DebateRound(1, "draft", "critique", 8.0, "ok", "summary"))
+        return "draft", "rolling"
+
+    async def fake_call(*_args, **_kwargs):
+        return "final answer"
+
+    async def fake_validate(*_args, **_kwargs):
+        nonlocal validate_calls
+        validate_calls += 1
+        if validate_calls == 1:
+            return False, 4.5, "Answer never states a recommendation."
+        return True, 8.0, "Now answers the request."
+
+    monkeypatch.setattr("backend.consensus.engine.assess_intent", fake_assess)
+    monkeypatch.setattr("backend.consensus.engine.run_rounds", fake_run_rounds)
+    monkeypatch.setattr("backend.consensus.engine.call_openrouter", fake_call)
+    monkeypatch.setattr("backend.consensus.engine.validate_relevance", fake_validate)
+
+    session = asyncio.run(
+        engine.consult(
+            question="Which database should I pick?",
+            domain="",
+            writers=["writer"],
+            critics=["critic"],
+            max_rounds=1,
+            threshold=8,
+            web_search_mode="off",
+            answer_mode="balanced",
+        )
+    )
+
+    phases = {row["phase"]: row for row in session.phase_timings}
+    assert phases["relevance_validation"]["relevance_reason"] == "Answer never states a recommendation."
+    assert phases["relevance_validation"]["relevance_score"] == 4.5
+    assert phases["repair"]["relevance_reason"] == "Now answers the request."
+    assert phases["repair"]["relevance_score"] == 8.0
+
+
 def test_user_facing_llm_error_for_openrouter_credit_limit():
     """OpenRouter 402 token/credit errors should be actionable and concise."""
     raw = (

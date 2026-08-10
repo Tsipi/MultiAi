@@ -12,11 +12,16 @@ from backend.consensus.attachments import AttachmentIn, build_attachment_context
 from backend.consensus.debate_runner import run_rounds
 from backend.consensus.llm_clients import LLMCallError, call_openrouter
 from backend.consensus.models import DebateSession
-from backend.consensus.intent import assess_intent
+from backend.consensus.intent import IntentAssessment, assess_intent
 from backend.consensus.prompts import FINAL_SYNTHESIS
 from backend.consensus.usage_tracker import start_usage_collection, stop_usage_collection
 from backend.consensus.validator import _token_overlap, validate_relevance
-from backend.consensus.web_research import build_research_context, research_web, should_search
+from backend.consensus.web_research import (
+    build_research_context,
+    is_meta_instruction,
+    research_web,
+    should_search,
+)
 
 log = logging.getLogger(__name__)
 
@@ -140,11 +145,26 @@ class ConsensusEngine:
             question_with_context=question_with_context,
             anchor_chars=self.cfg.intent_parent_anchor_chars,
         )
-        assessment = await assess_intent(intent_subject, domain, clarification, self.cfg)
+        reshape_only = is_followup and is_meta_instruction(followup_instruction)
+        if reshape_only:
+            assessment = IntentAssessment(
+                False,
+                "Reformatting instruction needs no clarification.",
+                _build_user_request(
+                    is_followup=is_followup,
+                    followup_instruction=followup_instruction,
+                    question=question,
+                    clarification=clarification,
+                ),
+                "",
+                [],
+            )
+        else:
+            assessment = await assess_intent(intent_subject, domain, clarification, self.cfg)
         record_phase(
             "intent_assessment",
             phase_started,
-            status="needs_clarification" if assessment.is_ambiguous else "clear",
+            status="reshape_only" if reshape_only else ("needs_clarification" if assessment.is_ambiguous else "clear"),
         )
         session.intent_scope = assessment.intent_scope
         if assessment.is_ambiguous:
@@ -264,6 +284,7 @@ class ConsensusEngine:
                     phase_started,
                     status="passed" if is_ok else "failed",
                     relevance_score=rel_score,
+                    relevance_reason=rel_reason,
                 )
             if not is_ok:
                 await report("Quality check: adding one final pass to better match your request.")
@@ -278,9 +299,17 @@ class ConsensusEngine:
                 session.final_answer = await call_openrouter(
                     refined, writers[0], self.cfg, max_tokens=self.cfg.round_call_max_tokens
                 )
-                is_ok, _, _ = await validate_relevance(user_request, session.final_answer, self.cfg)
-                record_phase("repair", phase_started, status="passed" if is_ok else "failed")
-                if not is_ok:
+                is_ok, repair_score, repair_reason = await validate_relevance(
+                    user_request, session.final_answer, self.cfg
+                )
+                record_phase(
+                    "repair",
+                    phase_started,
+                    status="passed" if is_ok else "failed",
+                    relevance_score=repair_score,
+                    relevance_reason=repair_reason,
+                )
+                if not is_ok and not reshape_only:
                     retry = await assess_intent(intent_subject, domain, clarification, self.cfg)
                     options = retry.clarification_options or []
                     if retry.is_ambiguous and retry.clarification_question and options:

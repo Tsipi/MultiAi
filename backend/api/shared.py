@@ -9,6 +9,19 @@ from backend.storage.db_session_store import load_shared_session
 
 router = APIRouter(prefix="/api/shared", tags=["shared"])
 
+INTERNAL_PHASE_KEYS = ("relevance_reason",)
+
+
+def _strip_internal_diagnostics(payload: dict) -> dict:
+    """Drop internal quality notes from the public payload; the shared page never renders them."""
+    rows = payload.get("phase_timings")
+    if isinstance(rows, list):
+        payload["phase_timings"] = [
+            {k: v for k, v in row.items() if k not in INTERNAL_PHASE_KEYS} if isinstance(row, dict) else row
+            for row in rows
+        ]
+    return payload
+
 
 @router.get("/{slug}")
 async def shared_get(
@@ -19,7 +32,7 @@ async def shared_get(
     session = await load_shared_session(slug, db)
     if session is None:
         return JSONResponse({"error": "not_found"}, status_code=404)
-    payload = session.to_dict()
+    payload = _strip_internal_diagnostics(session.to_dict())
     payload["visibility"] = "public"
     payload["public_slug"] = slug
     return JSONResponse(payload)
