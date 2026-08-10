@@ -7,7 +7,9 @@ verification pass across v8.1-v8.2.5. Index: `PLAN_v8.0.md`.
 
 **Verified:** `uv run pytest tests/` — 96 passed, 1 pre-existing unrelated failure
 (`test_session_store.py::test_load_legacy_session_without_list_fields`, a legacy `model_writer`
-attribute; that test does not import the engine). Production re-test of checks 2.3/2.4 outstanding.
+attribute; that test does not import the engine). Production re-tested 2026-08-10 — see Verify below.
+That pass also surfaced a new structural issue in relevance validation for reshape-only follow-ups,
+recorded under "Found during production re-test", not yet fixed.
 
 ---
 
@@ -109,16 +111,22 @@ public URL, about the user's own run, with no UI benefit — the same class of l
 ## Verify
 
 - [x] `uv run pytest tests/` — 96 passed, 1 pre-existing unrelated failure.
-- [ ] Re-run verification check **2.3**: marketing question, then "make it shorter". No clarification
-      prompt should appear, and Session Insights should show
-      `Intent Assessment → reshape_only`.
-- [ ] Re-run check **2.4**: the same B2 answer should now be a genuine condensation of B1. If it is
-      still not, 2.4 is a separate defect in follow-up synthesis and needs its own investigation.
-- [ ] Re-run check **3.2** (the control): "optimize it" on the Postgres/MySQL parent must **still**
-      raise a clarification. This is the regression guard for Task 1.
-- [ ] Collect reasons for **1.4**: run a handful of ordinary questions and read
-      `relevance_reason` from Session Insights or the query below. The distribution decides what, if
-      anything, to do about `min_relevance_score`.
+- [x] **2.1 / 2.2 / 2.3 — confirmed in production**, 2026-08-10. Chain: `20260810_135046`
+      ("scrape jobs from Comeet...") → `20260810_135837` ("make it shorter"). The follow-up recorded
+      `Intent Assessment → reshape_only`, `Web Research → skipped`, and raised no clarification prompt.
+- [x] **2.4 — confirmed fixed.** The "make it shorter" answer was a genuine, on-topic condensation of
+      the parent (same tools — Puppeteer/BeautifulSoup — tighter and more specific: it named SerpApi
+      and the Google Maps Places API where the parent was vaguer). Previously this was not a real
+      condensation; it now is.
+- [x] **3.2-equivalent — confirmed.** A third run in the same thread, `20260810_140116` ("what are the
+      risks of Direct scraping of Google as you mentioned on last answer"), carries real topical
+      content and correctly did **not** get the reshape skip — normal intent assessment ran and raised
+      a legitimate clarification ("Which type of risks should the analysis focus on?"). The guard
+      stayed narrow.
+- [ ] Collect reasons for **1.4** — partially informative from the same pass: the two non-reshape
+      validations both passed cleanly (`20260810_135046` in 5.3s, `20260810_140116` in 2.9s). No
+      non-reshape failure has been observed yet to read a reason from. See the finding below before
+      running the query — reshape-only rows will need excluding or they dominate the distribution.
 - [ ] Confirm a shared run's public JSON has no `relevance_reason`.
 
 ```sql
@@ -134,6 +142,59 @@ where p->>'phase' in ('relevance_validation','repair')
 order by r.created_at desc
 limit 20;
 ```
+
+---
+
+## Found during production re-test — not fixed
+
+### Relevance validation is structurally guaranteed to fail for reshape-only follow-ups
+
+On `20260810_135837` ("make it shorter"), both `Relevance Validation` and `Repair` read `failed` —
+silently, because Task 1's `not reshape_only` gate suppresses the note/clarification that would
+otherwise follow. The answer itself was fine (see 2.4 above); the validation machinery is what's
+wrong.
+
+**Root cause.** `validate_relevance`'s lexical floor-guard runs before the LLM score is even
+consulted:
+
+```python
+q = set(re.findall(r"[a-zA-Z]{3,}", question.lower()))
+```
+
+For a reshape-only follow-up, `question` is `_build_user_request()`, which returns the bare
+instruction — here, literally `"make it shorter"`. Tokenized: `{"make", "shorter"}`. Compared against
+an answer about Puppeteer and the Google Maps API, overlap is `0/2 = 0.0`, below
+`validator_min_overlap` (0.15). `OFF_TOPIC_REASON` fires automatically, every time, regardless of
+whether the answer is good — because reshape instructions ("make it shorter", "add a table",
+"condense", "tl;dr") share essentially no vocabulary with any answer on any topic.
+
+**Consequences.**
+- Currently masked rather than harmful: Task 1's gate happens to swallow this guaranteed failure, so
+  the user sees a clean answer with no disclaimer. That was a side effect of fixing the clarification
+  bug, not a designed outcome.
+- Real risk: if a repair on a reshape-only follow-up ever does drift or degrade, the user now gets
+  **no signal at all** — no note, no clarification. Before v8.2.6 they'd at least see "relevance
+  remained imperfect after repair."
+- Data risk: every reshape-only follow-up will permanently read `OFF_TOPIC_REASON` in
+  `relevance_reason`, for a reason unrelated to quality. The 1.4 SQL query above will need these rows
+  filtered out, or the distribution used to judge `min_relevance_score` is meaningless.
+
+**Likely fix, not applied:** validate a reshape-only answer against the parent topic (`source_prompt`
+or `root_question`), not the bare instruction — the same anchoring pattern already used in
+`_build_search_query` and `_build_intent_subject`. Deliberately not implemented here: this sits
+squarely inside the debate/validation redesign the user is weighing, and the timing is their call.
+
+### Two lower-severity observations, same pass
+
+- **Off-topic search results on a new (non-follow-up) question.** `20260810_135046` asked about
+  scraping job listings from Comeet; the returned sources were about prompt injection in AI agents,
+  not scraping tools — likely Exa matching "skills/plugins" against AI-agent content. Pre-existing
+  web-research relevance behavior, not touched by v8.2.4/v8.2.5/v8.2.6.
+- **Search-query anchor labeling in 3-level-deep chains.** `20260810_140116`'s anchor read
+  `(follow-up to an earlier request about: make it shorter)` — `_build_search_query` anchors to the
+  *immediate* parent's own instruction, not the deeper original topic. Didn't affect results here
+  because the third instruction carried its own topic, but a bare "what about that?" at the third
+  level could get a genuinely unhelpful anchor.
 
 ---
 
