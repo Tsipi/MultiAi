@@ -106,8 +106,9 @@ Bug-fix session: mobile follow-up flow, Full Debate transcript view, saved-sessi
 
 **Status:** Done — 6.3.1, 6.3.2, and 6.3.3 all Done.
 
-**In production:** v6.2, v6.3, v6.4, and v7.0 (7.0.1-7.0.10) — merged to `main` and deployed.  
-**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). v8.1 (free-tier quota counter), v8.2 (landing page), v8.2.1 (follow-up relevance bug fix), v8.2.2 (text-leak fixes), v8.2.3 (Hebrew PDF export + presentation pass) v8.2.4 (scorer + intent truncation fixes) and v8.2.5 (follow-up web-research query fix) Done; v8.3 (team role refinements) next; billing deferred (launching free).
+**In production:** v6.2, v6.3, v6.4, and v7.0 (7.0.1-7.0.10) — merged to `main` and deployed.
+**In development:** v8.0 - Marketing & Launch (on `PLAN_v8.0`). v8.1-v8.2.6 Done; v8.3 (team role
+refinements) next; billing deferred (launching free). Subphase detail: `docs/plan_archive/PLAN_v8.0.md`.
 
 Full spec: `docs/plan_archive/PLAN_v6.3.md`
 
@@ -121,7 +122,11 @@ Full spec: `docs/plan_archive/PLAN_v7.0.md`
 ### v8.0 - Marketing & Launch (TeamStoa Brand, Launch, Growth)
 Persona-driven landing/marketing site, analytics, template SEO pages, and the free-tier quota — launching **free** (billing deferred). Grounded-data sources (SEC EDGAR + academic APIs) tracked separately as a product dependency (`docs/local_only/Plan_grounded_sources.md`).
 
-**Status:** In Progress — v8.1 (free-tier quota counter — live update + month rollover + clarification double-count all fixed) Done; v8.2 (public landing page at `/` — hero, How it works stepper, persona cards + team chips, honest copy, login/register routing; plus search/share metadata — `<title>`/`<meta description>`, OG/Twitter copy, 1200×630 share image — and Google Search Console verification via HTML meta-tag) Done; v8.2.1 (follow-up relevance check overwrote the final answer with the parent session's answer — validation and repair now target the follow-up instruction, repair reuses `FINAL_SYNTHESIS`, and the validator reads the whole answer so the relevance threshold means what it says) Done; v8.2.2 (text-leak fixes — shared-run page showed the raw follow-up packet, sidebar titles lowercase, attachment chips deleted on click and opened blank tabs, PDF/Markdown export dumped extracted attachment text; plus shared-page presentation and footer) Done; v8.2.3 (PDF export mangled Hebrew — embedded Noto Sans Hebrew per document, one bidi pass with jsPDF's own engine disabled, RTL alignment, ASCII filenames; plus a presentation pass and a pre-existing page-break font bug) Done; v8.2.4 (truncation hid the decisive text in two more places — the scorer graded 600-char preambles instead of conclusions, measured at 38% coverage of the writer answer and 18% of the critic's revision across 110 stored rounds, now head+tail via a shared `excerpt()` helper at an unchanged budget; and follow-up intent assessment read the packet instead of the instruction, closing v8.2.1's deferred Task 4) Done; v8.2.5 (follow-up web research searched for the instruction text — "make it shorter" under Sources=Always returned text-summarizer tools as sources; reformatting instructions now skip research in every mode via a whole-string guard, and a follow-up's retrieval query carries the parent topic) Done. v8.3 team role refinements / analytics / template SEO pages next.
+**Status:** In Progress — v8.1 (free-tier quota counter) Done; v8.2 (landing page) Done; v8.2.1-v8.2.6
+(bug-fix subphases: follow-up relevance, text-leak, Hebrew PDF export, scorer/intent truncation,
+follow-up web-research query, production verification pass) Done. v8.3 team role refinements next;
+analytics and template SEO pages after. Per-subphase detail: `docs/plan_archive/PLAN_v8.0.md` and its
+linked `PLAN_v8.*.md` files.
 
 Full spec: `docs/plan_archive/PLAN_v8.0.md`
 

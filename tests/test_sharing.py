@@ -107,6 +107,38 @@ def test_shared_get_returns_session(client, monkeypatch):
     assert body["public_slug"] == "my-question-ab12cd"
 
 
+def test_shared_get_hides_the_validator_reason(client, monkeypatch):
+    """Phase timings reach the public payload; the validator's critique of the answer must not."""
+    async def fake_load_shared_session(slug, db):
+        return DebateSession(
+            session_id="20260315_210000",
+            question="q",
+            domain="role",
+            rounds=[],
+            final_answer="final",
+            final_score=8.2,
+            phase_timings=[
+                {
+                    "phase": "relevance_validation",
+                    "duration_seconds": 1.2,
+                    "status": "failed",
+                    "relevance_score": 4.5,
+                    "relevance_reason": "Answer never states a recommendation.",
+                }
+            ],
+        )
+
+    monkeypatch.setattr(shared_module, "load_shared_session", fake_load_shared_session)
+    response = client.get("/api/shared/my-question-ab12cd")
+    assert response.status_code == 200
+    row = response.json()["phase_timings"][0]
+
+    assert "relevance_reason" not in row
+    assert row["status"] == "failed"
+    assert row["relevance_score"] == 4.5
+    assert "never states a recommendation" not in response.text
+
+
 def test_shared_get_not_found(client, monkeypatch):
     async def fake_load_shared_session(slug, db):
         return None
