@@ -9,6 +9,6 @@ pypdf
 sqlalchemy[asyncio]
 alembic
 asyncpg
-fastapi-users[sqlalchemy]
+fastapi-users[sqlalchemy]>=15,<16
 bcrypt
 slowapi
